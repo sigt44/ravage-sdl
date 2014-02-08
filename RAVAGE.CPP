@@ -1,0 +1,537 @@
+
+/*-------------------------------------------------------*/
+/*                                                       */
+/* [c]copyright 1996 by AlphaHelix                       */
+/*                                                       */
+/* This is the mainmodule of RAVAGE. And I wrote it.     */
+/* Yes. I wrote it on my own.                            */
+/*                                                       */
+/*-------------------------------------------------------*/
+
+/*
+ Ultimate DEBUG MASTER switches.
+ These switches must be set for EACH and EVERY module in the project.
+
+ DEBUG   : Enables extended runtime checks.
+           - Memory check (out of memory, unfreed memory, messed up
+             memory structure, trying to free unallocated memory).
+           - Parameters in range check.
+           - In play DEBUG keys are enabled.
+             (a = bypass frame limiter)
+             (s = enter\leave single step mode)
+             (. = do single step)
+             (d = execute INT 3 exeption ----> ENTER DEBUGGER)
+             (i = toggle invincible on/off.)
+
+ RECORDER: Enables access to the game recorder for DEMO recording.
+ SHAREWARE:Build SHAREWARE VERSION of RAVAGE.
+*/
+
+#include <malloc.h>
+#include <setjmp.h>
+#include <sys\types.h>
+#include <conio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <iostream>
+#include <SDL.h>
+#include <SDL_image.h>
+#include <climits>
+
+#define AH_MAINMODULE
+#include "error.hpp"
+#include "memory.hpp"
+#include "WINDOWS.HPP"
+
+
+#include "input.hpp"
+#include "diskio.hpp"
+#include "ravage.hpp"
+#include "sound.hpp"
+
+#include "XLIB.HPP"
+
+#ifdef RAVAGE_PORT
+#include "types.h"
+
+#include "objects.hpp"
+#endif
+
+
+// Some variables.
+#ifdef SHAREWARE
+const char copyright[] = "RAVAGE shareware 1.1 [c]copyright 1996 by AlphaHelix.";
+#else
+const char copyright[] = "RAVAGE registered 1.1 [c]copyright 1996 by AlphaHelix.";
+#endif
+
+using namespace std;
+
+
+
+/*---------------------------------------------------------
+ Function: timer
+
+ Description:
+ This is the all important timer function.
+ This function will be called 60 times a second and
+ updates the "timer_ticks" variable.
+ "timer_ticks" is then used in the rest of the program
+ to synchronize game speed and screen output to 30
+ frames per second.
+---------------------------------------------------------*/
+volatile int  timer_ticks;
+void timer(void)
+{
+   timer_ticks++;
+}
+
+/*---------------------------------------------------------
+ Function: cmdline
+
+ Description:
+ Concatenate all command arguments to one string.
+ So easy search can be done now.
+---------------------------------------------------------*/
+#define CMDLEN       40             // Max allowed length of command line.
+static char    cmd[CMDLEN];         // Command line arguments.
+int incmd(char *text)
+{
+   return (int)strstr(cmd, text);
+}
+
+static int cmdnumber(char *text, int def)
+{
+   char  *i = strstr(cmd, text);
+
+   if (!i) return def;
+   return i[strlen(text)] - '0';
+}
+
+static void cmdline(int argc, char *argv[])
+{
+   int   i;
+
+// Concatenate all command strings together in 'cmd'.
+   cmd[0] = '\0';			// Clear string.
+   for (i = 1; i < argc; i++) {
+      if (strlen(cmd)+strlen(argv[i]) < CMDLEN)
+	 strcat(cmd, argv[i]);
+   }
+   strlwr(cmd);
+
+}
+
+/*---------------------------------------------------------
+ Function: loadsettings & savesettings
+
+ Description:
+ These functions are used to save\load the configuration
+ the user has choosen.
+---------------------------------------------------------*/
+static void loadsettings(char *file)
+{
+   myFile   myfile;
+
+// Fill in settings structure with FACTORY DEFAULTS.
+
+// Sound settings.
+   settings.voices = 2;
+   settings.sound_device = 1;
+   settings.mix_freq = 44100;
+   settings.mod_vol = 10;
+   settings.wav_vol = 30;
+
+// Control settings.
+// mouse.
+   settings.msens = M_MEDIUM;
+// keyboard
+   settings.key[0] = SDL_SCANCODE_LEFT;      
+   settings.key[1] = SDL_SCANCODE_RIGHT;     
+   settings.key[2] = SDL_SCANCODE_UP;     
+   settings.key[3] = SDL_SCANCODE_DOWN;      
+   settings.key[4] = SDL_SCANCODE_SPACE;      
+
+   settings.device[0] = 1;       // Player 1 input: Keyboard.
+   settings.device[1] = 3;       // Player 2 input: Mouse.
+
+// Graphix
+   settings.frate = 1;
+   settings.shadows = 0;
+   settings.cpu_usage = 0;
+
+// Try to load configuration file.
+   if (myfile.open(file)) {
+      myfile.read(&settings, sizeof(Settings));
+      myfile.close();
+   }
+}
+
+static void savesettings(char *file)
+{
+   myFile   myfile;
+
+   if (!myfile.creat(file)) return;
+   myfile.write(&settings, sizeof(Settings));
+   myfile.close();
+
+}
+
+/*---------------------------------------------------------
+ Function: powerdown
+
+ Description:
+ Function called upon exit of the program.
+ Does all the needed housekeeping AFTER the
+ registered exit functions (reg_exit) have been
+ called.
+---------------------------------------------------------*/
+static void powerdown(void)
+{
+#ifdef DEBUG
+   memory_usage();
+#endif
+   #ifdef RAVAGE_PORT
+   cout << "Object peak usage: " << object_usage() << " of "
+        << OBJ_MAXOBJECTS << " used." << endl;
+   cout << "Weapon peak usage: " << weapon_usage() << " of "
+        << G_MAXWEAPONS << " used." << endl;
+   cout << "Enemy peak usage: " << enemy_usage() << " of "
+        << G_MAXENEMIES << " used." << endl;
+#endif
+   _heapmin();
+
+   SDL_Quit();
+
+   cout << endl;
+   cout << "Thank you for playing RAVAGE." << endl << endl;
+}
+
+
+/*---------------------------------------------------------
+ Function: powerup
+
+ Description:
+ Initialize the system.
+ - SDL
+ - memory manager
+ - timer
+ - sound card
+ - graphics
+ - inputs (keyboard, mouse, joystick)
+---------------------------------------------------------*/
+static void powerup(void)
+{
+	// Init SDL
+
+	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_AUDIO) != 0) 
+	{
+		fprintf(stderr, "\nUnable to initialize SDL:  %s\n", SDL_GetError());
+		return;
+	}
+
+	atexit(powerdown);
+
+// Grow heap.
+   {
+		char *ptr;
+      ptr = new char[MEMNEEDED*1024];
+      if (ptr == 0) error("Not enough memory available.");
+      delete []ptr;
+   }
+
+// Init File Sytem.
+   initfilesystem(); reg_exit(shutfilesystem);
+
+// Load configuration.
+	loadsettings(CONFIGFILE);
+
+// Initialize Inputs.
+   if (incmd("/j")) {
+      initinputs(INPUT_KEYBOARD | INPUT_MOUSE);
+   } else {
+      initinputs(INPUT_KEYBOARD | INPUT_MOUSE | INPUT_JOYPAD);
+   }
+
+   reg_exit(shutinputs);
+   if (!lockdevice(settings.device[0])) {
+      settings.device[0] = nextdevice(0);
+      lockdevice(settings.device[0]);
+   }
+   if (!lockdevice(settings.device[1])) {
+      settings.device[1] = nextdevice(0);
+      lockdevice(settings.device[1]);
+   }
+// Define keys according to loaded settings.
+   setkeys(settings.key[0], settings.key[1],
+            settings.key[2], settings.key[3], settings.key[4]);
+
+   if (joypad) cout << "Joypad detected." << endl;
+   if (mouse) cout << "Mouse detected." << endl;
+
+// Init Sound system.
+   initsound(); reg_exit(shutsound);
+   s_setmodvol(settings.mod_vol);
+   s_setwavvol(settings.wav_vol);
+   cout << "Sound driver: " << s_drivername() << endl;
+	
+	// Enter graphics.
+   initgraphics(); reg_exit(shutgraphics);
+
+	// Wait for a boring key being pressed.
+   cout << endl;
+   cout << "Press any key." << endl;
+   input_fire();
+
+/*
+// Init OBJECT system.
+   initobjects(); reg_exit(shutobjects);
+   shadow_level(settings.shadows);
+// Init game classes.
+   initgclass(); reg_exit(shutgclass);
+
+
+// No game is in progress.
+   gstate.ready = 0;
+
+// Process command line.
+// First (DJ)Ammann cheats.
+   cheatlevel = 0;
+   if (incmd("/at")) cheatlevel |= CHEAT_INVUL;   // absolut toedlich.
+   if (incmd("/vv")) cheatlevel |= CHEAT_MONEY;   // vertammi vertori.
+// Level jumping.
+   start_stage = cmdnumber("/l", 1);
+   if (start_stage > MAXLEVELS) error("/l parameter out of range.");
+
+#ifdef DEBUG
+   if (incmd("/motz")) start_stage = 99;
+#endif
+
+#ifdef RECORDER
+   recorder = 0;
+   if (incmd("/rec")) recorder = 1;
+#endif
+   */
+}
+
+ int sdl_drawsprite(Sprite *sprite, int x, int y, int n)
+ {
+ }
+
+ int sdl_reportsprite(Sprite *sprite)
+ {
+	 int x, y, i;
+	 int newline = 0;
+	 long *pc = NULL;
+	 char *bytePix = NULL;
+	 char *start = NULL;
+	printf("Sprite(%p):\n", sprite);
+	printf("header: %d\n", sprite->header);
+	printf("xs_data: %ld\n", sprite->xs_data);
+	printf("ys_data: %ld\n", sprite->ys_data);
+	printf("fsize: %ld\n", sprite->fsize);
+	printf("xs: %ld\n", sprite->xs);
+	printf("ys: %ld\n", sprite->ys);
+	printf("frames: %ld\n", sprite->frames);
+	printf("speed: %ld\n", sprite->speed);
+	printf("x_core: %ld\n", sprite->x_core);
+	printf("y_core: %ld\n", sprite->y_core);
+	printf("xs_core: %ld\n", sprite->xs_core);
+	printf("ys_core: %ld\n", sprite->ys_data);
+	printf("data -\n");
+	start = ((char *)sprite->data);
+	pc = (long *)start;
+	bytePix = start;
+
+	SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
+
+	SDL_RenderClear(renderer);
+
+	for(y = 0; y < sprite->ys_data; y++)
+	{
+		for(x = 0; x < sprite->xs; x++)
+		{
+			//printf("%X ", sprite->data[y*sprite->xs_data + x]);
+
+			for(i = 0; i < 1; i++)
+			{
+				int mod = x % 4;
+
+				char pix = *(bytePix + (y*(sprite->xs_data) + ((sprite->xs_data*mod)/4) + (x/4)));
+
+				SDL_SetRenderDrawColor(renderer, palette.sdl_rgb[pix].r, palette.sdl_rgb[pix].g, palette.sdl_rgb[pix].b, SDL_ALPHA_OPAQUE);
+				SDL_RenderDrawPoint(renderer, x, y);
+				
+			}
+
+			newline++;
+		}
+	}
+	SDL_RenderPresent(renderer);
+	input_fire();
+	SDL_Delay(5000);
+	return 0;
+}
+
+int sdl_drawpcx(char *name)
+{
+	/*myFile myFile;
+	SDL_RWops *pcxMem;
+	SDL_Texture *pcxTexture = NULL;
+	
+	if(!myFile.open(name)) error("Unable to open file.", name);
+
+	pcxMem = SDL_RWFromMem(myFile.getMemory(), myFile.getsize());
+
+	pcxTexture = IMG_LoadTexture_RW(renderer, pcxMem, SDL_TRUE);
+
+	SDL_RenderClear(renderer);
+	SDL_RenderCopy(renderer, pcxTexture, NULL, NULL);
+	SDL_RenderPresent(renderer);
+
+	myFile.close();*/
+
+	myFile myFile;
+	SDLTexture pcxTexture;
+	
+	if(!myFile.open(name)) error("Unable to open file.", name);
+
+	SDL_RenderClear(renderer);
+	pcxTexture.loadMemory(myFile.getMemory(), myFile.getsize());
+	
+	pcxTexture.draw(0, 0, 50, 0, 100, 120);
+
+	SDL_RenderPresent(renderer);
+
+	myFile.close();
+
+	SDL_Delay(5000);
+	return 0;
+}
+
+int main(int argc, char *argv[])
+{
+   int   request;          // Returned request from MAIN MENU.
+
+// Set up error handling LONG JUMP.
+   if (setjmp(_err_jmp)) {
+// If an error occurs we will jump here.
+      reg_down();          // Properly shut down the system.
+      post_error();        // Post error processing.
+      exit(1);
+   }
+
+// Display some message.
+   cout << endl << copyright << endl << endl;
+   cout << "RAVAGE SDL" << endl;
+   cout << endl;
+
+// Prepare to access the command line.
+   cmdline(argc, argv);
+
+// Start the system.
+   powerup();
+
+// Open FilePool.
+   filepool[0].open("RAV0.DAT");
+   filepool[1].open("RAV1.DAT");
+   filepool[2].open("RAV2.DAT");
+   filepool[3].open("RAV3.DAT");
+
+	// Test music
+	// Load MOD.
+
+   s_loadmod("level2\\LEVEL2.UNI");
+	// Start music
+   s_startmod();
+	
+	//Load palette
+	void *p = (void *)loadfile("demo1\\DEMO1.CPA");
+	palette.set(p);
+	delete p;
+
+	//Test sprites
+	Sprite   *label;        // Player score LABELS.
+
+	/*label = (Sprite *)loadfile("pic\\ready.spr");
+	sdl_reportsprite(label);
+	label = (Sprite *)loadfile("pic\\ravage.spr");
+	sdl_reportsprite(label);
+		label = (Sprite *)loadfile("pic\\pointer.spr");
+	sdl_reportsprite(label);
+	label = (Sprite *)loadfile("pic\\save.spr");
+	sdl_reportsprite(label);
+		label = (Sprite *)loadfile("pic\\stuff.spr");
+	sdl_reportsprite(label);
+		label = (Sprite *)loadfile("pic\\main.spr");
+	sdl_reportsprite(label);
+		label = (Sprite *)loadfile("pic\\players.spr");
+	sdl_reportsprite(label);
+	*/
+	sdl_drawpcx("pic\\STORY.PCX");
+	sdl_drawpcx("pic\\TITLE.PCX");
+	sdl_drawpcx("pic\\ORDER.PCX");
+
+	cout << "Press fire to exit." << endl;
+   input_fire();
+
+
+	WavePool weapWaves;
+	weapWaves.load("level6\\LEVEL6.CWV");
+	cout << "Wave samples: " << weapWaves.nsamples << endl;
+	for(int x = 0; x < weapWaves.nsamples; x++)
+	{
+		SDL_Delay(500);
+		weapWaves.play(x % weapWaves.nsamples);
+		cout << "Sample: " << x % weapWaves.nsamples << endl;
+		sound_Report();
+		s_update();
+	}
+#ifdef NO_DEF
+// Show TITLE screen.
+   title();
+
+// Play loop.
+   request = M_QUIT;
+   do {
+      switch (request) {
+      case M_PLAY:
+// Enable RECORDER if needed.
+         #ifdef RECORDER
+            if (recorder) rec_enable();
+         #endif
+         play(0);    // Play NEW game.
+         break;
+      case M_LOAD:
+         play(1);    // Load game.
+         break;
+      case M_SOUND:  // Reinitialize Sound System.
+         /*shutsound();
+         initsound(settings.sound_device, settings.mix_freq);
+         s_setvoices(settings.voices);
+         s_setmodvol(settings.mod_vol);
+         s_setwavvol(settings.wav_vol);*/
+         break;
+      }
+      if (request == M_SOUND) {
+         request = menu(SOUNDMENU);
+      } else {
+         request = menu(MAINMENU);
+      }
+   } while (request != M_QUIT);
+#endif
+
+// Close FilePool.
+   filepool[3].close();
+   filepool[2].close();
+   filepool[1].close();
+   filepool[0].close();
+
+// Done for the game. Back to OS.
+   reg_down();                // Execute registered shutdown functions.
+   savesettings(CONFIGFILE);  // Save current game settings.
+
+   exit(0);                   // Exit nicely.
+   return 0;
+}
+
