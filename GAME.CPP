@@ -8,6 +8,7 @@
 #include "error.hpp"
 #include "input.hpp"
 #include "ravage.hpp"
+#include "SDL_BASE.HPP"
 
 #ifdef DEBUG
 extern void debugint(void);
@@ -42,10 +43,10 @@ static   int      rec_enabled = 0;
  LIVES, MONEY or the like.
 ---------------------------------------------------------*/
 class PlayerInfo {
-   Sprite   *label;        // Player score LABELS.
-   Sprite   *life;         // Small LIFE symbol.
+   SDLSprite   label;        // Player score LABELS.
+   SDLSprite   life;         // Small LIFE symbol.
    Font     *digit;        // 0123456789.
-   Sprite   *cpubanner;    // "CPU USAGE (%)" banner.
+   SDLSprite   cpubanner;    // "CPU USAGE (%)" banner.
 #ifdef STATS
    Font     *tiny;         // Use for statistics
 #endif
@@ -54,10 +55,10 @@ public:
 // Initialize needed sprites & fonts.
    void init(void)
    {
-      label = (Sprite *)loadfile("pic\\pinfo.spr");
-      life = (Sprite *)loadfile("pic\\life.spr");
+		label.load((Sprite *)loadfile("pic\\pinfo.spr"));
+      life.load((Sprite *)loadfile("pic\\life.spr"));
       digit = new Font("fonts\\yellow.fnt");
-      cpubanner = (Sprite *)loadfile("pic\\cpu.spr");
+      cpubanner.load((Sprite *)loadfile("pic\\cpu.spr"));
       #ifdef STATS
          tiny = new Font("fonts\\tiny.fnt");
       #endif
@@ -65,10 +66,10 @@ public:
 // Undo the effect of a previous load.
    void shut(void)
    {
-      unloadfile(label);
-      unloadfile(life);
+      unloadfile(label.getBase());
+      unloadfile(life.getBase());
       delete digit;
-      unloadfile(cpubanner);
+      unloadfile(cpubanner.getBase());
       #ifdef STATS
          delete tiny;
       #endif
@@ -79,16 +80,16 @@ public:
       int   i;
 
       if (p == 0) {
-         x_drawsprite(label, 6, 4, p);
+         render.x_drawsprite(&label, 6, 4, p);
          for (i = 0; i < player[p].ships-1; i++) {
             if (i > 4) break;
-            x_drawsprite(life, 6 + i*8, 14, 0);
+            render.x_drawsprite(&life, 6 + i*8, 14, 0);
          }
       } else {
-         x_drawsprite(label, 240, 4, p);
+         render.x_drawsprite(&label, 240, 4, p);
          for (i = 0; i < player[p].ships-1; i++) {
             if (i > 4) break;
-            x_drawsprite(life, 275 - i*8, 14, 0);
+            render.x_drawsprite(&life, 275 - i*8, 14, 0);
          }
       }
    }
@@ -98,7 +99,7 @@ public:
       char  text[4];
 
       itoa(5*(usage/5), text, 10);
-      x_drawsprite(cpubanner, 5, 230, 0);
+      render.x_drawsprite(&cpubanner, 5, 230, 0);
       digit->print(80, 230, text);
    }
 #ifdef STATS

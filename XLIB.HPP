@@ -10,8 +10,6 @@
 #define SCREENSIZE      (PLANESIZE*4)
 #define BORDER          16          // Size of border left and right of vscreen.
                                     // (used only for clipping, border will not be drawn).
-extern SDL_Surface *screen;
-extern SDL_Renderer *renderer;
 
 // -- Palette Constants.
 #define SCREENCOLORS    256
@@ -48,51 +46,6 @@ struct Sprite {
    long     data[];           // Start of data area.
 
 };
-
-class SDLTexture {
-	SDL_Texture *tex;
-	int width;
-	int height;
-
-	bool freeTexture;
-
-	void setup(bool reqFree);		//Fill in description attributes
-
-public:
-	SDLTexture() { tex = NULL; width = 12; }
-	~SDLTexture() { clean(); }
-
-	void draw(int x, int y, int cx, int cy, int cw, int ch);
-	void draw(int x, int y);
-
-	int loadFile(char *fileName);
-	int loadMemory(void *memory, int memSize);
-
-	int loadPointer(SDL_Texture *texture, bool reqFree) { 
-		tex = texture;
-		setup(reqFree);
-	}
-
-	int getWidth(void) { return width; }
-	int getHeight(void) { return height; }
-
-	void clean(void) { if(freeTexture && tex) SDL_DestroyTexture(tex); tex = NULL; }
-};
-
-class SDLSprite {
-	Sprite *sprite;
-	bool converted;
-	class SDLTexture texture;
-
-public:
-		void load(Sprite *sp);
-		void x_drawsprite(int x, int y, int n); // n refers to the frame of the sprite
-
-
-
-
-};
-
 
 // Position of data in SpritePool(SP) File.
 // Array must be of type long.

@@ -50,6 +50,7 @@
 #include "sound.hpp"
 
 #include "XLIB.HPP"
+#include "SDL_BASE.HPP"
 
 #ifdef RAVAGE_PORT
 #include "types.h"
@@ -278,11 +279,6 @@ static void powerup(void)
 	// Enter graphics.
    initgraphics(); reg_exit(shutgraphics);
 
-	// Wait for a boring key being pressed.
-   cout << endl;
-   cout << "Press any key." << endl;
-   input_fire();
-
 /*
 // Init OBJECT system.
    initobjects(); reg_exit(shutobjects);
@@ -343,9 +339,11 @@ static void powerup(void)
 	pc = (long *)start;
 	bytePix = start;
 
-	SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
+	SDLSprite spriteTest;
 
-	SDL_RenderClear(renderer);
+	SDL_SetRenderDrawColor(render.getBase(), 255, 255, 255, SDL_ALPHA_OPAQUE);
+
+	SDL_RenderClear(render.getBase());
 
 	for(y = 0; y < sprite->ys_data; y++)
 	{
@@ -359,53 +357,51 @@ static void powerup(void)
 
 				char pix = *(bytePix + (y*(sprite->xs_data) + ((sprite->xs_data*mod)/4) + (x/4)));
 
-				SDL_SetRenderDrawColor(renderer, palette.sdl_rgb[pix].r, palette.sdl_rgb[pix].g, palette.sdl_rgb[pix].b, SDL_ALPHA_OPAQUE);
-				SDL_RenderDrawPoint(renderer, x, y);
+				//SDL_SetRenderDrawColor(render.getBase(), palette.sdl_rgb[pix].r, palette.sdl_rgb[pix].g, palette.sdl_rgb[pix].b, SDL_ALPHA_OPAQUE);
+				//SDL_RenderDrawPoint(render.getBase(), x, y);
 				
 			}
 
 			newline++;
 		}
 	}
-	SDL_RenderPresent(renderer);
+
+	spriteTest.load(sprite, false);
+
+	render.x_drawsprite(&spriteTest, 0, 0, 0);
+
+	render.update();
+
 	input_fire();
 	SDL_Delay(5000);
+	spriteTest.destroy();
 	return 0;
 }
 
 int sdl_drawpcx(char *name)
 {
-	/*myFile myFile;
-	SDL_RWops *pcxMem;
-	SDL_Texture *pcxTexture = NULL;
-	
-	if(!myFile.open(name)) error("Unable to open file.", name);
-
-	pcxMem = SDL_RWFromMem(myFile.getMemory(), myFile.getsize());
-
-	pcxTexture = IMG_LoadTexture_RW(renderer, pcxMem, SDL_TRUE);
-
-	SDL_RenderClear(renderer);
-	SDL_RenderCopy(renderer, pcxTexture, NULL, NULL);
-	SDL_RenderPresent(renderer);
-
-	myFile.close();*/
-
 	myFile myFile;
 	SDLTexture pcxTexture;
 	
 	if(!myFile.open(name)) error("Unable to open file.", name);
 
-	SDL_RenderClear(renderer);
+	SDL_RenderClear(render.getBase());
 	pcxTexture.loadMemory(myFile.getMemory(), myFile.getsize());
 	
-	pcxTexture.draw(0, 0, 50, 0, 100, 120);
+	render.drawTexture(&pcxTexture, 0, 0, 50, 0, 100, 120);
 
-	SDL_RenderPresent(renderer);
+	render.update();
 
 	myFile.close();
 
-	SDL_Delay(5000);
+	int startTicks = SDL_GetTicks();
+	while(SDL_GetTicks() - startTicks < 2000)
+		{
+			input_update();
+	}
+
+	pcxTexture.destroy();
+
 	return 0;
 }
 
@@ -441,7 +437,7 @@ int main(int argc, char *argv[])
 	// Test music
 	// Load MOD.
 
-   s_loadmod("level2\\LEVEL2.UNI");
+   s_loadmod("level3\\LEVEL3.UNI");
 	// Start music
    s_startmod();
 	
@@ -451,9 +447,9 @@ int main(int argc, char *argv[])
 	delete p;
 
 	//Test sprites
-	Sprite   *label;        // Player score LABELS.
+	/*Sprite   *label;        // Player score LABELS.
 
-	/*label = (Sprite *)loadfile("pic\\ready.spr");
+	label = (Sprite *)loadfile("pic\\ready.spr");
 	sdl_reportsprite(label);
 	label = (Sprite *)loadfile("pic\\ravage.spr");
 	sdl_reportsprite(label);
@@ -476,7 +472,7 @@ int main(int argc, char *argv[])
    input_fire();
 
 
-	WavePool weapWaves;
+	/*WavePool weapWaves;
 	weapWaves.load("level6\\LEVEL6.CWV");
 	cout << "Wave samples: " << weapWaves.nsamples << endl;
 	for(int x = 0; x < weapWaves.nsamples; x++)
@@ -486,7 +482,7 @@ int main(int argc, char *argv[])
 		cout << "Sample: " << x % weapWaves.nsamples << endl;
 		sound_Report();
 		s_update();
-	}
+	}*/
 #ifdef NO_DEF
 // Show TITLE screen.
    title();

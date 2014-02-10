@@ -15,18 +15,16 @@
 #include <string.h>
 #include <conio.h>
 #include <stdlib.h>
-#include <SDL.h>
+
 #include <SDL_image.h>
 
+#include "SDL_BASE.HPP"
 #include "XLIB.HPP"
 #include "error.hpp"
 #include "memory.hpp"
 #include "diskio.hpp"
 
 // Global variables. World Access.
-SDL_Window *window = NULL;
-SDL_Surface *screen = NULL;
-SDL_Renderer *renderer = NULL;
 
 static int     ingraphics = 0;            // Already in Graphics mode ?
 
@@ -396,79 +394,6 @@ void doeffects(void)
    }
 }
 
-/*---------------------------------------------------------
-SDLTexture class methods
----------------------------------------------------------*/
-
-	
-void SDLTexture::setup(bool reqFree)
-{
-	if(tex != NULL) SDL_QueryTexture(tex, NULL, NULL, &width, &height);
-	else
-	{
-		width = 0;
-		height = 0;
-	}
-
-	freeTexture = reqFree;
-
-	return;
-}
-
-void SDLTexture::draw(int x, int y, int cx, int cy, int cw, int ch)
-{
-	SDL_Rect dest = {x, y, cw, ch};
-	SDL_Rect src = {cx, cy, cw, ch};
-
-	SDL_RenderCopy(renderer, tex, &src, &dest);
-
-	return;
-}
-
-void SDLTexture::draw(int x, int y)
-{
-	SDL_Rect dest = {x, y, width, height};
-
-	SDL_RenderCopy(renderer, tex, NULL, &dest);
-
-	return;
-}
-
-int SDLTexture::loadFile(char *filePath)
-{
-	if(tex) clean();
-
-	tex = IMG_LoadTexture(renderer, filePath);
-
-	if(tex == NULL)
-	{
-		error("Unable to load texture from file: ", (char *)IMG_GetError());
-	}
-
-	setup(true);
-
-	return 0;
-}
-
-int SDLTexture::loadMemory(void *memory, int memSize)
-{
-	SDL_RWops *texMem = NULL;
-	
-	if(tex) clean();
-
-	texMem = SDL_RWFromMem(memory, memSize);
-
-	tex = IMG_LoadTexture_RW(renderer, texMem, SDL_TRUE);
-	
-	if(tex == NULL)
-	{
-		error("Unable to load texture from memory: ", (char *)IMG_GetError());
-	}
-
-	setup(true);
-
-	return 0;
-}
 
 /*---------------------------------------------------------
  Function: showpcx
@@ -843,29 +768,9 @@ void initgraphics(void)
 
 	//IMG_Init();
 	
-	window = SDL_CreateWindow("Ravage SDL",
-									SDL_WINDOWPOS_UNDEFINED,
-									SDL_WINDOWPOS_UNDEFINED,
-									1280, 960,
-									SDL_WINDOW_OPENGL);
+	window.create("Ravage SDL", 1280, 960);
 
-
-
-
-	screen = SDL_GetWindowSurface(window);
-
-	// We must call SDL_CreateRenderer in order for draw calls to affect this window.
-	renderer = SDL_CreateRenderer(window, -1, 0);
-
-	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");  // make the scaled rendering look smoother.
-	SDL_RenderSetLogicalSize(renderer, 320, 240);
-
-	SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
-
-	// Clear the entire screen to our selected color.
-	SDL_RenderClear(renderer);
-
-	SDL_RenderPresent(renderer);
+	render.init(&window, 320, 240);
 
    if (ingraphics) return;
 
@@ -885,8 +790,8 @@ void initgraphics(void)
 void shutgraphics(void)
 {
    if (ingraphics) {
-		SDL_DestroyWindow(window); window = NULL; screen = NULL;
-
+		window.destroy();
+		render.destroy();
       ingraphics = 0;         // Reset flag.
    }
 }

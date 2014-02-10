@@ -1,4 +1,7 @@
 
+#ifndef AH_ERROR_ONCE
+#define AH_ERROR_ONCE
+
 #include <setjmp.h>
 
 #ifdef AH_ERROR
@@ -18,4 +21,6 @@ void reg_down(void);
 void post_error(void);
 
 #undef _extrn
+
+#endif
 

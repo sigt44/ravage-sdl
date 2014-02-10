@@ -10,9 +10,9 @@
 //#include <dos.h>
 //#include <conio.h>
 
-#include <SDL.h>
 #include <stdio.h>
 
+#include "SDL_BASE.HPP"
 #include "error.hpp"
 #define AH_INPUTMANAGER
 #include "input.hpp"
@@ -44,49 +44,6 @@ static int  key_right = SDL_SCANCODE_RIGHT;
 static int  key_up = SDL_SCANCODE_UP;
 static int  key_down = SDL_SCANCODE_DOWN;
 static int  key_fire = SDL_SCANCODE_SPACE;
-
-#ifdef OLD_CODE 
-static void (__interrupt __far *int09)(void);    // Pointer to old keyboard interrupt.
-
-/*This interrupt can be replaced by putting input polling code in the keyboard_wait function*/
-
-static void __interrupt __far newint09(void)
-{
-   int   scan;
-   int   status;
-
-// Get scan code.
-   scan = inp(0x60);
-// Fetch status information.
-   status = inp(0x61);
-// Re-enable keyboard.
-   outp(0x61, status | 0x80);
-// Write back old value.
-   outp(0x61, status);
-
-// Analyze scan code.
-   if (scan & 0x80) {
-      scan &=0x7f;         // Clear 'key pressed' bit.
-      key_released = scan; // Store last released key.
-      if (key[scan]) {
-         key[scan] = 0;
-         keys--;
-      }
-   } else {
-      key_pressed = scan;  // Store last pressed key.
-      if (!key[scan]) {
-         key[scan] = 1;
-         keys++;
-      }
-   }
-
-// Do PIC housekeeping.
-   outp(0x20, 0x20);
-
-// Quit if CTRLALTDEL has been pressed.
-   if (key[0x1d] && key[0x38] && key[0x53]) error("James Bond was here.");
-}
-#endif
 
 /*---------------------------------------------------------
  Function: keyboard_wait
@@ -149,7 +106,7 @@ static int measure(int &x, int &y, int &fire)
    int      x_count, y_count;
    int      timeout;
    int      tmp;
-   
+
 // Start new measure.
 	x = SDL_JoystickGetAxis(joystick, 0);
 	y = SDL_JoystickGetAxis(joystick, 1);
@@ -258,8 +215,11 @@ static int m_limx0, m_limx1, m_limy0, m_limy1; //Current mouse limits
 void getmousexy(int &b, int &x, int &y)
 {
    Uint32 buttonState = SDL_GetMouseState(&x, &y);
+
    b = buttonState & SDL_BUTTON(1); //Check if left mouse button is pressed.
-   
+
+	//printf("%d %d ---> %d\n", x, y, b);
+
    //Constrain mouse position
    if(x < m_limx0) ;
    else if(x > m_limx1) ;
@@ -377,6 +337,41 @@ void input_update(void)
 	SDL_Event event;
 	while(SDL_PollEvent(&event))
 	{
+		switch(event.type)
+		{
+			case SDL_MOUSEBUTTONDOWN:
+			break;
+
+			case SDL_MOUSEBUTTONUP:
+			break;
+
+			case SDL_WINDOWEVENT:
+
+				switch(event.window.event)
+				{
+					case SDL_WINDOWEVENT_ENTER:
+					window.enableMouseFocus();
+					puts("Mouse focus gained!");
+					break;
+
+					case SDL_WINDOWEVENT_LEAVE:
+					window.disableMouseFocus();
+					puts("Mouse focus lost!");
+					break;
+
+					case SDL_WINDOWEVENT_FOCUS_LOST:
+					window.disableInputFocus();
+					puts("Input Focus lost!");
+					break;
+
+					case SDL_WINDOWEVENT_FOCUS_GAINED:
+					window.enableInputFocus();
+					puts("Input Focus gained!");
+					break;
+				}
+
+			break;
+		}
 	}
 }
 
@@ -404,14 +399,15 @@ void input_fire(void)
 {
    int  j, k, m;
    int  x, y;
-
+	int hasFocus = 0;
    k = j = m = 0;
    do {
 		input_update();
+
       if (keyboard) getkeyboard(x, y, k);
       if (joypad) getjoypad(x, y, j);
       if (mouse) getmouse(x, y, m);
-   } while (!k && !j && !m);
+	} while ((!k && !j && !m) || !window.isFocus());
 
 	if(m) puts("Mouse FIRE!");
 }
