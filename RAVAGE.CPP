@@ -316,11 +316,6 @@ static void powerup(void)
 
  int sdl_reportsprite(Sprite *sprite)
  {
-	 int x, y, i;
-	 int newline = 0;
-	 long *pc = NULL;
-	 char *bytePix = NULL;
-	 char *start = NULL;
 	printf("Sprite(%p):\n", sprite);
 	printf("header: %d\n", sprite->header);
 	printf("xs_data: %ld\n", sprite->xs_data);
@@ -334,41 +329,15 @@ static void powerup(void)
 	printf("y_core: %ld\n", sprite->y_core);
 	printf("xs_core: %ld\n", sprite->xs_core);
 	printf("ys_core: %ld\n", sprite->ys_data);
-	printf("data -\n");
-	start = ((char *)sprite->data);
-	pc = (long *)start;
-	bytePix = start;
 
 	SDLSprite spriteTest;
 
-	SDL_SetRenderDrawColor(render.getBase(), 255, 255, 255, SDL_ALPHA_OPAQUE);
-
-	SDL_RenderClear(render.getBase());
-
-	for(y = 0; y < sprite->ys_data; y++)
-	{
-		for(x = 0; x < sprite->xs; x++)
-		{
-			//printf("%X ", sprite->data[y*sprite->xs_data + x]);
-
-			for(i = 0; i < 1; i++)
-			{
-				int mod = x % 4;
-
-				char pix = *(bytePix + (y*(sprite->xs_data) + ((sprite->xs_data*mod)/4) + (x/4)));
-
-				//SDL_SetRenderDrawColor(render.getBase(), palette.sdl_rgb[pix].r, palette.sdl_rgb[pix].g, palette.sdl_rgb[pix].b, SDL_ALPHA_OPAQUE);
-				//SDL_RenderDrawPoint(render.getBase(), x, y);
-				
-			}
-
-			newline++;
-		}
-	}
+	render.clear();
 
 	spriteTest.load(sprite, false);
-
-	render.x_drawsprite(&spriteTest, 0, 0, 0);
+	printf("Texture width: %d\n", spriteTest.getTexture()->getWidth());
+	
+	render.x_drawsprite(&spriteTest, 0, 0, -1);
 
 	render.update();
 
@@ -405,6 +374,37 @@ int sdl_drawpcx(char *name)
 	return 0;
 }
 
+int ask_abort(void)
+{
+   Font     *tiny;
+   Sprite   *escbox;
+   SDLSprite escSprite;
+	int      x, y, fire0 = 0, fire1 = 0;
+
+   tiny = new Font("fonts\\tiny.fnt");
+   escbox = (Sprite *) loadfile("pic\\escbox.spr");
+	escSprite.load(escbox, false);
+
+   y = (YMAX-escbox->ys)/2;
+
+	render.x_drawsprite(&escSprite, (XMAX-escbox->xs)/2, y, 0);
+   y += 15;
+
+   tiny->vanilla_c(XMAX/2, y, "Press ESC again to abort the game.", 12);
+   y += 15;
+   tiny->vanilla_c(XMAX/2, y, "Fire to continue.", 15);
+
+	render.update();
+
+   unloadfile(escbox);
+   delete tiny;
+	escSprite.destroy();
+
+	input_fire();
+
+	return 0;
+}
+
 int main(int argc, char *argv[])
 {
    int   request;          // Returned request from MAIN MENU.
@@ -437,9 +437,9 @@ int main(int argc, char *argv[])
 	// Test music
 	// Load MOD.
 
-   s_loadmod("level3\\LEVEL3.UNI");
+   s_loadmod("level1\\LEVEL1.UNI");
 	// Start music
-   s_startmod();
+   //s_startmod();
 	
 	//Load palette
 	void *p = (void *)loadfile("demo1\\DEMO1.CPA");
@@ -447,9 +447,9 @@ int main(int argc, char *argv[])
 	delete p;
 
 	//Test sprites
-	/*Sprite   *label;        // Player score LABELS.
+	Sprite   *label;        // Player score LABELS.
 
-	label = (Sprite *)loadfile("pic\\ready.spr");
+	/*label = (Sprite *)loadfile("pic\\ready.spr");
 	sdl_reportsprite(label);
 	label = (Sprite *)loadfile("pic\\ravage.spr");
 	sdl_reportsprite(label);
@@ -463,10 +463,12 @@ int main(int argc, char *argv[])
 	sdl_reportsprite(label);
 		label = (Sprite *)loadfile("pic\\players.spr");
 	sdl_reportsprite(label);
-	*/
+	
 	sdl_drawpcx("pic\\STORY.PCX");
 	sdl_drawpcx("pic\\TITLE.PCX");
 	sdl_drawpcx("pic\\ORDER.PCX");
+	*/
+	ask_abort();
 
 	cout << "Press fire to exit." << endl;
    input_fire();
@@ -530,4 +532,3 @@ int main(int argc, char *argv[])
    exit(0);                   // Exit nicely.
    return 0;
 }
-

@@ -96,27 +96,6 @@ public:
 #define FD_BASE         2
 #define FD_PITCH        3
 #define FD_XSDATA       4
-#pragma pack (4)
-class Font {
-   long     *anchor;          // Pointer to all data.
-   long     *xs;              // Pointer to xs array.(proportional schrift)
-   Sprite   *sprite;          // Pointer to font sprite array.
-public:
-   Font(char *file);
-   ~Font();
-   void     print(int x, int y, char *text);
-   void     print_c(int x, int y, char *text);
-   void     vanilla(int x, int y, char *text, int c);
-   void     vanilla_c(int x, int y, char *text, int c);
-   void     vanilla_char(int x, int y, char ch, int c);
-   int      textlen(char *text);
-   int      charlen(char ch)
-   { 
-      return xs[ch - anchor[FD_BASE]] + anchor[FD_PITCH];
-   }
-   int      width(void) { return sprite->xs; }
-   int      height(void) { return sprite->ys; }
-};
 
 
 // Background class.

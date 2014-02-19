@@ -16,6 +16,8 @@ void SDLSprite::load(Sprite *sp, bool isOwner)
 	sprite = sp;
 	owner = isOwner;
 
+	numFrames = sprite->frames;
+
 	convert();
 }
 
@@ -33,35 +35,57 @@ void SDLSprite::convert(void)
 		return;
 	}
 
-	surface = SDL_CreateRGBSurface(0, sprite->xs, sprite->ys_data, 32, 0, 0, 0, 0);
-	SDL_FillRect(surface, NULL, SDL_MapRGB(surface->format, 255, 0, 0));
+	//Create a blank surface
+	surface = SDL_CreateRGBSurface(0, sprite->xs, sprite->ys_data * sprite->frames, 32, 0, 0, 0, 0);
+	SDL_FillRect(surface, NULL, SDL_MapRGB(surface->format, 0, 0, 0));
+
 	
+	//Prepare for direct pixel access
 	SDL_LockSurface(surface);
 
 	bytePix = (char *)sprite->data;
 	surfacePix = (Uint32 *)surface->pixels;
 
-	for(y = 0; y < sprite->ys_data; y++)
+	for(y = 0; y < sprite->ys_data * sprite->frames; y++) //For each row of the sprite map
 	{
-		for(x = 0; x < sprite->xs; x++)
+		for(x = 0; x < sprite->xs; x++) //For each column up to the width of the sprite
 		{
-			mod = x % 4;
+			mod = x % 4; //Find the plane the requested pixel (x,y) is in
 
-			pix = *(bytePix + (y*(sprite->xs_data) + ((sprite->xs_data*mod)/4) + (x/4)));
+			pix = *(bytePix + (y*(sprite->xs_data) + ((sprite->xs_data*mod)/4) + (x/4))); //Get the pixel index colour from the correct address
 			
 			surfacePix[x + (y * sprite->xs)] = SDL_MapRGB(surface->format, palette.sdl_rgb[pix].r, palette.sdl_rgb[pix].g, palette.sdl_rgb[pix].b);
 		}
 	}
 
 	SDL_UnlockSurface(surface);
+	
+	//Use first colour of palette as colour key.
+	SDL_SetColorKey(surface, 1, SDL_MapRGB(surface->format, palette.sdl_rgb[0].r, palette.sdl_rgb[0].g, palette.sdl_rgb[0].b));
 
+	//Convert the surface into a texture and load it into the class
 	texture.loadPointer(SDL_CreateTextureFromSurface(render.getBase(), surface), true);
 
+	//Clean up
 	SDL_FreeSurface(surface);
 
 	converted = true;
 
 	return;
+}
+
+SDL_Rect SDLSprite::getFrameRect(int n)
+{
+	SDL_Rect frame;
+	
+	frame.x = 0;
+	frame.y = n*sprite->ys;
+	frame.w = texture.getWidth();
+	frame.h = sprite->ys;
+
+	printf("FRAME (%d %d %d %d)\n", frame.x, frame.y, frame.w, frame.h);
+
+	return frame;
 }
 
 /*---------------------------------------------------------
@@ -148,13 +172,12 @@ void SDLRenderer::init(SDLWindow *window, int logicalWidth, int logicalHeight)
 
 	if(!renderer) error("Unable to create renderer: ", (char *)SDL_GetError());
 
-	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");  // make the scaled rendering look smoother.
+	//SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear"); Don't ruin the fonts!
 
 	SDL_RenderSetLogicalSize(renderer, logicalWidth, logicalHeight);
 
 	SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
 
-	// Clear the entire screen to our selected color.
 	SDL_RenderClear(renderer);
 	SDL_RenderPresent(renderer);
 
@@ -163,7 +186,16 @@ void SDLRenderer::init(SDLWindow *window, int logicalWidth, int logicalHeight)
 
 void SDLRenderer::x_drawsprite(SDLSprite *sprite, int x, int y, int n)
 {
-	drawTexture(sprite->getTexture(), x, y);
+	SDL_Rect clip;
+	if(sprite->getNumFrames() == 0 || n == -1)
+		drawTexture(sprite->getTexture(), x, y);
+	else
+	{
+		clip = sprite->getFrameRect(n);
+		drawTexture(sprite->getTexture(), x, y, &clip);
+	}
+
+	return;
 }
 
 void SDLRenderer::drawTexture(SDLTexture *texture, int x, int y, int cx, int cy, int cw, int ch)
@@ -172,6 +204,15 @@ void SDLRenderer::drawTexture(SDLTexture *texture, int x, int y, int cx, int cy,
 	SDL_Rect src = {cx, cy, cw, ch};
 
 	SDL_RenderCopy(renderer, texture->getBase(), &src, &dest);
+
+	return;
+}
+
+void SDLRenderer::drawTexture(SDLTexture *texture, int x, int y, SDL_Rect *clip)
+{
+	SDL_Rect dest = {x, y, clip->w, clip->h};
+
+	SDL_RenderCopy(renderer, texture->getBase(), clip, &dest);
 
 	return;
 }

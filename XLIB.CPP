@@ -589,18 +589,20 @@ Font::Font(char *file)
    xs = &anchor[FD_XSDATA];
 
    sprite = (Sprite *)(anchor+FD_XSDATA+anchor[FD_NCHARS]);
+	fontSprite.load(sprite, false);
 }
 
 Font::~Font()
 {
+	fontSprite.destroy();
    unloadfile(anchor);
 }
 
 void Font::print(int x, int y, char *text)
 {
    while (*text != 0) {
-      //x_drawsprite(sprite, x, y, *text - anchor[FD_BASE]);
-      x += xs[*text - anchor[FD_BASE]] + anchor[FD_PITCH];
+      render.x_drawsprite(&fontSprite, x, y, (int)(*text - anchor[FD_BASE]));
+      x += xs[(int)(*text - anchor[FD_BASE])] + anchor[FD_PITCH];
       text++;
    }
 }
@@ -608,34 +610,22 @@ void Font::print(int x, int y, char *text)
 void Font::print_c(int x, int y, char *text)
 {
    x -= textlen(text) / 2;
-   while (*text != 0) {
-      //x_drawsprite(sprite, x, y, *text - anchor[FD_BASE]);
-      x += xs[*text - anchor[FD_BASE]] + anchor[FD_PITCH];
-      text++;
-   }
+	print(x, y, text);
 }
 
 void Font::vanilla(int x, int y, char *text, int c)
 {
-   while (*text != 0) {
-      //x_drawvanilla(sprite, x, y, *text - anchor[FD_BASE], c);
-      x += xs[*text - anchor[FD_BASE]] + anchor[FD_PITCH];
-      text++;
-   }
+	print(x, y, text);
 }
 
 void Font::vanilla_c(int x, int y, char *text, int c)
 {
    x -= textlen(text) / 2;
-   while (*text != 0) {
-      //x_drawvanilla(sprite, x, y, *text - anchor[FD_BASE], c);
-      x += xs[*text - anchor[FD_BASE]] + anchor[FD_PITCH];
-      text++;
-   }
+	print(x, y, text);
 }
 
 void Font::vanilla_char(int x, int y, char ch, int c) {
-   //x_drawvanilla(sprite, x, y, ch - anchor[FD_BASE], c);
+   render.x_drawsprite(&fontSprite, x, y, ch - anchor[FD_BASE]);
 }
 
 int Font::textlen(char *text)

@@ -10,6 +10,7 @@
 extern class SDLWindow window;
 extern class SDLRenderer render;
 
+//Game window class
 class SDLWindow {
 	SDL_Window *window;
 	bool mouseFocus; 
@@ -76,11 +77,13 @@ public:
 	void destroy(void) { if(freeTexture && tex) SDL_DestroyTexture(tex); tex = NULL; }
 };
 
+//Sprite class to replace functionality of the previous Sprite structure
 class SDLSprite {
 	Sprite *sprite;
 	bool converted;
-	bool owner; // The class fully owns the Sprite structure
+	bool owner; // The class looks after the Sprite structure's memory
 	class SDLTexture texture;
+	int numFrames;
 
 public:
 	SDLSprite() { sprite = NULL; converted = false; owner = false; }
@@ -90,6 +93,10 @@ public:
 
 	Sprite *getBase() { return sprite; }
 	SDLTexture *getTexture(void) { return &texture; }
+
+	SDL_Rect getFrameRect(int n);
+
+	int getNumFrames(void) { return numFrames; }
 
 	void destroy(void) { 
 		texture.destroy(); 
@@ -101,6 +108,8 @@ public:
 	}
 };
 
+
+//Drawing functions
 class SDLRenderer {
 	SDL_Renderer *renderer;
 
@@ -114,12 +123,23 @@ public:
 	void init(SDLWindow *window, int logicalWidth, int logicalHeight);
 	void x_drawsprite(SDLSprite *sprite, int x, int y, int n); // n refers to the frame of the sprite
 
+	void drawTexture(SDLTexture *texture, int x, int y, SDL_Rect *clip);
 	void drawTexture(SDLTexture *texture, int x, int y, int cx, int cy, int cw, int ch);
 	void drawTexture(SDLTexture *texture, int x, int y);
 
 	SDL_Renderer *getBase(void) { return renderer; }
 
 	void update(void) { SDL_RenderPresent(renderer); }
+
+	void clear(void) { 	
+		SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE); 
+		SDL_RenderClear(renderer); 
+	}
+
+	void clear(Uint8 r, Uint8 g, Uint8 b) {
+		SDL_SetRenderDrawColor(renderer, r, g, b, SDL_ALPHA_OPAQUE); 
+		SDL_RenderClear(renderer); 
+	}
 
 	void destroy(void)
 	{
@@ -129,6 +149,31 @@ public:
 			renderer = NULL;
 		}
 	}
+};
+
+class Font {
+   long     *anchor;          // Pointer to all data.
+   long     *xs;              // Pointer to xs array.(proportional schrift)
+   
+
+
+public:
+	Sprite   *sprite;          // Pointer to font sprite array.
+	SDLSprite fontSprite;		// SDL version of the sprite
+   Font(char *file);
+   ~Font();
+   void     print(int x, int y, char *text);
+   void     print_c(int x, int y, char *text);
+   void     vanilla(int x, int y, char *text, int c);
+   void     vanilla_c(int x, int y, char *text, int c);
+   void     vanilla_char(int x, int y, char ch, int c);
+   int      textlen(char *text);
+   int      charlen(char ch)
+   { 
+      return xs[ch - anchor[FD_BASE]] + anchor[FD_PITCH];
+   }
+   int      width(void) { return sprite->xs; }
+   int      height(void) { return sprite->ys; }
 };
 
 #endif
