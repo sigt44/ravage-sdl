@@ -39,6 +39,8 @@ public:
 		return 0;
 	}
 
+	SDL_Surface *getScreen(void) { return SDL_GetWindowSurface(window); }
+
 	SDL_Window *getWindow() { return window; };
 	bool isFocus() { return (inputFocus && mouseFocus); }; // window is in focus if both mouse and input is in focus
 	void enableInputFocus(void) { inputFocus = true; }
@@ -74,7 +76,17 @@ public:
 	int getHeight(void) { return height; }
 	SDL_Texture *getBase(void) { return tex; }
 
-	void destroy(void) { if(freeTexture && tex) SDL_DestroyTexture(tex); tex = NULL; }
+	int setAlpha(int a)
+	{
+		if(a > SDL_ALPHA_OPAQUE) a = SDL_ALPHA_OPAQUE;
+		if(a < SDL_ALPHA_TRANSPARENT) a = SDL_ALPHA_TRANSPARENT;
+		return SDL_SetTextureAlphaMod(tex, a);
+	}
+
+	void destroy(void) { 
+		if(freeTexture && tex) SDL_DestroyTexture(tex); 
+		tex = NULL; 
+	}
 };
 
 //Sprite class to replace functionality of the previous Sprite structure
@@ -112,8 +124,10 @@ public:
 //Drawing functions
 class SDLRenderer {
 	SDL_Renderer *renderer;
+	SDLTexture renderTexture; //Render onto a texture first before rendering to the screen
 
 public:
+
 	SDLRenderer() {
 		renderer = NULL;
 	}
@@ -121,15 +135,27 @@ public:
 	~SDLRenderer() { if(renderer) error("Renderer not released correctly"); }
 	
 	void init(SDLWindow *window, int logicalWidth, int logicalHeight);
-	void x_drawsprite(SDLSprite *sprite, int x, int y, int n); // n refers to the frame of the sprite
 
+	SDL_Texture *createScreenTexture() {
+		SDL_Texture *copy = SDL_CreateTexture(renderer, 0, SDL_TEXTUREACCESS_TARGET, HWXMAX, HWYMAX);
+		SDL_SetRenderTarget(renderer, copy);
+		
+		drawTexture(&renderTexture, 0, 0);
+		SDL_RenderPresent(renderer);
+
+		SDL_SetRenderTarget(renderer, renderTexture.getBase());
+		return copy;
+	}
+
+
+	void x_drawsprite(SDLSprite *sprite, int x, int y, int n); // n refers to the frame of the sprite
 	void drawTexture(SDLTexture *texture, int x, int y, SDL_Rect *clip);
 	void drawTexture(SDLTexture *texture, int x, int y, int cx, int cy, int cw, int ch);
 	void drawTexture(SDLTexture *texture, int x, int y);
 
 	SDL_Renderer *getBase(void) { return renderer; }
 
-	void update(void) { SDL_RenderPresent(renderer); }
+	void update(void);
 
 	void clear(void) { 	
 		SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE); 
@@ -145,6 +171,8 @@ public:
 	{
 		if(renderer) 
 		{
+			renderTexture.destroy();
+
 			SDL_DestroyRenderer(renderer);
 			renderer = NULL;
 		}
@@ -154,8 +182,6 @@ public:
 class Font {
    long     *anchor;          // Pointer to all data.
    long     *xs;              // Pointer to xs array.(proportional schrift)
-   
-
 
 public:
 	Sprite   *sprite;          // Pointer to font sprite array.
@@ -175,6 +201,8 @@ public:
    int      width(void) { return sprite->xs; }
    int      height(void) { return sprite->ys; }
 };
+
+void beauty(Font *, int &, int &, char *);
 
 #endif
 

@@ -2,6 +2,10 @@
 #ifndef AH_XLIB
 #define AH_XLIB
 
+// -- Hardware screen definition.
+#define HWXMAX          320
+#define HWYMAX          240
+
 // -- Virtual Screen dimensions.
 #define XMAX            288         // Size of screen in x-direction.
 #define YMAX            240         // And y direction.

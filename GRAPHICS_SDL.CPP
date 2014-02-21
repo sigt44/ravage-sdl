@@ -83,8 +83,6 @@ SDL_Rect SDLSprite::getFrameRect(int n)
 	frame.w = texture.getWidth();
 	frame.h = sprite->ys;
 
-	printf("FRAME (%d %d %d %d)\n", frame.x, frame.y, frame.w, frame.h);
-
 	return frame;
 }
 
@@ -168,7 +166,7 @@ SDLRenderer class methods
 
 void SDLRenderer::init(SDLWindow *window, int logicalWidth, int logicalHeight)
 {
-	renderer = SDL_CreateRenderer(window->getWindow(), -1, 0);
+	renderer = SDL_CreateRenderer(window->getWindow(), -1, SDL_RENDERER_TARGETTEXTURE);
 
 	if(!renderer) error("Unable to create renderer: ", (char *)SDL_GetError());
 
@@ -178,10 +176,25 @@ void SDLRenderer::init(SDLWindow *window, int logicalWidth, int logicalHeight)
 
 	SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
 
+	renderTexture.loadPointer(SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, HWXMAX, HWYMAX), true);
+
 	SDL_RenderClear(renderer);
 	SDL_RenderPresent(renderer);
 
+	SDL_SetRenderTarget(renderer, renderTexture.getBase());
+
 	return;
+}
+
+void SDLRenderer::update(void) { 
+
+	SDL_RenderPresent(renderer);
+	SDL_SetRenderTarget(renderer, NULL);
+
+	drawTexture(&renderTexture, 0, 0);
+	SDL_RenderPresent(renderer);
+
+	SDL_SetRenderTarget(renderer, renderTexture.getBase());
 }
 
 void SDLRenderer::x_drawsprite(SDLSprite *sprite, int x, int y, int n)

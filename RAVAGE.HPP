@@ -8,6 +8,7 @@
 #include "types.h"
 #include "gclass.hpp"
 #endif
+#include "DISKIO.HPP"
 
 #ifndef AH_MAINMODULE
 #define _ext extern
@@ -136,6 +137,14 @@ _ext FilePool  filepool[4];      // A pool of all the needed data files.
 
 _ext Settings  settings;         // Environment settings.
 
+// --- Prototypes of "stuff.cpp"
+#define FADE_PALETTE       1        // Do palette fading.
+#define FADE_MUSIC         2        // Do music fading.
+#define FADE_ALL           (FADE_PALETTE | FADE_MUSIC)
+void fadeout(int);
+void fadein(void *p);
+
+
 #ifdef RAVAGE_PORT
 _ext Weapons   weapons;          // All possible Weapons.
 _ext Level     level;            // All Level Data en bloc.
@@ -185,14 +194,6 @@ void playback_loop(void);
 // Save Game I/O
 SaveGame *get_savegame(void);
 void put_savegame(SaveGame &);
-
-// --- Prototypes of "stuff.cpp"
-#define FADE_PALETTE       1        // Do palette fading.
-#define FADE_MUSIC         2        // Do music fading.
-#define FADE_ALL           (FADE_PALETTE | FADE_MUSIC)
-void fadeout(int);
-void fadein(void *p);
-void beauty(Font *, int &, int &, char *);
 
 // --- Prototypes of "face.cpp"
 #define MAINMENU        0

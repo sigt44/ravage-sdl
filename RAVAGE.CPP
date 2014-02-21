@@ -405,6 +405,61 @@ int ask_abort(void)
 	return 0;
 }
 
+void showorder(void)
+{
+   void  *f;
+   Font  *tiny, *blue;
+   char  *text;
+   int   x, y;
+
+// Load MOD.
+   s_loadmod("mods\\menu.uni");
+// Start music and fade in screen.
+   s_startmod();
+
+   tiny = new Font("fonts\\tiny.fnt");
+   blue = new Font("fonts\\blue.fnt");
+
+   f = loadfile("pic\\order.pcx");
+
+   text = (char *)loadfile("stuff\\order1.txt");
+
+   setscreen(0); clear(0);
+   showpcx(f, 20);
+   blue->print_c(XMAX/2, 0, "ORDER RAVAGE NOW");
+   x = 0; y = 30;
+   beauty(tiny, x, y, text);
+   unloadfile(text);
+
+   copyfull(); flippage();
+   //fadein(getpcxpal());
+
+   input_wait(); input_fire(); input_wait();
+   fadeout(FADE_PALETTE);
+
+   text = (char *)loadfile("stuff\\order2.txt");
+
+   clear(0);
+   showpcx(f, 20);
+   blue->print_c(XMAX/2, 0, "HOW TO ORDER");
+   x = 0; y = 30;
+   beauty(tiny, x, y, text);
+   unloadfile(text);
+
+   copyfull(); flippage();
+   //fadein(getpcxpal());
+
+   unloadfile(f);
+
+   input_wait(); input_fire(); input_wait();
+   fadeout(FADE_ALL);
+
+   delete blue;
+   delete tiny;
+
+   s_unloadmod();
+}
+
 int main(int argc, char *argv[])
 {
    int   request;          // Returned request from MAIN MENU.
@@ -439,7 +494,8 @@ int main(int argc, char *argv[])
 
    s_loadmod("level1\\LEVEL1.UNI");
 	// Start music
-   //s_startmod();
+   s_startmod();
+	s_setmodvol(64);
 	
 	//Load palette
 	void *p = (void *)loadfile("demo1\\DEMO1.CPA");
@@ -472,7 +528,7 @@ int main(int argc, char *argv[])
 
 	cout << "Press fire to exit." << endl;
    input_fire();
-
+	fadeout(FADE_ALL);
 
 	/*WavePool weapWaves;
 	weapWaves.load("level6\\LEVEL6.CWV");

@@ -25,6 +25,7 @@
 #include "diskio.hpp"
 
 // Global variables. World Access.
+#define HWLINEBYTES 80
 
 static int     ingraphics = 0;            // Already in Graphics mode ?
 
@@ -54,14 +55,6 @@ static struct {
    int      steps;                  // Number of fade steps already done.
 } _fade;                            // Allocate one FADE structure.
 static signed char   pcxpal[PALETTESIZE]; // Palette of last loaded PCX file.
-
-// -- Hardware screen definition.
-#define HWSCRBASE       0xa0000     // Screen base address (linear).
-#define HWXMAX          320
-#define HWYMAX          240
-#define HWLINEBYTES     80          // Bytes per line per page.
-#define HWPLANESIZE     (HWLINEBYTES*HWYMAX)
-#define HWSCRSIZE       0x10000     // 64kb screen memory.
 
 static unsigned int    currentpage;
 
@@ -760,7 +753,7 @@ void initgraphics(void)
 	
 	window.create("Ravage SDL", 1280, 960);
 
-	render.init(&window, 320, 240);
+	render.init(&window, HWXMAX, HWYMAX);
 
    if (ingraphics) return;
 
