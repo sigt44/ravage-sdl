@@ -15,7 +15,7 @@
 
 
 #define FADESPEED       2
-#define FADETIME			4000 //ms
+#define FADETIME			3000 //ms
 
 
 /*---------------------------------------------------------

@@ -552,6 +552,7 @@ int main(int argc, char *argv[])
 // Play loop.
    request = M_QUIT;
    do {
+			printf("What is happening %d\n", request);
       switch (request) {
       case M_PLAY:
 // Enable RECORDER if needed.
@@ -569,9 +570,9 @@ int main(int argc, char *argv[])
          break;
       }
       if (request == M_SOUND) {
-         request = menu(SOUNDMENU);
+         request = menu(SOUNDMENU, 0);
       } else {
-         request = menu(MAINMENU);
+         request = menu(MAINMENU, 0);
       }
    } while (request != M_QUIT);
 

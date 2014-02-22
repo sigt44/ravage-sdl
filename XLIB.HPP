@@ -103,23 +103,6 @@ public:
 #define FD_XSDATA       4
 
 
-// Background class.
-// This class is intended to help building small animations like
-// cursors or mouse pointers.
-#pragma pack(4)
-class Back {
-   int      valid;
-   int      x, y;             // Coordinates of saved blocks.
-   int      xs, ys;           // Size of block.
-   unsigned long    *buffer;          // Buffer to hold background data.
-public:
-   Back(int dxs, int dys);
-   ~Back();
-   void     save(int x, int y);
-   void     restore();
-   void     invalidate(void) { valid = 0; }
-};
-
 // Global variables.
 // Don't use name-mangling because of Turbo Assembler.
 extern "C" {

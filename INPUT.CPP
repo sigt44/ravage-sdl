@@ -224,10 +224,10 @@ void getmousexy(int &b, int &x, int &y)
 	//printf("%d %d ---> %d\n", x, y, b);
 
    //Constrain mouse position
-   if(x < m_limx0) ;
-   else if(x > m_limx1) ;
-   if(y < m_limy0) ;
-   else if (y > m_limy1) ;
+   if(x < m_limx0) x = m_limx0;
+   else if(x > m_limx1) x = m_limx1;
+   if(y < m_limy0) y = m_limy0;
+   else if (y > m_limy1) y = m_limy1;
    
 }
 

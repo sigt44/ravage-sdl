@@ -581,17 +581,17 @@ void Font::print_c(int x, int y, char *text)
 
 void Font::vanilla(int x, int y, char *text, int c)
 {
-	print(x, y, text);
+	print(x + BORDER, y, text);
 }
 
 void Font::vanilla_c(int x, int y, char *text, int c)
 {
    x -= textlen(text) / 2;
-	print(x, y, text);
+	print(x + BORDER, y, text);
 }
 
 void Font::vanilla_char(int x, int y, char ch, int c) {
-   render.x_drawsprite(&fontSprite, x, y, ch - anchor[FD_BASE]);
+   render.x_drawsprite(&fontSprite, x + BORDER, y, ch - anchor[FD_BASE]);
 }
 
 int Font::textlen(char *text)
@@ -613,28 +613,49 @@ int Font::textlen(char *text)
 
 Back::Back(int dxs, int dys)
 {
-   xs = ((dxs + 31) & 0xffe0) / 4;
+   xs = ((dxs + 31) & 0xffe0);
+   xs = dxs;
 //   xs = ((dxs + 15) & 0xfff0) / 4;
    ys = dys;
-   buffer = new unsigned long[xs*ys];
-   xs /= 4;
+	background.loadPointer(SDL_CreateTexture(render.getBase(), SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, xs, ys), true);
+
    valid = 0;
 }
 
 Back::~Back()
 {
-   if (buffer) delete []buffer;
+   background.destroy();
 }
 
 // Store background at (x, y).
 void Back::save(int dx, int dy)
 {
-   int   i, j;
+
+	x = dx; y = dy;
+	SDLTexture screen;
+
+	SDL_RenderPresent(render.getBase());
+	screen.loadPointer(render.createScreenTexture(), true);
+
+	render.setTarget(&background);
+	render.drawTexture(&screen, 0, 0, x, y, xs, ys);
+	SDL_RenderPresent(render.getBase());
+
+	render.setTarget(NULL);
+	
+
+	//printf("SCREEN TEST %d %d (%d, %d) vs (%d, %d):\n", x, y, xs, ys, background.getWidth(), background.getHeight());
+
+	screen.destroy();
+	valid = 1;
 // Use pointers to long for faster but harder job.
-   /*unsigned long *ptr = buffer;
+	  
+   /*
+	 int   i, j;
+	unsigned long *ptr = buffer;
    unsigned long *src;
 
-   x = (dx & 0xfff0) / 4; y = dy;
+   
    src = (unsigned long *)(vscreen+y*LINEBYTES+x);
    for (j = 0; j < ys; j++) {
       for (i = 0; i < xs; i++) {
@@ -645,17 +666,21 @@ void Back::save(int dx, int dy)
          src++;
       }
       src += (HWLINEBYTES/4-xs);
-   }*/
-   valid = 1;
+   }
+	valid = 1;*/
+ 
 }
 
 // restore background previously saved using Back::save.
 void Back::restore(void)
 {
+	if (!valid) return;
+
+	render.drawTexture(&background, x, y);
+/*
    int   i, j;
    unsigned long *ptr;
    unsigned long *dst;
-/*
    if (!valid) return;
    ptr = buffer;
    dst = (unsigned long *)(vscreen+y*LINEBYTES+x);
@@ -724,7 +749,7 @@ void initgraphics(void)
 
 	//IMG_Init();
 	
-	window.create("Ravage SDL", 1280, 960);
+	window.create("Ravage SDL", 640, 480);
 
 	render.init(&window, HWXMAX, HWYMAX);
 

@@ -60,7 +60,12 @@ class SDLTexture {
 
 public:
 	SDLTexture() { tex = NULL; }
-	~SDLTexture() { if(tex) error("Error texture not released properly."); }
+	~SDLTexture() { 
+		if(tex)
+		{
+			error("Error texture not released properly."); 
+		}
+	}
 
 	int loadFile(char *fileName);
 	int loadMemory(void *memory, int memSize);
@@ -134,7 +139,9 @@ public:
 		renderer = NULL;
 	}
 
-	~SDLRenderer() { if(renderer) error("Renderer not released correctly"); }
+	~SDLRenderer() { 
+		if(renderer) error("Renderer not released correctly"); 
+	}
 	
 	void init(SDLWindow *window, int logicalWidth, int logicalHeight);
 
@@ -160,6 +167,13 @@ public:
 	SDL_Renderer *getBase(void) { return renderer; }
 
 	void update(void);
+
+	void setTarget(SDLTexture *target) {
+		if(!target) SDL_SetRenderTarget(renderer, renderTexture.getBase());
+		else SDL_SetRenderTarget(renderer, target->getBase());
+
+		return;
+	}
 
 	void clear(void) { 	
 		SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE); 
@@ -208,6 +222,24 @@ public:
 };
 
 void beauty(Font *, int &, int &, char *);
+
+// Background class.
+// This class is intended to help building small animations like
+// cursors or mouse pointers.
+#pragma pack(4)
+class Back {
+   int      valid;
+   int      x, y;             // Coordinates of saved background area to update.
+   int      xs, ys;           // Size of background area.
+   SDLTexture background;		
+
+public:
+   Back(int dxs, int dys);
+   ~Back();
+   void     save(int x, int y);
+   void     restore();
+   void     invalidate(void) { valid = 0; }
+};
 
 #endif
 

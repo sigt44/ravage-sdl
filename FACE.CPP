@@ -255,11 +255,11 @@ static Menu shopmenu[] = {
 #define DEMOY           0
 #define DEMOXS          144        // x size of demo screen
 #define DEMOYS          YMAX        //
-#define MENUX           (DEMOX+DEMOXS+6)
+#define MENUX           (DEMOX+DEMOXS+6 + BORDER)
 #define MENUY           90
-#define MENUXS          (XMAX-MENUX)
+#define MENUXS          (XMAX-MENUX + BORDER)
 #define MENUYS          (YMAX-MENUY)
-#define MENUX1          (MENUX+MENUXS-1)
+#define MENUX1          (MENUX+MENUXS-1 + + BORDER)
 #define MENUY1          (MENUY+MENUYS-1)
 
 // Events.
@@ -341,7 +341,7 @@ static void destroybuttons(void)
 
    while (anchor) {
       keep = anchor->next;
-		b->sSpr.destroy();
+		//b->sSpr.destroy();
       delete anchor;
       anchor = keep;
    }
@@ -757,13 +757,14 @@ int menu(int mode, int p)
       demo();
       if (fast) {
 // Restore title.
-         render.x_drawsprite(&sHead, 100, 12, 0);
+         render.x_drawsprite(&sHead, 100 + BORDER, 12, 0);
 // Back to menu screen.
          //setscreen(scr);
 // Restore mouse pointer background.
          back->restore();
       }
       b = 0;
+		input_update();
       if (mouse) getmousexy(b, x, y);
       if (joypad) {
          getjoypad(joy_x, joy_y, joy_fire);
@@ -808,7 +809,9 @@ int menu(int mode, int p)
 
 // Flip (aber ned z'knapp).
       if (fast) render.update();
-      fast = tmp;
+      fast = 1;
+		//printf("tmp: %d\n", tmp);
+		SDL_Delay(32);
 #ifdef DEBUG
       if (key[0x20]) debugint();
 #endif
