@@ -533,7 +533,7 @@ void setscreen(void *screen)
 // Allocate another virtual screen.
 void *allocscreen(void)
 {
-
+	return NULL;
 }
 
 // Free virtual screen previously allocated with "allocscreen".
@@ -631,7 +631,7 @@ void Back::save(int dx, int dy)
 {
    int   i, j;
 // Use pointers to long for faster but harder job.
-   unsigned long *ptr = buffer;
+   /*unsigned long *ptr = buffer;
    unsigned long *src;
 
    x = (dx & 0xfff0) / 4; y = dy;
@@ -645,7 +645,7 @@ void Back::save(int dx, int dy)
          src++;
       }
       src += (HWLINEBYTES/4-xs);
-   }
+   }*/
    valid = 1;
 }
 
@@ -655,7 +655,7 @@ void Back::restore(void)
    int   i, j;
    unsigned long *ptr;
    unsigned long *dst;
-
+/*
    if (!valid) return;
    ptr = buffer;
    dst = (unsigned long *)(vscreen+y*LINEBYTES+x);
@@ -677,7 +677,7 @@ void Back::restore(void)
          dst++;
       }
       dst += (HWLINEBYTES/4-xs);
-   }
+   }*/
 }
 
 // ------------------------------------------------------------------

@@ -42,7 +42,7 @@
 #include "error.hpp"
 #include "memory.hpp"
 #include "WINDOWS.HPP"
-
+#include "SDL_BASE.HPP"
 
 #include "input.hpp"
 #include "diskio.hpp"
@@ -50,7 +50,7 @@
 #include "sound.hpp"
 
 #include "XLIB.HPP"
-#include "SDL_BASE.HPP"
+
 
 #ifdef RAVAGE_PORT
 #include "types.h"
@@ -279,7 +279,6 @@ static void powerup(void)
 	// Enter graphics.
    initgraphics(); reg_exit(shutgraphics);
 
-/*
 // Init OBJECT system.
    initobjects(); reg_exit(shutobjects);
    shadow_level(settings.shadows);
@@ -307,7 +306,7 @@ static void powerup(void)
    recorder = 0;
    if (incmd("/rec")) recorder = 1;
 #endif
-   */
+
 }
 
  int sdl_drawsprite(Sprite *sprite, int x, int y, int n)
@@ -526,13 +525,13 @@ int main(int argc, char *argv[])
 	sdl_drawpcx("pic\\TITLE.PCX");
 	sdl_drawpcx("pic\\ORDER.PCX");
 	*/
-	sdl_ask_abort();
+	/*sdl_ask_abort();
 
 	cout << "Press fire to exit." << endl;
 	input_wait();
    input_fire();
 	fadeout(FADE_ALL);
-	sdl_showorder();
+	sdl_showorder();*/
 
 	/*WavePool weapWaves;
 	weapWaves.load("level6\\LEVEL6.CWV");
@@ -546,7 +545,7 @@ int main(int argc, char *argv[])
 		s_update();
 	}*/
 
-#ifdef DONT_DEF
+
 // Show TITLE screen.
    title();
 
@@ -559,10 +558,10 @@ int main(int argc, char *argv[])
          #ifdef RECORDER
             if (recorder) rec_enable();
          #endif
-         play(0);    // Play NEW game.
+         //play(0);    // Play NEW game.
          break;
       case M_LOAD:
-         play(1);    // Load game.
+         //play(1);    // Load game.
          break;
       case M_SOUND:  // Reinitialize Sound System.
          s_setmodvol(settings.mod_vol);
@@ -575,7 +574,6 @@ int main(int argc, char *argv[])
          request = menu(MAINMENU);
       }
    } while (request != M_QUIT);
-#endif
 
 // Close FilePool.
    filepool[3].close();

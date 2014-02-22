@@ -1,6 +1,7 @@
 
 #ifndef AH_XLIB
 #define AH_XLIB
+#include "SDL.h"
 
 // -- Hardware screen definition.
 #define HWXMAX          320

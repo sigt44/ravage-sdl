@@ -3,8 +3,9 @@
 #define AH_RAVAGE
 
 #include "types.h"
-//#include "gclass.hpp"
+#include "gclass.hpp"
 #include "DISKIO.HPP"
+#include "SDL_BASE.HPP"
 
 #ifndef AH_MAINMODULE
 #define _ext extern
@@ -46,7 +47,6 @@
 #define CHEAT_MONEY     4        // Unlimited money.
 #define CHEAT_NOMONEY   8        // Don't add money (used in shop mode).
 
-#ifdef DONT_DEF
 // Define the GameState structure.
 // This one holds data to track the state of the current game being played.
 struct GameState {
@@ -104,8 +104,6 @@ struct SaveGame {
    }           player[MAXPLAYERS];
 };
 
-#endif
-
 // Keep track of several machine settings.
 // This structure will be saved to disk.
 struct Settings {
@@ -140,7 +138,20 @@ _ext Settings  settings;         // Environment settings.
 void fadeout(int);
 void fadein(void *p);
 
-#ifdef DONT_DEF
+// --- Prototypes of "face.cpp"
+#define MAINMENU        0
+#define SHOPMENU        4
+#define SOUNDMENU       8
+
+#define M_PLAY          1
+#define M_LOAD          2
+#define M_SOUND         3
+#define M_NONE          99
+#define M_QUIT          -1
+
+void title(void);
+int menu(int mode, int p = 0);
+
 _ext Weapons   weapons;          // All possible Weapons.
 _ext Level     level;            // All Level Data en bloc.
                                  //                  /\
@@ -151,12 +162,6 @@ _ext GameState gstate;           // Described above.
 _ext PlayerState player[MAXPLAYERS];
 _ext int       cheatlevel;
 _ext int       start_stage;
-#ifdef DEBUG
-_ext int       recorder;         // 1 if GamePlay recorder is enabled.
-#endif
-_ext volatile int cpu_power;     // CPU Power measured at start up.
-
-extern volatile int timer_ticks;
 
 // --- Prototypes of "gengine.cpp"
 Weapon *release_weapon(int player, int n, int x, int y);
@@ -189,19 +194,14 @@ void playback_loop(void);
 // Save Game I/O
 SaveGame *get_savegame(void);
 void put_savegame(SaveGame &);
+#ifdef DONT_DEF
 
-// --- Prototypes of "face.cpp"
-#define MAINMENU        0
-#define SHOPMENU        4
-#define SOUNDMENU       8
+#ifdef DEBUG
+_ext int       recorder;         // 1 if GamePlay recorder is enabled.
+#endif
+_ext volatile int cpu_power;     // CPU Power measured at start up.
 
-#define M_PLAY          1
-#define M_LOAD          2
-#define M_SOUND         3
-#define M_NONE          99
-#define M_QUIT          -1
+extern volatile int timer_ticks;
 
-void title(void);
-int menu(int mode, int p = 0);
 #endif
 #endif
