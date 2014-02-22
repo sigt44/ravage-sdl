@@ -9,6 +9,8 @@
 #include "input.hpp"
 #include "ravage.hpp"
 #include "SDL_BASE.HPP"
+#include "SOUND.HPP"
+#include "SOUND_SDL.HPP"
 
 #ifdef DEBUG
 extern void debugint(void);
@@ -22,9 +24,9 @@ static   SaveGame savegame;
 // Game RECORDER variables.
 
 struct Record {
-   schar    dx;
-   schar    dy;
-   schar    fire;
+   signed char    dx;
+   signed char    dy;
+   signed char    fire;
 };
 static   Record   *record;       // Pointer to recording buffer.
 static   int      maxrecords;    // Size of allocated recording buffer.
@@ -55,10 +57,10 @@ public:
 // Initialize needed sprites & fonts.
    void init(void)
    {
-		label.load((Sprite *)loadfile("pic\\pinfo.spr"));
-      life.load((Sprite *)loadfile("pic\\life.spr"));
+		label.load((Sprite *)loadfile("pic\\pinfo.spr", NULL));
+      life.load((Sprite *)loadfile("pic\\life.spr", NULL));
       digit = new Font("fonts\\yellow.fnt");
-      cpubanner.load((Sprite *)loadfile("pic\\cpu.spr"));
+      cpubanner.load((Sprite *)loadfile("pic\\cpu.spr", NULL));
       #ifdef STATS
          tiny = new Font("fonts\\tiny.fnt");
       #endif
@@ -716,13 +718,15 @@ static void showstartlogo(void)
 static void showendlogo(void)
 {
    Sprite *gover;
+	SDLSprite sGover;
 
 // Load needed stuff into memory.
-   gover = (Sprite *)loadfile("pic\\gover.spr");
-   x_drawsprite(gover, (XMAX - gover->xs)/2, 100, 0);
-   copyscreen();
-   flippage();
+   gover = (Sprite *)loadfile("pic\\gover.spr", NULL);
+	sGover.load(gover, false);
+   render.x_drawsprite(&sGover, (XMAX - gover->xs)/2, 100, 0);
+	render.update();
    unloadfile(gover);
+	sGover.destroy();
 
 // Wait for fire button being released & pressed again.
    input_wait();
@@ -735,21 +739,23 @@ static void showendlogo(void)
 static void showhappyend(void)
 {
    void  *f;
+	int size = 0;
 
 // Load MOD.
    s_loadmod("mods\\happy.uni");
 // Start music and fade in screen.
    s_startmod();
 // Show HAPPY picture
-   f = loadfile("pic\\happy.pcx");
-   setscreen(0); clear(0);
-   showpcx(f, 0);
+   f = loadfile("pic\\happy.pcx", &size);
+   render.clear(0, 0, 0);
+	render.update();
+
+   showpcx(f, 0, size);
    unloadfile(f);
-   copyfull(); flippage();
+   render.update();
 
 // Some delay before we fadein the picture.
-   timer_ticks = 0;
-   while (timer_ticks < 3*60);
+	SDL_Delay(10000);
 
    fadein(getpcxpal());
    input_wait(); input_fire(); input_wait();
@@ -851,7 +857,7 @@ static int ask_abort(void)
    return key[KEY_ESC] ? -1 : 0;
 }
 
-static getlevelname(int n, char *name)
+static void getlevelname(int n, char *name)
 {
    switch (n) {
       case 1 : strcpy(name, "level1\\level1"); break;

@@ -374,7 +374,7 @@ int sdl_drawpcx(char *name)
 	return 0;
 }
 
-int ask_abort(void)
+int sdl_ask_abort(void)
 {
    Font     *tiny;
    Sprite   *escbox;
@@ -382,7 +382,7 @@ int ask_abort(void)
 	int      x, y, fire0 = 0, fire1 = 0;
 
    tiny = new Font("fonts\\tiny.fnt");
-   escbox = (Sprite *) loadfile("pic\\escbox.spr");
+   escbox = (Sprite *) loadfile("pic\\escbox.spr", NULL);
 	escSprite.load(escbox, false);
 
    y = (YMAX-escbox->ys)/2;
@@ -405,12 +405,13 @@ int ask_abort(void)
 	return 0;
 }
 
-void showorder(void)
+void sdl_showorder(void)
 {
    void  *f;
    Font  *tiny, *blue;
    char  *text;
    int   x, y;
+	int size = 0;
 
 // Load MOD.
    s_loadmod("mods\\menu.uni");
@@ -420,38 +421,39 @@ void showorder(void)
    tiny = new Font("fonts\\tiny.fnt");
    blue = new Font("fonts\\blue.fnt");
 
-   f = loadfile("pic\\order.pcx");
+   f = loadfile("pic\\order.pcx", &size);
 
-   text = (char *)loadfile("stuff\\order1.txt");
+   text = (char *)loadfile("stuff\\order1.txt", NULL);
 
-   setscreen(0); clear(0);
-   showpcx(f, 20);
+   render.clear(0, 0, 0);
+
+   showpcx(f, 20, size);
    blue->print_c(XMAX/2, 0, "ORDER RAVAGE NOW");
    x = 0; y = 30;
    beauty(tiny, x, y, text);
    unloadfile(text);
 
-   copyfull(); flippage();
-   //fadein(getpcxpal());
+   render.update();
+   fadein(getpcxpal());
 
-   input_wait(); input_fire(); input_wait();
+   input_fire();
    fadeout(FADE_PALETTE);
 
-   text = (char *)loadfile("stuff\\order2.txt");
+   text = (char *)loadfile("stuff\\order2.txt", NULL);
 
-   clear(0);
-   showpcx(f, 20);
+   render.clear(0, 0, 0);
+   showpcx(f, 20, size);
    blue->print_c(XMAX/2, 0, "HOW TO ORDER");
    x = 0; y = 30;
    beauty(tiny, x, y, text);
    unloadfile(text);
 
-   copyfull(); flippage();
-   //fadein(getpcxpal());
+   render.update();
+   fadein(getpcxpal());
 
    unloadfile(f);
 
-   input_wait(); input_fire(); input_wait();
+   input_fire();
    fadeout(FADE_ALL);
 
    delete blue;
@@ -498,7 +500,7 @@ int main(int argc, char *argv[])
 	s_setmodvol(64);
 	
 	//Load palette
-	void *p = (void *)loadfile("demo1\\DEMO1.CPA");
+	void *p = (void *)loadfile("demo1\\DEMO1.CPA", NULL);
 	palette.set(p);
 	delete p;
 
@@ -524,11 +526,13 @@ int main(int argc, char *argv[])
 	sdl_drawpcx("pic\\TITLE.PCX");
 	sdl_drawpcx("pic\\ORDER.PCX");
 	*/
-	ask_abort();
+	sdl_ask_abort();
 
 	cout << "Press fire to exit." << endl;
+	input_wait();
    input_fire();
 	fadeout(FADE_ALL);
+	sdl_showorder();
 
 	/*WavePool weapWaves;
 	weapWaves.load("level6\\LEVEL6.CWV");
@@ -541,7 +545,8 @@ int main(int argc, char *argv[])
 		sound_Report();
 		s_update();
 	}*/
-#ifdef NO_DEF
+
+#ifdef DONT_DEF
 // Show TITLE screen.
    title();
 
@@ -560,11 +565,8 @@ int main(int argc, char *argv[])
          play(1);    // Load game.
          break;
       case M_SOUND:  // Reinitialize Sound System.
-         /*shutsound();
-         initsound(settings.sound_device, settings.mix_freq);
-         s_setvoices(settings.voices);
          s_setmodvol(settings.mod_vol);
-         s_setwavvol(settings.wav_vol);*/
+         s_setwavvol(settings.wav_vol);
          break;
       }
       if (request == M_SOUND) {

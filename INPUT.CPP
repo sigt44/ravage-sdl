@@ -53,7 +53,15 @@ static int  key_fire = SDL_SCANCODE_SPACE;
 ---------------------------------------------------------*/
 void keyboard_wait(void)
 {
-	//SDL_PumpEvents();
+	int x, y, fire;
+
+	do
+	{
+		input_update();
+		getkeyboard(x, y, fire);
+	}
+	while(x || y || fire);
+
 }
 
 void getkeyboard(int &x, int &y, int &fire)
@@ -103,10 +111,6 @@ static   int   x0 = -32768/8, y0 = -32767/8, x1 = 32767/8, y1 = 32767/8;        
 
 static int measure(int &x, int &y, int &fire)
 {
-   int      x_count, y_count;
-   int      timeout;
-   int      tmp;
-
 // Start new measure.
 	x = SDL_JoystickGetAxis(joystick, 0);
 	y = SDL_JoystickGetAxis(joystick, 1);
@@ -129,12 +133,11 @@ void joypad_wait(void)
    int   i;
    int   x, y, fire;
 
-   for (i = 0; i < 10; i++) {
-      do {
-         measure(x, y, fire);
-      } while (fire);
-      SDL_Delay(10);
-   }
+   do {
+		input_update();
+      measure(x, y, fire);
+   } while (fire);
+   SDL_Delay(10);
 }
 
 
@@ -271,7 +274,11 @@ void mouse_wait(void)
    int   x, y, b;
 
    getmousexy(b, x, y);
-   while (b) getmousexy(b, x, y);
+   while (b) 
+	{
+		input_update();
+		getmousexy(b, x, y);
+	}
 }
 
 void setmousesens(int sens)

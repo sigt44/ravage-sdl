@@ -23,7 +23,7 @@ void SDLSprite::load(Sprite *sp, bool isOwner)
 
 void SDLSprite::convert(void)
 {
-	int x,y, i, mod;
+	int x, y, mod;
 	char *bytePix = NULL;
 	Uint32 *surfacePix = NULL;
 	char pix;
@@ -181,7 +181,17 @@ void SDLRenderer::init(SDLWindow *window, int logicalWidth, int logicalHeight)
 	SDL_RenderClear(renderer);
 	SDL_RenderPresent(renderer);
 
+	//Setup target to another texture
 	SDL_SetRenderTarget(renderer, renderTexture.getBase());
+
+	//Load fade texture
+	SDL_Surface *fadeSurface = SDL_CreateRGBSurface(0, HWXMAX, HWYMAX, 32, 0, 0, 0, 0);
+
+	fadeTexture.loadPointer(SDL_CreateTextureFromSurface(render.getBase(), fadeSurface), true);
+	SDL_SetTextureBlendMode(fadeTexture.getBase(), SDL_BLENDMODE_BLEND);
+
+	SDL_FreeSurface(fadeSurface);
+
 
 	return;
 }
@@ -195,6 +205,16 @@ void SDLRenderer::update(void) {
 	SDL_RenderPresent(renderer);
 
 	SDL_SetRenderTarget(renderer, renderTexture.getBase());
+}
+
+void SDLRenderer::fade(SDLTexture *background, int a)
+{
+	fadeTexture.setAlpha(a);
+
+	render.drawTexture(background, 0, 0);
+	render.drawTexture(&fadeTexture, 0, 0);
+
+	return;
 }
 
 void SDLRenderer::x_drawsprite(SDLSprite *sprite, int x, int y, int n)

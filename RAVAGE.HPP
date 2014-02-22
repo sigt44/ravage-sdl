@@ -2,12 +2,8 @@
 #ifndef AH_RAVAGE
 #define AH_RAVAGE
 
-
-
-#ifdef RAVAGE_PORT
 #include "types.h"
-#include "gclass.hpp"
-#endif
+//#include "gclass.hpp"
 #include "DISKIO.HPP"
 
 #ifndef AH_MAINMODULE
@@ -50,8 +46,7 @@
 #define CHEAT_MONEY     4        // Unlimited money.
 #define CHEAT_NOMONEY   8        // Don't add money (used in shop mode).
 
-#ifdef RAVAGE_PORT
-
+#ifdef DONT_DEF
 // Define the GameState structure.
 // This one holds data to track the state of the current game being played.
 struct GameState {
@@ -110,6 +105,7 @@ struct SaveGame {
 };
 
 #endif
+
 // Keep track of several machine settings.
 // This structure will be saved to disk.
 struct Settings {
@@ -144,8 +140,7 @@ _ext Settings  settings;         // Environment settings.
 void fadeout(int);
 void fadein(void *p);
 
-
-#ifdef RAVAGE_PORT
+#ifdef DONT_DEF
 _ext Weapons   weapons;          // All possible Weapons.
 _ext Level     level;            // All Level Data en bloc.
                                  //                  /\
@@ -209,5 +204,4 @@ void put_savegame(SaveGame &);
 void title(void);
 int menu(int mode, int p = 0);
 #endif
-
 #endif

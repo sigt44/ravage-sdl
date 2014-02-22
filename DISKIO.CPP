@@ -132,12 +132,15 @@ void *myFile::getMemory(void)
 
 
 
-void *loadfile(char *f)
+void *loadfile(char *f, int *size)
 {
    myFile   myfile;
    void     *ptr;
 
    if (!myfile.open(f)) error("file not found (loadfile): ", f);
+
+	if(size) *size = myfile.getsize();
+
    ptr = new char[myfile.getsize()];
    myfile.read(ptr, myfile.getsize());
    myfile.close();

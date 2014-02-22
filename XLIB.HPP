@@ -160,7 +160,7 @@ void clearregion(int x0, int y0, int xs, int ys);
 void clear(int c);
 
 // Misc.
-void showpcx(void *pic, int line);
+void showpcx(void *pic, int line, int size);
 void *getpcxpal(void);
 void pixelate(int dir);
 void retrace();

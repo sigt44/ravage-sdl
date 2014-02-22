@@ -184,7 +184,7 @@ void Palette::calcshadows(void *p, int v)
    int   r0, g0, b0;       // Current colour we are looking for a shadow for.
    int   r1, g1, b1;       // Some temporaries.
    int   rd, gd, bd;       // Even more temporaries.
-   int   rlen;             // Requested length.
+   unsigned int   rlen;             // Requested length.
    int   len;              // Length of vector;
    int   best, min;        // Best found.
 
@@ -394,46 +394,19 @@ void doeffects(void)
  Description:
  Unpack a PCX file into VIRTUAL screen. Starting at "line".
 ---------------------------------------------------------*/
-void showpcx(void *pic, int line)
+void showpcx(void *pic, int line, int size)
 {
-   int      size, sizecount;
-   int      data, count;
-   int      i, plane;
-   unsigned char    *pos;
-   unsigned char    *scrptr;
+	SDLTexture pcxTexture;
 
+	pcxTexture.loadMemory(pic, size);
+	
+	render.drawTexture(&pcxTexture, 0, line);
 
-   size = 320 * (((unsigned short *)pic)[5] + 1);   // Get picture size.
-   sizecount = 0;
-   pos = (unsigned char *)pic + 128;           // Skip Header.
+	render.update();
 
-   scrptr = _vscreen + line*LINEBYTES;
-   plane = 0;
-// Decode picture.
-   while (sizecount < size) {
-      count = *pos; pos++;
-      if ((count & 0xc0) == 0xc0) {
-         count &= 0x3f;
-         data = *pos; pos++;
-      } else {
-         data = count; count = 1;
-      }
+	pcxTexture.destroy();
 
-      for (i = 0; i < count; i++) {
-         scrptr[plane] = data;
-         sizecount++;
-         if ((plane += PLANESIZE) >= SCREENSIZE) {
-            plane = 0;
-            scrptr++;
-         }
-      }
-   }
-
-// Load palette.
-   pos++;
-   for (i = 0; i < PALETTESIZE; i++, pos++) {
-      pcxpal[i] = (unsigned char)(*pos) >> 2;
-   }
+	return;
 }
 
 void *getpcxpal(void)
@@ -578,7 +551,7 @@ void freescreen(void *scr)
 //-------------------------------------------------------------------
 Font::Font(char *file)
 {
-   anchor = (long *)loadfile(file);
+   anchor = (long *)loadfile(file, NULL);
    xs = &anchor[FD_XSDATA];
 
    sprite = (Sprite *)(anchor+FD_XSDATA+anchor[FD_NCHARS]);
@@ -717,7 +690,7 @@ void SpritePool::load(char *file)
    unsigned long  ptr;
 
 // Set some pointers to easy access data.
-   anchor = (unsigned long *) loadfile(file);
+   anchor = (unsigned long *) loadfile(file, NULL);
    ptr = (unsigned long)anchor;
 
 // Get the number of pointers to adjust.

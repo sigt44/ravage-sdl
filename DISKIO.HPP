@@ -52,7 +52,7 @@ public:
    void close(void);
 };
 
-void *loadfile(char *);
+void *loadfile(char *f, int *size);
 void unloadfile(void *);
 
 void initfilesystem(void);

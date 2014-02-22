@@ -125,6 +125,8 @@ public:
 class SDLRenderer {
 	SDL_Renderer *renderer;
 	SDLTexture renderTexture; //Render onto a texture first before rendering to the screen
+	SDLTexture fadeTexture; //Black fading texture
+
 
 public:
 
@@ -153,6 +155,8 @@ public:
 	void drawTexture(SDLTexture *texture, int x, int y, int cx, int cy, int cw, int ch);
 	void drawTexture(SDLTexture *texture, int x, int y);
 
+	void fade(SDLTexture *background, int a);
+
 	SDL_Renderer *getBase(void) { return renderer; }
 
 	void update(void);
@@ -172,6 +176,7 @@ public:
 		if(renderer) 
 		{
 			renderTexture.destroy();
+			fadeTexture.destroy();
 
 			SDL_DestroyRenderer(renderer);
 			renderer = NULL;
