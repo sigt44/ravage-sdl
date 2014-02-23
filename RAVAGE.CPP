@@ -493,10 +493,10 @@ int main(int argc, char *argv[])
 	// Test music
 	// Load MOD.
 
-   s_loadmod("level1\\LEVEL1.UNI");
+   //s_loadmod("level1\\LEVEL1.UNI");
 	// Start music
-   s_startmod();
-	s_setmodvol(64);
+   //s_startmod();
+	//s_setmodvol(64);
 	
 	//Load palette
 	void *p = (void *)loadfile("demo1\\DEMO1.CPA", NULL);
@@ -559,10 +559,10 @@ int main(int argc, char *argv[])
          #ifdef RECORDER
             if (recorder) rec_enable();
          #endif
-         //play(0);    // Play NEW game.
+         play(0);    // Play NEW game.
          break;
       case M_LOAD:
-         //play(1);    // Load game.
+         play(1);    // Load game.
          break;
       case M_SOUND:  // Reinitialize Sound System.
          s_setmodvol(settings.mod_vol);

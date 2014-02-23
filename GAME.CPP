@@ -7,10 +7,11 @@
 #include "memory.hpp"
 #include "error.hpp"
 #include "input.hpp"
-#include "ravage.hpp"
 #include "SDL_BASE.HPP"
 #include "SOUND.HPP"
 #include "SOUND_SDL.HPP"
+#include "ravage.hpp"
+#include "WINDOWS.HPP"
 
 #ifdef DEBUG
 extern void debugint(void);
@@ -57,10 +58,10 @@ public:
 // Initialize needed sprites & fonts.
    void init(void)
    {
-		label.load((Sprite *)loadfile("pic\\pinfo.spr", NULL));
-      life.load((Sprite *)loadfile("pic\\life.spr", NULL));
+		label.load((Sprite *)loadfile("pic\\pinfo.spr", NULL), false);
+      life.load((Sprite *)loadfile("pic\\life.spr", NULL), false);
       digit = new Font("fonts\\yellow.fnt");
-      cpubanner.load((Sprite *)loadfile("pic\\cpu.spr", NULL));
+      cpubanner.load((Sprite *)loadfile("pic\\cpu.spr", NULL), false);
       #ifdef STATS
          tiny = new Font("fonts\\tiny.fnt");
       #endif
@@ -72,6 +73,9 @@ public:
       unloadfile(life.getBase());
       delete digit;
       unloadfile(cpubanner.getBase());
+		label.destroy();
+		life.destroy();
+		cpubanner.destroy();
       #ifdef STATS
          delete tiny;
       #endif
@@ -469,7 +473,7 @@ static int playlevel(void)
    int      dx, dy, fire;     // Player commands.
    int      delay;            // Delay value.
    int      master = 0;       // Cause of game abort.
-   int      fast;             // Used in determining frame speed.
+   int      fast = 1;             // Used in determining frame speed.
    int      tmp;              // Some really unimportant temporary values.
 #ifdef DEBUG
    int   singlestep = 0;
@@ -485,9 +489,6 @@ static int playlevel(void)
       while (gstate.attack->count < gstate.frame) gstate.attack++;
    }
 */
-// Wait a bit so we start in sync with the timer.
-   timer_ticks = 0;
-   while (timer_ticks < 2); timer_ticks = 0;
 
 // Start a nearly endless loop.
    do {
@@ -524,10 +525,15 @@ static int playlevel(void)
       newwave();
 // Calculate enemy's next step.
       enemystep();
+
+		input_update();
+		s_update();
+
 // Spend some CPU time to handle the brave fighters.
       if (player[0].active) {
 // Get control commands. (left, right, up, down, fire).
          player[0].control(dx, dy, fire);
+			printf("dx %d dy %d fire %d\n", dx, dy, fire);
 #ifdef RECORDER
 // Record player movement if RECORDER is enabled.
          if (rec_enabled && (rec_count<maxrecords)) {
@@ -637,12 +643,7 @@ static int playlevel(void)
 // Write Player information on top of the whole mess.
          if (player[0].active) pinfo.display(0);
          if (player[1].active) pinfo.display(1);
-// Display CPU USAGE if setting is on.
-         if (settings.cpu_usage) {
-            cpu = 100 - (cpu / cpu_power);
-            if (cpu < 0) cpu = 0;
-            pinfo.cpu(cpu);
-         }
+
          #ifdef STATS
 // Display DEBUG statistics if in DEBUG mode.
             pinfo.debug();
@@ -652,33 +653,34 @@ static int playlevel(void)
          #ifdef DEBUG
             if (singlestep != 2) while (timer_ticks < 1) cpu++;
          #else
-            while (timer_ticks < 1) cpu++;
+      
          #endif
-         copyscreen();
       }
       tmp = (settings.frate==1) || ((settings.frate==0) && (gstate.frame&1));
 // Another DEBUG feature. Don't wait for retrace if key 'A' has been pressed.
       #ifdef DEBUG
          if (singlestep != 2) while (timer_ticks < 2) cpu++;
       #else
-         while (timer_ticks < 2) cpu++;
+
       #endif
       if (!fast) cpu /= 2;
-      timer_ticks = 0;
+
 // Flip pages for smooth animation.
       if (fast) {
-         flippage();
+         render.update();
       }
-      fast = tmp;
+      fast = 1;
 
-// Start palette fading if we are just in time.
+/*// Start palette fading if we are just in time.
       if (delay == 32) {
 // Fade to white if BOSS has been killed.
          if (master == 2) palette.fade(52, 52, 52, 2);
-      }
+      }*/
       if (delay) --delay;
       if (master && (delay == 0)) return master;
       if (key[KEY_ESC]) return -1;
+
+		SDL_Delay(32);
    } while (1);
 
 }
@@ -688,27 +690,30 @@ static int playlevel(void)
 static void showstartlogo(void)
 {
    Sprite *ready;
+	SDLSprite sReady;
    Font   *font;
 
 // Clear screen.
-   clear(0); copyfull(); flippage(); copyfull();
+   render.clear();
 
 // Load needed stuff into memory.
-   ready = (Sprite *)loadfile("pic\\ready.spr");
+   ready = (Sprite *)loadfile("pic\\ready.spr", NULL);
+	sReady.load(ready, false);
    font = new Font("fonts\\blue.fnt");
 // Draw gamescreen.
    drawscreen();
    font->print_c(XMAX/2, 40, level.descript->text);
-   x_drawsprite(ready, (XMAX - ready->xs)/2, 100, 0);
+   render.x_drawsprite(&sReady, (XMAX - ready->xs)/2, 100, 0);
    font->print_c(XMAX/2, 200, "HIT FIRE");
 //   pixelate(1);
-   copyscreen();
-   flippage();
+	render.update();
 // 'GET READY' is no longer used.
    delete font;
    unloadfile(ready);
 // Fade in palette.
    fadein(level.palette);
+
+	sReady.destroy();
 
 // Wait for fire button being released & pressed again.
    input_wait(); input_fire(); input_wait();
@@ -833,24 +838,28 @@ static int ask_abort(void)
 {
    Font     *tiny;
    Sprite   *escbox;
+	SDLSprite sEscbox;
    int      x, y, fire0 = 0, fire1 = 0;
 
    tiny = new Font("fonts\\tiny.fnt");
-   escbox = (Sprite *) loadfile("pic\\escbox.spr");
+   escbox = (Sprite *) loadfile("pic\\escbox.spr", NULL);
+	sEscbox.load(escbox, false);
 
    y = (YMAX-escbox->ys)/2;
-   x_drawsprite(escbox, (XMAX-escbox->xs)/2, y, 0);
+   render.x_drawsprite(&sEscbox, (XMAX-escbox->xs)/2, y, 0);
    y += 15;
    tiny->vanilla_c(XMAX/2, y, "Press ESC again to abort the game.", 12);
    y += 15;
    tiny->vanilla_c(XMAX/2, y, "Fire to continue.", 15);
-   copyscreen(); flippage();
+   render.update();
 
    unloadfile(escbox);
    delete tiny;
+	sEscbox.destroy();
 
    input_wait();
    do {
+		input_update();
       if (player[0].active) player[0].control(x, y, fire0);
       if (player[1].active) player[1].control(x, y, fire1);
    } while (!fire0 && !fire1 && !key[KEY_ESC]);

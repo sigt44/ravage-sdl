@@ -581,17 +581,17 @@ void Font::print_c(int x, int y, char *text)
 
 void Font::vanilla(int x, int y, char *text, int c)
 {
-	print(x + BORDER, y, text);
+	print(x, y, text);
 }
 
 void Font::vanilla_c(int x, int y, char *text, int c)
 {
    x -= textlen(text) / 2;
-	print(x + BORDER, y, text);
+	print(x, y, text);
 }
 
 void Font::vanilla_char(int x, int y, char ch, int c) {
-   render.x_drawsprite(&fontSprite, x + BORDER, y, ch - anchor[FD_BASE]);
+   render.x_drawsprite(&fontSprite, x, y, ch - anchor[FD_BASE]);
 }
 
 int Font::textlen(char *text)
@@ -613,9 +613,7 @@ int Font::textlen(char *text)
 
 Back::Back(int dxs, int dys)
 {
-   xs = ((dxs + 31) & 0xffe0);
    xs = dxs;
-//   xs = ((dxs + 15) & 0xfff0) / 4;
    ys = dys;
 	background.loadPointer(SDL_CreateTexture(render.getBase(), SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, xs, ys), true);
 
@@ -631,43 +629,37 @@ Back::~Back()
 void Back::save(int dx, int dy)
 {
 
-	x = dx; y = dy;
+	x = dx + BORDER; y = dy;
 	SDLTexture screen;
 
+	//Update screen texture
 	SDL_RenderPresent(render.getBase());
+	//Grab screen
 	screen.loadPointer(render.createScreenTexture(), true);
 
+	//Draw specific part of screen to background texture
 	render.setTarget(&background);
 	render.drawTexture(&screen, 0, 0, x, y, xs, ys);
 	SDL_RenderPresent(render.getBase());
 
 	render.setTarget(NULL);
 	
-
-	//printf("SCREEN TEST %d %d (%d, %d) vs (%d, %d):\n", x, y, xs, ys, background.getWidth(), background.getHeight());
+	/*printf("SCREEN TEST %d %d (%d, %d) vs (%d, %d):\n", x, y, xs, ys, background.getWidth(), background.getHeight());
+	puts("Draw screen");
+	render.clear();
+	render.drawTexture(&screen, 10, 10);
+	render.update();
+	SDL_Delay(5000);
+	puts("Draw background");
+	render.clear();
+	render.drawTexture(&background, 10, 10);
+	render.update();
+	SDL_Delay(5000);
+	render.drawTexture(&screen, 0, 0);
+	*/
 
 	screen.destroy();
 	valid = 1;
-// Use pointers to long for faster but harder job.
-	  
-   /*
-	 int   i, j;
-	unsigned long *ptr = buffer;
-   unsigned long *src;
-
-   
-   src = (unsigned long *)(vscreen+y*LINEBYTES+x);
-   for (j = 0; j < ys; j++) {
-      for (i = 0; i < xs; i++) {
-         *ptr++ = *src;
-         *ptr++ = *(src + PLANESIZE/4 * 1);
-         *ptr++ = *(src + PLANESIZE/4 * 2);
-         *ptr++ = *(src + PLANESIZE/4 * 3);
-         src++;
-      }
-      src += (HWLINEBYTES/4-xs);
-   }
-	valid = 1;*/
  
 }
 
@@ -677,32 +669,6 @@ void Back::restore(void)
 	if (!valid) return;
 
 	render.drawTexture(&background, x, y);
-/*
-   int   i, j;
-   unsigned long *ptr;
-   unsigned long *dst;
-   if (!valid) return;
-   ptr = buffer;
-   dst = (unsigned long *)(vscreen+y*LINEBYTES+x);
-   for (j = 0; j < ys; j++) {
-      for (i = 0; i < xs; i++) {
-         *dst = *ptr++;
-         *(dst + PLANESIZE/4 * 1) = *ptr++;
-         *(dst + PLANESIZE/4 * 2) = *ptr++;
-         *(dst + PLANESIZE/4 * 3) = *ptr++;
-#ifdef DEBUG
-         {
-            ulong test;
-            test = (ulong)dst;
-            if (test < (ulong)_vscreen) error("Border violation in Back::restore");
-            if (test+PLANESIZE*3+3 >= ((ulong)_vscreen)+4*PLANESIZE)
-               error("Border violation in Back::restore");
-         }
-#endif
-         dst++;
-      }
-      dst += (HWLINEBYTES/4-xs);
-   }*/
 }
 
 // ------------------------------------------------------------------

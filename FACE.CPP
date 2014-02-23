@@ -99,7 +99,7 @@ int a_save(int, int);
 int a_shop(int, int);
 // -
 
-enum Control { END, HEAD, TEXT, STEXT, ADD, ADDSUB, YES, YESNO, UPDOWN, CUSTOM };
+enum Control { END, HEAD, TEXT, STEXT, ADD, ADDSUB, YES, YESNO, UPDOWN, CUSTOM, NONE };
 
 struct Menu {
    Control  type;                // Control Type.
@@ -164,8 +164,8 @@ static Menu controlmenu[] = {
    { ADD, "",0,0,29,0,"",0,a_control,0 },
    { ADD, "",0,0,47,0,"",0,a_control,0 },
    { ADD, "",0,0,65,0,"",0,a_control,0 },
-   { ADD, "",0,0,83,0,"",0,a_control,0 },
-   { ADD, "",0,0,101,0,"",0,a_control,0 },
+   //{ ADD, "",0,0,83,0,"",0,a_control,0 },
+   //{ ADD, "",0,0,101,0,"",0,a_control,0 },
    { YES, "", 0, 0, 0, 0, "To Option Menu",0,a_tooptions,0 },
    { END, "",0,0,0,0,"",0,a_control,0 }
 };
@@ -190,10 +190,10 @@ static Menu joymenu[] = {
 
 static Menu soundmenu[] = {
    { HEAD, "", 0,0,0,0,"SOUND",0,0,0 },
-   { ADDSUB, "",0,0,40,0,"",0,a_sound,0 },
-   { ADD, "",0,0,60,0,"",0,a_sound,0 },
-   { ADDSUB, "",0,0,80,0,"",0,a_sound,1 },
-   { ADDSUB, "",0,0,100,0,"",0,a_sound,1 },
+   { ADDSUB, "",0,0,40,0,"",0,a_sound,1 },
+   { ADDSUB, "",0,0,60,0,"",0,a_sound,1 },
+   { NONE, "",0,0,80,0,"",0,a_sound,1 }, //Kept for element 6
+   { NONE, "",0,0,100,0,"",0,a_sound,1 }, //Kept for element 6
    { YES, "", 0, 0, 0, 0, "To Option Menu",0,a_tooptions,0 },
    { TEXT, "",0,-1,25,12,"123456789012345678901234567890",0,0,0 }, // Must be element 6
    { END, "",0,0,0,0,"",0,a_sound,0 }
@@ -201,9 +201,9 @@ static Menu soundmenu[] = {
 
 static Menu graphixmenu[] = {
    { HEAD, "", 0,0,0,0,"GRAPHICS",0,0,0 },
-   { ADD, "",0,0,35,0,"",0,a_graphix,0 },
-   { ADD, "",0,0,55,0,"",0,a_graphix,0 },
-   { ADD, "",0,0,75,0,"",0,a_graphix,0 },
+//   { ADD, "",0,0,35,0,"",0,a_graphix,0 },
+//   { ADD, "",0,0,55,0,"",0,a_graphix,0 },
+//   { ADD, "",0,0,75,0,"",0,a_graphix,0 },
    { YES, "", 0, 0, 0, 0, "To Option Menu",0,a_tooptions,0 },
    { END, "",0,0,0,0,"",0,a_graphix,0 }
 };
@@ -255,11 +255,11 @@ static Menu shopmenu[] = {
 #define DEMOY           0
 #define DEMOXS          144        // x size of demo screen
 #define DEMOYS          YMAX        //
-#define MENUX           (DEMOX+DEMOXS+6 + BORDER)
+#define MENUX           (DEMOX+DEMOXS+6)
 #define MENUY           90
-#define MENUXS          (XMAX-MENUX + BORDER)
+#define MENUXS          (XMAX-MENUX)
 #define MENUYS          (YMAX-MENUY)
-#define MENUX1          (MENUX+MENUXS-1 + + BORDER)
+#define MENUX1          (MENUX+MENUXS-1)
 #define MENUY1          (MENUY+MENUYS-1)
 
 // Events.
@@ -315,7 +315,7 @@ public:
    friend   Button *checkbuttons(int x0, int y0, int &index, int &subindex);
    friend   void destroybuttons(void);
 };
-static Button  *anchor = 0;
+static Button  *anchor = 0; //Head of a list of buttons
 
 Button::Button(int dx, int dy, Sprite *sprite, int dn, int idx)
 {
@@ -341,7 +341,7 @@ static void destroybuttons(void)
 
    while (anchor) {
       keep = anchor->next;
-		//b->sSpr.destroy();
+		anchor->sSpr.destroy();
       delete anchor;
       anchor = keep;
    }
@@ -494,6 +494,7 @@ static void buildmenu(Menu *menu)
          else
             x = MENUX + menu->x;
          y = MENUY + menu->y;
+
          for (i = 0; i < n; i++) {
             new Button(x, y, menu->spr, i, index);
             y += menu->ys + menu->spr->ys;
@@ -502,6 +503,8 @@ static void buildmenu(Menu *menu)
       case END:
          menu->action(M_INIT, 0);
          break;
+		case NONE:
+			break;
       }
       if (menu->type == END) break;
       menu++; index++;
@@ -569,10 +572,11 @@ int checkmenu(int mb, int x, int y)
 // Play one frame of the DEMO GAME.
 void demo(void)
 {
-   /*int  dx, dy, fire;
+   int  dx, dy, fire;
 	
    newwave();
    enemystep();
+	s_update();
    player[nowplayer].control(dx, dy, fire);
    weaponstep(nowplayer, dx * SHIPSPEED, dy * SHIPSPEED, fire);
    crash(nowplayer);
@@ -585,7 +589,7 @@ void demo(void)
    }
    process_objects();
    if (fast) drawscreen();
-   postprocess_objects();*/
+   postprocess_objects();
 }
 
 
@@ -653,12 +657,12 @@ static void initmenu(void)
 // Initialize DEMO GAME.
    cheatsave = cheatlevel;
    cheatlevel |= CHEAT_INVUL | CHEAT_NOMONEY;
-   //playback_start("demo1\\demo1.rec");
-   //player[nowplayer].control = playback_device;
+   playback_start("demo1\\demo1.rec");
+   player[nowplayer].control = playback_device;
    gstate.nplayers = 1; gstate.difficulty = 3;
-   //newgame(1);
-   //newlevel("demo1\\demo1");
-   //weapon_releaseall(nowplayer, STARTX1, STARTY);
+   newgame(1);
+   newlevel("demo1\\demo1");
+   weapon_releaseall(nowplayer, STARTX1, STARTY);
 // Start playing background music.
    s_loadmod("mods\\menu.uni");
    s_startmod();
@@ -673,11 +677,11 @@ static void shutmenu(void)
    s_unloadmod();
 	
 	// Housekeeping.
-   //weapon_removeall(nowplayer);
+   weapon_removeall(nowplayer);
    palette.unlock();
-   //shutlevel();
-   //shutgame();
-   //playback_stop();
+   shutlevel();
+   shutgame();
+   playback_stop();
    cheatlevel = cheatsave;
 // Restore Previous Saved Game State.
    gstate = gsave;
@@ -757,7 +761,7 @@ int menu(int mode, int p)
       demo();
       if (fast) {
 // Restore title.
-         render.x_drawsprite(&sHead, 100 + BORDER, 12, 0);
+         render.x_drawsprite(&sHead, 100, 12, 0);
 // Back to menu screen.
          //setscreen(scr);
 // Restore mouse pointer background.
@@ -844,6 +848,9 @@ static void showpicture(char *file)
 {
    void  *f;
 	int size = 0;
+	SDLTexture restore;
+	
+	restore.loadPointer(render.createScreenTexture(), true);
 
    f = loadfile(file, &size);
    fadeout(FADE_PALETTE);
@@ -858,7 +865,10 @@ static void showpicture(char *file)
    render.clear(0, 0, 0);
 	render.update();
    //fadein(level.palette);
+	render.drawTexture(&restore, 0, 0);
    fadein(NULL);
+
+	restore.destroy();
 }
 
 static void order(void)
@@ -867,6 +877,9 @@ static void order(void)
    char  *text;
    int   x, y;
 	int size = 0;
+	SDLTexture restore;
+	
+	restore.loadPointer(render.createScreenTexture(), true);
 
    f = loadfile("pic\\order.pcx", &size);
 
@@ -906,7 +919,10 @@ static void order(void)
    render.clear(0, 0, 0);
 	render.update();
    //fadein(level.palette);
+	render.drawTexture(&restore, 0, 0);
    fadein(NULL);
+
+	restore.destroy();
 }
 
 static int a_main(int index, int subindex)
@@ -958,6 +974,7 @@ static int a_quit(int index, int subindex)
 
 static int a_options(int index, int subindex)
 {
+	
    if (index == M_INIT) {
       backoff = mainmenu;
       return 0;
@@ -1033,10 +1050,10 @@ static void b_control(int n)
       addtext1(controlmenu[n], "Redefine Keys", "");
       break;
    case 4:
-      addtext1(controlmenu[n], "Calibrate Joypad", "");
+      //addtext1(controlmenu[n], "Calibrate Joypad", "");
       break;
    case 5:
-      addtext1(controlmenu[n], "Mouse Sensitivity: ", mtext[settings.msens]);
+      //addtext1(controlmenu[n], "Mouse Sensitivity: ", mtext[settings.msens]);
       break;
    }
 }
@@ -1072,12 +1089,12 @@ static int a_control(int index, int subindex)
       buildmenu(keymenu);
       break;
    case 4:     // Calibrate joypad.
-      buildmenu(joymenu);
+      //buildmenu(joymenu);
       break;
    case 5:
-      if (++settings.msens >= 3) settings.msens = 0;
-      setmousesens(settings.msens);
-      b_control(5);
+      //if (++settings.msens >= 3) settings.msens = 0;
+      //setmousesens(settings.msens);
+      //b_control(5);
       break;
    }
    return 0;
@@ -1086,7 +1103,7 @@ static int a_control(int index, int subindex)
 static int a_key(int index, int subindex)
 {
    static int  k;
-   char   text[8];
+   char   text[16];
 
    if (index == M_INIT) {
       k = 0;      // First key to enter now.
@@ -1097,7 +1114,7 @@ static int a_key(int index, int subindex)
    }
 
    if (k < 5) {
-      itoa(subindex, text, 16);
+		strncpy(text, SDL_GetScancodeName((SDL_Scancode)subindex), 15);
       tiny->vanilla(MENUX+80, MENUY+nowmenu[k+2].y, text, 12);
       settings.key[k] = subindex;
       if (k == 4) {
@@ -1133,7 +1150,7 @@ static void b_sound(int n)
    char  text[20];
 
    switch (n) {
-   case 1:
+   /*case 1:
       itoa(settings.voices, text, 10);
       addtext1(soundmenu[n], "SFx Voices: ", text);
       break;
@@ -1142,7 +1159,8 @@ static void b_sound(int n)
       strcat(text, "kHz");
       addtext1(soundmenu[n], "Mixing Frequency: ", text);
       break;
-   case 3:
+	*/
+   case 1:
       if (settings.mod_vol) {
          itoa(settings.mod_vol, text, 10); strcat(text, "/64");
       } else {
@@ -1150,7 +1168,7 @@ static void b_sound(int n)
       }
       addtext1(soundmenu[n], "Music Volume: ", text);
       break;
-   case 4:
+   case 2:
       if (settings.wav_vol) {
          itoa(settings.wav_vol, text, 10); strcat(text, "/64");
       } else {
@@ -1168,8 +1186,8 @@ static int a_sound(int index, int subindex)
    if (index == M_INIT) {
       b_sound(1);
       b_sound(2);
-      b_sound(3);
-      b_sound(4);
+      //b_sound(3);
+      //b_sound(4);
       for (i = 0; i < 3; i++) {
          if (sfreq[i] > settings.mix_freq) break;
       }
@@ -1179,7 +1197,7 @@ static int a_sound(int index, int subindex)
    }
 
    switch (index) {
-   case 1:     // WAV voices.
+   /*case 1:     // WAV voices.
       if ((subindex == 0) && (settings.voices < 6)) settings.voices++;
       if ((subindex == 1) && (settings.voices > 1)) settings.voices--;
       //s_setvoices(settings.voices);
@@ -1189,13 +1207,14 @@ static int a_sound(int index, int subindex)
       if (++sfreq_now > 2) sfreq_now = 0;
       settings.mix_freq = sfreq[sfreq_now];
       return M_SOUND;
-   case 3:     // MOD volume.
+	*/
+   case 1:     // MOD volume.
       if ((subindex == 0) && (settings.mod_vol < 64)) settings.mod_vol++;
       if ((subindex == 1) && (settings.mod_vol > 0)) settings.mod_vol--;
       s_setmodvol(settings.mod_vol);
       b_sound(index);
       break;
-   case 4:     // WAV volume.
+   case 2:     // WAV volume.
       if ((subindex == 0) && (settings.wav_vol < 64)) settings.wav_vol++;
       if ((subindex == 1) && (settings.wav_vol > 0)) settings.wav_vol--;
       s_setwavvol(settings.wav_vol);
@@ -1210,13 +1229,14 @@ static void b_graphix(int n)
 {
    switch (n) {
    case 1:
-      addtext1(graphixmenu[n], "Frames/sec: ", ftext[settings.frate]);
+      //addtext1(graphixmenu[n], "Frames/sec: ", ftext[settings.frate]);
       break;
    case 2:
-      addtext1(graphixmenu[n], "Shadows: ", stext[settings.shadows]);
+      //addtext1(graphixmenu[n], "Shadows: ", stext[settings.shadows]);
       break;
    case 3:
-      addtext1(graphixmenu[n], "Show CPU Usage: ", settings.cpu_usage ? "On" : "Off");
+      //addtext1(graphixmenu[n], "Show CPU Usage: ", settings.cpu_usage ? "On" : "Off");
+	break;
    }
 }
 
@@ -1271,8 +1291,8 @@ static int a_play2(int index, int subindex)
    }
 
 // Play a game.
-   //gsave.nplayers = nplayers;
-   //gsave.difficulty = subindex;
+   gsave.nplayers = nplayers;
+   gsave.difficulty = subindex;
 
    return M_PLAY;
 }
@@ -1343,7 +1363,7 @@ static int a_load(int index, int subindex)
    case 3:
    case 4:     // Load GAME.
       if (save[index-2].active) {
-         //put_savegame(save[index-2]);
+         put_savegame(save[index-2]);
          return M_LOAD;
       }
       break;
@@ -1382,7 +1402,7 @@ static int a_save(int index, int subindex)
    case 2:
    case 3:
    case 4:     // Save game.
-      //save[index-2] = *get_savegame();
+      save[index-2] = *get_savegame();
       b_updatesave(save[index-2]);
       b_savegame(save);
       b_loadsave(savemenu[index], save[index-2], "saved");
@@ -1607,8 +1627,8 @@ static void buy(int n)
 // Upgrade weapon.
          player[nowplayer].slot[slot] = w[n].next;
          shop_savepos();
-         //weapon_removeall(nowplayer);
-         //weapon_releaseall(nowplayer, wx, wy);
+         weapon_removeall(nowplayer);
+         weapon_releaseall(nowplayer, wx, wy);
          shop_filter();
          shop_display();
       } else {
@@ -1621,8 +1641,8 @@ static void buy(int n)
             your_money(player[nowplayer].money);
             player[nowplayer].slot[slot] = n;
             shop_savepos();
-            //weapon_removeall(nowplayer);
-            //weapon_releaseall(nowplayer, wx, wy);
+            weapon_removeall(nowplayer);
+            weapon_releaseall(nowplayer, wx, wy);
             shop_filter();
             shop_display();
          } else {
@@ -1663,8 +1683,8 @@ static void sell(int n)
          n = w[n].prev;
          player[nowplayer].slot[slot] = n;
          shop_savepos();
-         //weapon_removeall(nowplayer);
-         //weapon_releaseall(nowplayer, wx, wy);
+         weapon_removeall(nowplayer);
+         weapon_releaseall(nowplayer, wx, wy);
          shop_filter();
          shop_display();
       } else {
@@ -1674,8 +1694,8 @@ static void sell(int n)
 // Add some money to player's account.
             player[nowplayer].slot[slot] = -1;
             shop_savepos();
-            //weapon_removeall(nowplayer);
-            //weapon_releaseall(nowplayer, wx, wy);
+            weapon_removeall(nowplayer);
+            weapon_releaseall(nowplayer, wx, wy);
             shop_filter();
             shop_display();
          }

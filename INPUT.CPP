@@ -342,6 +342,9 @@ static Device  device[MAXINPUTS];      // Device description.
 void input_update(void)
 {
 	SDL_Event event;
+
+	keys = 0;
+	
 	while(SDL_PollEvent(&event))
 	{
 		switch(event.type)
@@ -350,6 +353,34 @@ void input_update(void)
 			break;
 
 			case SDL_MOUSEBUTTONUP:
+			break;
+
+			case SDL_KEYDOWN:
+				keys++;
+				
+				key_pressed = (int)event.key.keysym.scancode;
+				//printf("Key pressed: %s %d\n", SDL_GetScancodeName((SDL_Scancode)key_pressed), key_pressed);
+
+				switch(event.key.keysym.scancode)
+				{
+					case SDL_SCANCODE_ESCAPE:
+						key[KEY_ESC] = 1;
+					break;
+				}
+
+			break; 
+
+			case SDL_KEYUP:
+				key_released = (int)event.key.keysym.scancode;
+				//printf("Key depressed: %s %d\n", SDL_GetScancodeName((SDL_Scancode)key_released), key_released);
+
+				switch(event.key.keysym.scancode)
+				{
+					case SDL_SCANCODE_ESCAPE:
+						key[KEY_ESC] = 0;
+					break;
+				}
+
 			break;
 
 			case SDL_WINDOWEVENT:

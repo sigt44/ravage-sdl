@@ -220,6 +220,9 @@ void SDLRenderer::fade(SDLTexture *background, int a)
 void SDLRenderer::x_drawsprite(SDLSprite *sprite, int x, int y, int n)
 {
 	SDL_Rect clip;
+
+	x+= BORDER; //Ajust for screen border
+
 	if(sprite->getNumFrames() == 0 || n == -1)
 		drawTexture(sprite->getTexture(), x, y);
 	else
