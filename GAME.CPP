@@ -296,6 +296,7 @@ void shutgame(void)
 void newlevel(char *name)
 {
    level.load(name);
+	
    gstate.bosses = level.descript->bigboss_count;
    gstate.frame = 0;             // Reset frame counter.
 // Set initial layer speeds.
@@ -475,6 +476,7 @@ static int playlevel(void)
    int      master = 0;       // Cause of game abort.
    int      fast = 1;             // Used in determining frame speed.
    int      tmp;              // Some really unimportant temporary values.
+	Uint32	startTime = 0;
 #ifdef DEBUG
    int   singlestep = 0;
 #endif
@@ -492,7 +494,8 @@ static int playlevel(void)
 
 // Start a nearly endless loop.
    do {
-
+		
+		startTime = SDL_GetTicks();
 // Check Debug keys.
       #ifdef DEBUG
          if (key[0x20]) debugint();
@@ -520,6 +523,8 @@ static int playlevel(void)
          }
          while (key[0x34]);
       #endif
+
+		render.clear();
 
 // Release new enemies.
       newwave();
@@ -680,7 +685,11 @@ static int playlevel(void)
       if (master && (delay == 0)) return master;
       if (key[KEY_ESC]) return -1;
 
-		SDL_Delay(32);
+		while(SDL_GetTicks() - startTime < 32)
+		{
+				SDL_Delay(1);
+		}
+
    } while (1);
 
 }

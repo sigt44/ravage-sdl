@@ -552,7 +552,6 @@ int main(int argc, char *argv[])
 // Play loop.
    request = M_QUIT;
    do {
-			printf("What is happening %d\n", request);
       switch (request) {
       case M_PLAY:
 // Enable RECORDER if needed.

@@ -2,6 +2,7 @@
 #ifndef AH_OBJECTS
 #define AH_OBJECTS
 
+#include "SDL_BASE.HPP"
 #include "xlib.hpp"
 
 // Shadow Flags
@@ -26,6 +27,7 @@
 class Object {
 public:  // Yeah. It's strange. Everything is public here ?? Poor C++ programmer.
    Sprite   *sprite;       // Main sprite.
+	SDLSprite sSprite;
    Sprite   *shadow;       // Object's shadow.
    int      priority;      // Object's priority level.
    int      layer;         // Layer to which object is attached.

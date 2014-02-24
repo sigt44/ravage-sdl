@@ -60,7 +60,7 @@ void keyboard_wait(void)
 		input_update();
 		getkeyboard(x, y, fire);
 	}
-	while(x || y || fire);
+	while(x || y || fire || key[KEY_ESC]);
 
 }
 

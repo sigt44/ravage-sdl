@@ -112,20 +112,19 @@ void process_objects(void)
 ---------------------------------------------------------*/
 void drawscreen(void)
 {
-#ifdef DONT_DEF
    int     i;
    Object  *ptr;
 
 // At the bottom, there's map layer 0
    if (map.layer[0]) {
-      x_layer0(map.layer[0], map.y[0]);
+      //x_layer0(map.layer[0], map.y[0]);
    }
 // Next we draw layer 1.
    if (map.layer[1]) {
       if (_shadows == SH_ALL) {
-         x_layer2(map.layer[1], map.y[1]);
+         //x_layer2(map.layer[1], map.y[1]);
       } else {
-         x_layer1(map.layer[1], map.y[1]);
+         //x_layer1(map.layer[1], map.y[1]);
       }
    }
 
@@ -149,7 +148,6 @@ void drawscreen(void)
          ptr = ptr->next;
       }
    }
-#endif
 
 }
 
@@ -180,6 +178,8 @@ void postprocess_objects(void)
 Object::Object(Sprite *spr, int x, int y, int flags)
 {
    sprite = spr;
+	sSprite.load(spr, false);
+
    shadow = NULL;
 
 // Initialize new Object.
@@ -206,6 +206,7 @@ Object::Object(Sprite *spr, int x, int y, int flags)
 // Destructor.
 Object::~Object()
 {
+	sSprite.destroy();
    if (prev != NULL) prev->next = next; else obj[priority] = next;
    if (next != NULL) next->prev = prev;
 }
@@ -237,6 +238,9 @@ void Object::changesprite(Sprite *spr, int dx, int dy)
    y += dy;
 
    sprite = spr;
+	sSprite.destroy();
+	sSprite.load(spr, false);
+
    f_low = 0; f_high = sprite->frames - 1;
    if (frame > f_high) frame = f_high; else if (frame < f_low) frame = f_low;
 }
@@ -253,6 +257,8 @@ void Object::draw(void)
       //x_drawvanilla(sprite, x, y, frame, 15);
       flags &= ~O_FLASH;
    } else {
+		render.x_drawsprite(&sSprite, x, y, frame);
+
       if (flags & O_CRISPY) {
          //x_drawcrispy(sprite,x ,y, frame, c_now);
       } else {

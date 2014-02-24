@@ -60,8 +60,6 @@ void fadeout(int mode)
       s_setmodvol(mod_vol + 1);
    }
 
-	render.clear(0, 0, 0);
-
 	originalTexture.destroy();
 }
 
@@ -87,6 +85,8 @@ void fadein(void *p)
    }
 
 	originalTexture.destroy();
+
+	if(p) palette.set(p);
 }
 
 

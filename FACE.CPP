@@ -67,7 +67,7 @@ void title(void)
    input_wait(); input_fire(); input_wait();
    fadeout(FADE_PALETTE);
 
-   render.clear(0, 0, 0);
+   //render.clear(0, 0, 0);
    render.update();
 
    unloadfile(text);
@@ -164,7 +164,7 @@ static Menu controlmenu[] = {
    { ADD, "",0,0,29,0,"",0,a_control,0 },
    { ADD, "",0,0,47,0,"",0,a_control,0 },
    { ADD, "",0,0,65,0,"",0,a_control,0 },
-   //{ ADD, "",0,0,83,0,"",0,a_control,0 },
+   { ADD, "",0,0,83,0,"",0,a_control,0 },
    //{ ADD, "",0,0,101,0,"",0,a_control,0 },
    { YES, "", 0, 0, 0, 0, "To Option Menu",0,a_tooptions,0 },
    { END, "",0,0,0,0,"",0,a_control,0 }
@@ -667,8 +667,7 @@ static void initmenu(void)
    s_loadmod("mods\\menu.uni");
    s_startmod();
 // Fade In
-   //fadein(level.palette);
-   fadein(NULL);
+   fadein(level.palette);
 }
 
 static void shutmenu(void)
@@ -864,9 +863,9 @@ static void showpicture(char *file)
 
    render.clear(0, 0, 0);
 	render.update();
-   //fadein(level.palette);
+   
 	render.drawTexture(&restore, 0, 0);
-   fadein(NULL);
+   fadein(level.palette);
 
 	restore.destroy();
 }
@@ -918,9 +917,9 @@ static void order(void)
 
    render.clear(0, 0, 0);
 	render.update();
-   //fadein(level.palette);
+
 	render.drawTexture(&restore, 0, 0);
-   fadein(NULL);
+   fadein(level.palette);
 
 	restore.destroy();
 }
@@ -1050,10 +1049,11 @@ static void b_control(int n)
       addtext1(controlmenu[n], "Redefine Keys", "");
       break;
    case 4:
-      //addtext1(controlmenu[n], "Calibrate Joypad", "");
+		addtext1(controlmenu[n], "Mouse Sensitivity: ", mtext[settings.msens]);
+      
       break;
    case 5:
-      //addtext1(controlmenu[n], "Mouse Sensitivity: ", mtext[settings.msens]);
+      //addtext1(controlmenu[n], "Calibrate Joypad", "");
       break;
    }
 }
@@ -1088,13 +1088,14 @@ static int a_control(int index, int subindex)
    case 3:     // Define keys.
       buildmenu(keymenu);
       break;
-   case 4:     // Calibrate joypad.
-      //buildmenu(joymenu);
+
+   case 4:
+      if (++settings.msens >= 3) settings.msens = 0;
+      setmousesens(settings.msens);
+      b_control(4);
       break;
-   case 5:
-      //if (++settings.msens >= 3) settings.msens = 0;
-      //setmousesens(settings.msens);
-      //b_control(5);
+	case 5:     // Calibrate joypad.
+      //buildmenu(joymenu);
       break;
    }
    return 0;

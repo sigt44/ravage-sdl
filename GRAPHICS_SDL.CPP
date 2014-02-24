@@ -26,7 +26,7 @@ void SDLSprite::convert(void)
 	int x, y, mod;
 	char *bytePix = NULL;
 	Uint32 *surfacePix = NULL;
-	char pix;
+	unsigned char pix;
 	SDL_Surface *surface = NULL;
 
 	if(!sprite) 

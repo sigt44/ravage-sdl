@@ -17,6 +17,8 @@
 static Memory<Weapon>   wmem;
 static Memory<Enemy>    emem;
 
+Palette *mainPalette = &palette;
+
 void initgclass(void)
 {
 // Initialize Memory system.
@@ -275,8 +277,10 @@ void Level::load(char *file)
       strcpy(text, file); strcat(text, ".uni");
       s_loadmod(text);          // Mod file.
    }
-   strcpy(text, file); strcat(text, ".cpa");
+
+	strcpy(text, file); strcat(text, ".cpa");
    palette = (void *)loadfile(text, NULL);   // Palette
+
 }
 
 void Level::unload(void)

@@ -149,9 +149,9 @@ void Palette::set(void *p)
    memcpy(rgb, p, sizeof(rgb));
 
    for (i = 0; i < SCREENCOLORS; i++) {
-      sdl_rgb[i].r = rgb[i + (i<<1) + 0];
-		sdl_rgb[i].g = rgb[i + (i<<1) + 1];
-		sdl_rgb[i].b = rgb[i + (i<<1) + 2];
+      sdl_rgb[i].r = 4 * rgb[i + (i<<1) + 0];
+		sdl_rgb[i].g = 4 * rgb[i + (i<<1) + 1];
+		sdl_rgb[i].b = 4 * rgb[i + (i<<1) + 2];
    }
 
 }
@@ -161,9 +161,9 @@ void Palette::set(int r, int g, int b)
    int   i;
 
    for (i = 0; i < SCREENCOLORS; i++) {
-      rgb[i*3 +0] = r;
-      rgb[i*3 +1] = g;
-      rgb[i*3 +2] = b;
+      rgb[i*3 +0] = r; sdl_rgb[i].r = 4 * r;
+      rgb[i*3 +1] = g; sdl_rgb[i].g = 4 * g;
+      rgb[i*3 +2] = b; sdl_rgb[i].b = 4 * b;
    }
 }
 
@@ -411,7 +411,7 @@ void showpcx(void *pic, int line, int size)
 
 void *getpcxpal(void)
 {
-   return pcxpal;
+   return NULL;
 }
 
 /*---------------------------------------------------------
