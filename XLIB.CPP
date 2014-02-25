@@ -581,17 +581,21 @@ void Font::print_c(int x, int y, char *text)
 
 void Font::vanilla(int x, int y, char *text, int c)
 {
+	SDL_SetTextureColorMod(fontSprite.getTexture()->getBase(), palette.sdl_rgb[c].r, palette.sdl_rgb[c].g, palette.sdl_rgb[c].b);
 	print(x, y, text);
+	SDL_SetTextureColorMod(fontSprite.getTexture()->getBase(), 255, 255, 255);
 }
 
 void Font::vanilla_c(int x, int y, char *text, int c)
 {
    x -= textlen(text) / 2;
-	print(x, y, text);
+	vanilla(x, y, text, c);
 }
 
 void Font::vanilla_char(int x, int y, char ch, int c) {
+	SDL_SetTextureColorMod(fontSprite.getTexture()->getBase(), palette.sdl_rgb[c].r, palette.sdl_rgb[c].g, palette.sdl_rgb[c].b);
    render.x_drawsprite(&fontSprite, x, y, ch - anchor[FD_BASE]);
+	SDL_SetTextureColorMod(fontSprite.getTexture()->getBase(), 255, 255, 255);
 }
 
 int Font::textlen(char *text)

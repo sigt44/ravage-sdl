@@ -67,7 +67,10 @@ public:  // functions.
       moveshadow(dx, dy);
    }
    void     setlayer(int layer) { Object::layer = layer; }
-   void     flash(void) { flags |= O_FLASH; }
+   void     flash(void) { 
+		flags |= O_FLASH; 
+		if(sprite) SDL_SetTextureColorMod(sSprite.getTexture()->getBase(), 200, 200, 200); 
+	}
    void     animation(int dir) { f_direction = dir; }
    void     setbounds(int low, int high)
    {

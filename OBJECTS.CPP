@@ -253,18 +253,13 @@ void Object::drawshadow(void)
 
 void Object::draw(void)
 {
+	render.x_drawsprite(&sSprite, x, y, frame);
+	
    if (flags & O_FLASH) {
-      //x_drawvanilla(sprite, x, y, frame, 15);
+		SDL_SetTextureColorMod(sSprite.getTexture()->getBase(), 255, 255, 255);
       flags &= ~O_FLASH;
-   } else {
-		render.x_drawsprite(&sSprite, x, y, frame);
+	}
 
-      if (flags & O_CRISPY) {
-         //x_drawcrispy(sprite,x ,y, frame, c_now);
-      } else {
-         //x_drawsprite(sprite, x, y, frame);    // Draw object to virtual screen.
-      }
-   }
 }
 
 int Object::process(void)
