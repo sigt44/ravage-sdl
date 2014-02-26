@@ -261,3 +261,50 @@ void SDLRenderer::drawTexture(SDLTexture *texture, int x, int y)
 
 	return;
 }
+
+void SDLMap::convert(int arrayIndex, long *tileData)
+{
+	int x, y, mod;
+	char *bytePix = NULL;
+	Uint32 *surfacePix = NULL;
+	unsigned char pix;
+	SDL_Surface *surface = NULL;
+	SDLTexture *tex = NULL;
+
+	//Create a blank surface
+	surface = SDL_CreateRGBSurface(0, TILEXS, TILEYS, 32, 0, 0, 0, 0);
+	SDL_FillRect(surface, NULL, SDL_MapRGB(surface->format, 0, 0, 0));
+
+	
+	//Prepare for direct pixel access
+	SDL_LockSurface(surface);
+
+	bytePix = (char *)tileData;
+	surfacePix = (Uint32 *)surface->pixels;
+
+	for(y = 0; y < TILEYS; y++) //For each row of the sprite map
+	{
+		for(x = 0; x < TILEXS; x++) //For each column up to the width of the sprite
+		{
+			mod = x % 4; //Find the plane the requested pixel (x,y) is in
+
+			pix = *(bytePix + (y*(TILEXS) + ((TILEXS*mod)/4) + (x/4))); //Get the pixel index colour from the correct address
+			
+			surfacePix[x + (y * TILEXS)] = SDL_MapRGB(surface->format, palette.sdl_rgb[pix].r, palette.sdl_rgb[pix].g, palette.sdl_rgb[pix].b);
+		}
+	}
+
+	SDL_UnlockSurface(surface);
+	
+	//Use first colour of palette as colour key.
+	SDL_SetColorKey(surface, 1, SDL_MapRGB(surface->format, palette.sdl_rgb[0].r, palette.sdl_rgb[0].g, palette.sdl_rgb[0].b));
+
+	//Convert the surface into a texture and load it into the class
+	tex = tiles + arrayIndex;
+	tex->loadPointer(SDL_CreateTextureFromSurface(render.getBase(), surface), true);
+
+	//Clean up
+	SDL_FreeSurface(surface);
+
+	return;
+}

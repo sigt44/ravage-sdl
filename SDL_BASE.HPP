@@ -241,6 +241,58 @@ public:
    void     invalidate(void) { valid = 0; }
 };
 
+class SDLMap {
+
+		int numTiles;
+		SDLTexture *tiles;
+
+public: 
+
+	SDLMap() {
+		numTiles = 0;
+		tiles = NULL;
+	}
+
+	void init(int nTiles)
+	{
+		if(tiles)
+			destroy();
+
+		numTiles = nTiles;
+
+		tiles = new SDLTexture[numTiles];
+	}
+
+	~SDLMap() { 
+		if(tiles) error("Map not released correctly"); 
+	}
+
+	void convert(int arrayIndex, long *tileData);
+
+	SDLTexture *getTile(int x, int y)
+	{
+		return tiles + (x);
+	}
+
+	void destroy()
+	{
+		SDLTexture *tile = NULL;
+		int x = 0;
+		for(x = 0; x < numTiles; x++)
+		{
+			tile = (tiles+x);
+			tile->destroy();
+		}
+		if(tiles)
+		{
+			delete[] tiles;
+		}
+
+		tiles = NULL;
+		numTiles = 0;
+	}
+
+};
 #endif
 
 
