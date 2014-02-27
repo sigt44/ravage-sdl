@@ -477,6 +477,9 @@ static int playlevel(void)
    int      fast = 1;             // Used in determining frame speed.
    int      tmp;              // Some really unimportant temporary values.
 	Uint32	startTime = 0;
+	SDL_Rect borderLeft = {0, 0, BORDER, YMAX};
+	SDL_Rect borderRight = {HWXMAX - BORDER, 0, BORDER, YMAX};
+
 #ifdef DEBUG
    int   singlestep = 0;
 #endif
@@ -524,7 +527,7 @@ static int playlevel(void)
          while (key[0x34]);
       #endif
 
-		render.clear();
+		render.clear(0, 0, 0);
 
 // Release new enemies.
       newwave();
@@ -672,6 +675,9 @@ static int playlevel(void)
 
 // Flip pages for smooth animation.
       if (fast) {
+			//Draw borders
+			render.drawRect(&borderLeft, 0, 0, 0);
+			render.drawRect(&borderRight, 0, 0, 0);
          render.update();
       }
       fast = 1;
@@ -703,7 +709,7 @@ static void showstartlogo(void)
    Font   *font;
 
 // Clear screen.
-   render.clear();
+   render.clear(0, 0, 0);
 
 // Load needed stuff into memory.
    ready = (Sprite *)loadfile("pic\\ready.spr", NULL);
@@ -715,7 +721,6 @@ static void showstartlogo(void)
    render.x_drawsprite(&sReady, (XMAX - ready->xs)/2, 100, 0);
    font->print_c(XMAX/2, 200, "HIT FIRE");
 //   pixelate(1);
-	render.update();
 // 'GET READY' is no longer used.
    delete font;
    unloadfile(ready);

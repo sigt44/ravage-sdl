@@ -35,7 +35,7 @@ struct Map {
 
 
 static Map        map;
-SDLMap				sMap;
+SDLMap				sMap[2];
 static Object     *obj[OBJ_MAXPRIORITY];
 static int        _shadows;         // Shadows ENABLE level.
 
@@ -122,9 +122,11 @@ void drawscreen(void)
 // At the bottom, there's map layer 0
    if (map.layer[0]) {
       //x_layer0(map.layer[0], map.y[0]);
+		render.drawMap(&sMap[0], map.y[0]);
    }
 // Next we draw layer 1.
    if (map.layer[1]) {
+		render.drawMap(&sMap[1], map.y[1]);
       if (_shadows == SH_ALL) {
          //x_layer2(map.layer[1], map.y[1]);
       } else {
@@ -211,6 +213,7 @@ Object::Object(Sprite *spr, int x, int y, int flags)
 Object::~Object()
 {
 	sSprite.destroy();
+	sShadow.destroy();
    if (prev != NULL) prev->next = next; else obj[priority] = next;
    if (next != NULL) next->prev = prev;
 }
@@ -227,12 +230,24 @@ void Object::operator delete(void *p)
 
 void Object::changeshadow(Sprite *spr)
 {
+	if(_shadows == SH_NONE) return;
+
    if (!shadow) {
       shadow = spr;
+		
       shadowx = shadowy = 0;
    } else {
       shadow = spr;
    }
+
+	sShadow.destroy();
+
+	if(spr)
+	{
+		sShadow.load(shadow, false);
+		sShadow.getTexture()->setAlpha(128);
+		SDL_SetTextureColorMod(sShadow.getTexture()->getBase(), 32, 32, 32);
+	}
 }
 
 // Change objects sprite. Keep it centered at old sprites position.
@@ -252,7 +267,7 @@ void Object::changesprite(Sprite *spr, int dx, int dy)
 
 void Object::drawshadow(void)
 {
-   if (shadow) ;//x_drawshadow(shadow, x+shadowx, y+shadowy, frame);
+   if (shadow) render.x_drawsprite(&sShadow, x+shadowx, y+shadowy, frame);
 }
 
 void Object::draw(void)
@@ -328,8 +343,8 @@ void loadmap(char *file)
    lSize = size = anchor[MP_BOTTOMSIZE];
    map.len[0] = (size/XTILES)*TILEYS - YMAX;
 
-	printf("Init map of size: %d, length %d vs actual size %d\n", size, map.len[0], size - (size/XTILES) * 4);
-	sMap.init(size - (size/XTILES) * 4);
+	printf("Init map of size: %d, length %d\n", size, map.len[0]);
+	sMap[0].init(size, _shadows == SH_ALL ? true : false);
 
 // Layer 1 might not be present.
    if (anchor[MP_TOP] != 0) {
@@ -338,53 +353,37 @@ void loadmap(char *file)
       map.len[1] = map.len[0]*2;
    }
 
+	sMap[1].init(size - lSize, _shadows == SH_ALL ? true : false);
+
 // Adjust tile pointers but let NULL pointers stay NULL pointers.
    for (i = 0; i < size; i++) {
-		if(i % 9 > 4 && anchor[MP_DATA+i] > 0) printf("[%d][%d]: anchor: %p\n", i, size, anchor[MP_DATA+i]);
       if (anchor[MP_DATA+i] > 0)
 		{
 			anchor[MP_DATA+i] += ptr; //ANCHOR[MP_DATA + i] now refers to the actual location of the tile data instead of being an offset from ptr
 		}
-		//SDL_Delay(500);
+
 	}
 
-	x = 0; y = 0;render.clear();
-	for (i = 0, x = 0; i < lSize; i++) {
-		if(i % 9 > 4 && anchor[MP_DATA+i] > 0) printf("[%d][%d]: anchor: %p\n", i, size, anchor[MP_DATA+i]);
-
+	for (i = 0; i < lSize; i++) {
       if (anchor[MP_DATA+i] > 0)
 		{
-			sMap.convert(x, (long *)anchor[MP_DATA+i]);
-			x++;
-			printf("x - %d\n", x);
+			sMap[0].convert(i, (long *)anchor[MP_DATA+i]);
 		}
-		//SDL_Delay(500);
 	}
 
-	y = 7;
-	x = 0;
-		for(i = 0; i < 280; i++)
+	for (i = i; i < size; i++) {
+      if (anchor[MP_DATA+i] > 0)
 		{
-
-			//printf("Render texture test [%d, %d]\n", x, y);
-			
-			render.drawTexture(sMap.getTile(279 - x, y), (5 - (x % 5)) * TILEXS, y * TILEYS);
-			render.update();
-			SDL_Delay(100);
-			x++;
-			if((x) % 5 == 0)
-				y++;
-			if(y > 7) y = 0;
-
+			sMap[1].convert(i - lSize, (long *)anchor[MP_DATA+i]);
 		}
-
-	//anchor = (long *)map.layer[0];
-
+	}
 
 }
 
 void unloadmap(void)
 {
+	sMap[0].destroy();
+	sMap[1].destroy();
    unloadfile(map.anchor);
    map.anchor = 0;
 }

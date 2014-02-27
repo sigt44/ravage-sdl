@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <math.h>
 #include "SDL_BASE.HPP"
 #include "ERROR.HPP"
 
@@ -170,13 +171,14 @@ void SDLRenderer::init(SDLWindow *window, int logicalWidth, int logicalHeight)
 
 	if(!renderer) error("Unable to create renderer: ", (char *)SDL_GetError());
 
-	//SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear"); Don't ruin the fonts!
+	//SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear"); //Don't ruin the fonts!
 
 	SDL_RenderSetLogicalSize(renderer, logicalWidth, logicalHeight);
 
 	SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
 
 	renderTexture.loadPointer(SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, HWXMAX, HWYMAX), true);
+	//SDL_SetTextureBlendMode(renderTexture.getBase(), SDL_BLENDMODE_BLEND);
 
 	SDL_RenderClear(renderer);
 	SDL_RenderPresent(renderer);
@@ -221,7 +223,7 @@ void SDLRenderer::x_drawsprite(SDLSprite *sprite, int x, int y, int n)
 {
 	SDL_Rect clip;
 
-	x+= BORDER; //Ajust for screen border
+	x += BORDER; //Ajust for screen border
 
 	if(sprite->getNumFrames() == 0 || n == -1)
 		drawTexture(sprite->getTexture(), x, y);
@@ -230,6 +232,97 @@ void SDLRenderer::x_drawsprite(SDLSprite *sprite, int x, int y, int n)
 		clip = sprite->getFrameRect(n);
 		drawTexture(sprite->getTexture(), x, y, &clip);
 	}
+
+	return;
+}
+
+void SDLRenderer::drawRect(SDL_Rect *rect, int r, int g, int b)
+{
+	SDL_SetRenderDrawColor(renderer, r, g, b, SDL_ALPHA_OPAQUE);
+
+	SDL_RenderFillRect(renderer, rect);
+
+	return;
+}
+
+void SDLRenderer::drawTile(SDLTile *tile, int x, int y)
+{
+	const SDL_Rect clip = {0, 0, TILEXS, TILEYS};
+
+	drawTile(tile, x, y, &clip);
+
+	return;
+}
+
+void SDLRenderer::drawTile(SDLTile *tile, int x, int y, const SDL_Rect *clip)
+{
+	SDLTexture *texture = tile->getBase();
+
+	SDL_Rect dest = {BORDER + x, y, clip->w, clip->h};
+	SDL_Rect src = {clip->x, clip->y, clip->w, clip->h};
+
+	if(tile->drawable())
+	{
+		SDL_RenderCopy(renderer, texture->getBase(), &src, &dest);
+	}
+
+	return;
+}
+
+void SDLRenderer::drawMap(SDLMap *map, int yOffset)
+{
+	int bodySize = XTILES * ((YMAX/TILEYS));
+	int fullSize = XTILES * (1+ (YMAX/TILEYS));
+
+	int rowStart = (map->getLength()/TILEYS) - (1 + yOffset/TILEYS);
+	int i = 0;
+	int offset = map->getSize() - (XTILES * rowStart) - 1;
+	int y = 0;
+	int yMod = yOffset % TILEYS;
+	int rowsDrawn = -1;
+
+	SDL_Rect firstRow = {0, TILEYS - yMod, TILEXS, yMod}; //Clipping for first and last rows
+	SDL_Rect lastRow = {0, 0, TILEXS, TILEYS};
+
+	if(yMod < TILEYS/2) 
+	{
+		bodySize += XTILES;
+		fullSize += XTILES;
+	}
+
+	//printf("LastRow %d %d\n", lastRow.w, lastRow.h);
+	//All drawing has to be done from right to left
+
+	//First draw the top row, allow for clipping
+	for(i = 0; i < XTILES; i++)
+	{
+		//printf("First row test [%d, %d]\n", ((XTILES - 1) - (i % 9)) * TILEXS, y);
+		render.drawTile(map->getTile(offset - i), ((XTILES - 1) - (i % 9)) * TILEXS, y, &firstRow);
+	}
+
+	y+=yMod - TILEYS;
+
+	//Next draw all rows up to the last one, no clipping should be needed
+	for(i = i; i < bodySize; i++)
+	{
+		
+		if(i % 9 == 0)
+			y += TILEYS;
+
+		//printf("Body test [%d, %d]\n", (8 - (i % 9)) * TILEXS, y);
+
+		render.drawTile(map->getTile(offset - i), ((XTILES - 1) - (i % 9)) * TILEXS, y);
+	}
+
+	y += TILEYS;
+	lastRow.h = YMAX - y;
+	//Draw the final row, allow for clipping
+	for(i = i; i < fullSize; i++)
+	{
+		//printf("Last row test [%d, %d]\n", (8 - (i % 9)) * TILEXS, y);
+		render.drawTile(map->getTile(offset - i), ((XTILES - 1) - (i % 9)) * TILEXS, y, &lastRow);
+	}
+	//printf("Rows drawn %d, final y %d\n", rowsDrawn, y+32);
 
 	return;
 }
@@ -269,13 +362,24 @@ void SDLMap::convert(int arrayIndex, long *tileData)
 	Uint32 *surfacePix = NULL;
 	unsigned char pix;
 	SDL_Surface *surface = NULL;
-	SDLTexture *tex = NULL;
+	SDL_Surface *temp = NULL;
+	SDLTile *tile = NULL;
 
 	//Create a blank surface
-	surface = SDL_CreateRGBSurface(0, TILEXS, TILEYS, 32, 0, 0, 0, 0);
+	temp = SDL_CreateRGBSurface(0, TILEXS, TILEYS, 32, 0, 0, 0, 0);
+
+	if(shadows == true)
+	{
+		surface = SDL_ConvertSurfaceFormat(temp, SDL_PIXELFORMAT_RGBA8888, 0);
+		SDL_FreeSurface(temp);
+	}
+	else
+	{
+		surface = temp;
+	}
+
 	SDL_FillRect(surface, NULL, SDL_MapRGB(surface->format, 0, 0, 0));
 
-	
 	//Prepare for direct pixel access
 	SDL_LockSurface(surface);
 
@@ -289,19 +393,28 @@ void SDLMap::convert(int arrayIndex, long *tileData)
 			mod = x % 4; //Find the plane the requested pixel (x,y) is in
 
 			pix = *(bytePix + (y*(TILEXS) + ((TILEXS*mod)/4) + (x/4))); //Get the pixel index colour from the correct address
-			
-			surfacePix[x + (y * TILEXS)] = SDL_MapRGB(surface->format, palette.sdl_rgb[pix].r, palette.sdl_rgb[pix].g, palette.sdl_rgb[pix].b);
+
+			if(palette.sdl_rgb[pix].r == 252 && palette.sdl_rgb[pix].g == 252 && palette.sdl_rgb[pix].b == 252) //Shadow
+			{
+				if(shadows)
+					surfacePix[x + (y * TILEXS)] = SDL_MapRGBA(surface->format, 1, 1, 1, 64);
+				else
+					surfacePix[x + (y * TILEXS)] = SDL_MapRGBA(surface->format, palette.sdl_rgb[0].r, palette.sdl_rgb[0].g, palette.sdl_rgb[0].b, 64);			
+			}
+			else
+				surfacePix[x + (y * TILEXS)] = SDL_MapRGBA(surface->format, palette.sdl_rgb[pix].r, palette.sdl_rgb[pix].g, palette.sdl_rgb[pix].b, 255);
 		}
 	}
 
 	SDL_UnlockSurface(surface);
 	
 	//Use first colour of palette as colour key.
-	SDL_SetColorKey(surface, 1, SDL_MapRGB(surface->format, palette.sdl_rgb[0].r, palette.sdl_rgb[0].g, palette.sdl_rgb[0].b));
+	SDL_SetColorKey(surface, 1, SDL_MapRGBA(surface->format, palette.sdl_rgb[0].r, palette.sdl_rgb[0].g, palette.sdl_rgb[0].b, 255));
 
 	//Convert the surface into a texture and load it into the class
-	tex = tiles + arrayIndex;
-	tex->loadPointer(SDL_CreateTextureFromSurface(render.getBase(), surface), true);
+	tile = tiles + arrayIndex;
+	tile->load(SDL_CreateTextureFromSurface(render.getBase(), surface), true, (unsigned long)tileData);
+	SDL_SetTextureBlendMode(tile->getBase()->getBase(), SDL_BLENDMODE_BLEND);
 
 	//Clean up
 	SDL_FreeSurface(surface);

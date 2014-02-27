@@ -402,8 +402,6 @@ void showpcx(void *pic, int line, int size)
 	
 	render.drawTexture(&pcxTexture, 0, line);
 
-	render.update();
-
 	pcxTexture.destroy();
 
 	return;

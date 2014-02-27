@@ -125,6 +125,121 @@ public:
 	}
 };
 
+class SDLTile {
+	SDLTexture tex;
+	unsigned long id;
+	bool assigned;
+
+public:
+
+	SDLTile() {
+		assigned = false;
+		id = 0;
+	}
+
+	~SDLTile() {
+		if(assigned) error("Tile not released properly");
+	}
+
+	SDLTexture *getBase() { return &tex; }
+
+	void load(SDL_Texture *tileTexture, bool owner, unsigned long addressID)
+	{
+		id = addressID;
+		tex.loadPointer(tileTexture, owner);
+		
+		if(tileTexture != NULL) assigned = true;
+
+		return;
+	}
+
+	bool drawable()
+	{
+		return assigned;
+	}
+
+	void destroy()
+	{
+		id = 0;
+		tex.destroy();
+		assigned = false;
+		return;
+	}
+
+};
+
+class SDLMap {
+
+		int numTiles;
+		int length;
+		bool shadows;
+		SDLTile *tiles;
+
+public: 
+
+	SDLMap() {
+		numTiles = 0;
+		tiles = NULL;
+	}
+
+	void init(int nTiles, bool shadowEnabled)
+	{
+		if(tiles)
+			destroy();
+
+		numTiles = nTiles;
+		length = (nTiles/XTILES)*TILEYS - YMAX;
+		shadows = shadowEnabled;
+
+		tiles = new SDLTile[numTiles];
+	}
+
+	~SDLMap() { 
+		if(tiles) error("Map not released correctly"); 
+	}
+
+	void convert(int arrayIndex, long *tileData);
+
+	SDLTile *getTile(int x, int y)
+	{
+		return tiles + x + (XTILES * y);
+	}
+
+	SDLTile *getTile(int i)
+	{
+		return tiles + i;
+	}
+
+	int getSize()
+	{
+		return numTiles;
+	}
+
+	int getLength()
+	{
+		return length;
+	}
+
+	void destroy()
+	{
+		SDLTile *tile = NULL;
+		int x = 0;
+		for(x = 0; x < numTiles; x++)
+		{
+			tile = (tiles+x);
+			tile->destroy();
+		}
+		if(tiles)
+		{
+			delete[] tiles;
+		}
+
+		tiles = NULL;
+		numTiles = 0;
+	}
+
+};
+
 
 //Drawing functions
 class SDLRenderer {
@@ -158,6 +273,12 @@ public:
 
 
 	void x_drawsprite(SDLSprite *sprite, int x, int y, int n); // n refers to the frame of the sprite
+	void drawTile(SDLTile *tile, int x, int y);
+	void drawTile(SDLTile *tile, int x, int y, const SDL_Rect *clip);
+	void drawMap(SDLMap *map, int yOffset);
+
+	void drawRect(SDL_Rect *rect, int r, int g, int b);
+
 	void drawTexture(SDLTexture *texture, int x, int y, SDL_Rect *clip);
 	void drawTexture(SDLTexture *texture, int x, int y, int cx, int cy, int cw, int ch);
 	void drawTexture(SDLTexture *texture, int x, int y);
@@ -241,58 +362,7 @@ public:
    void     invalidate(void) { valid = 0; }
 };
 
-class SDLMap {
 
-		int numTiles;
-		SDLTexture *tiles;
-
-public: 
-
-	SDLMap() {
-		numTiles = 0;
-		tiles = NULL;
-	}
-
-	void init(int nTiles)
-	{
-		if(tiles)
-			destroy();
-
-		numTiles = nTiles;
-
-		tiles = new SDLTexture[numTiles];
-	}
-
-	~SDLMap() { 
-		if(tiles) error("Map not released correctly"); 
-	}
-
-	void convert(int arrayIndex, long *tileData);
-
-	SDLTexture *getTile(int x, int y)
-	{
-		return tiles + (x);
-	}
-
-	void destroy()
-	{
-		SDLTexture *tile = NULL;
-		int x = 0;
-		for(x = 0; x < numTiles; x++)
-		{
-			tile = (tiles+x);
-			tile->destroy();
-		}
-		if(tiles)
-		{
-			delete[] tiles;
-		}
-
-		tiles = NULL;
-		numTiles = 0;
-	}
-
-};
 #endif
 
 

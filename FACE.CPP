@@ -51,9 +51,7 @@ void title(void)
 #endif
 
 // Fade out and draw new screen.
-   render.clear(0, 0, 0);
    fadeout(FADE_PALETTE);
-   render.clear(0, 0, 0);
    showpcx(f, 20, size);
 
 // Print text.
@@ -61,14 +59,12 @@ void title(void)
    beauty(tiny, x, y, text);
 
 // Fade in
-   render.update();
    fadein(getpcxpal());
 
    input_wait(); input_fire(); input_wait();
    fadeout(FADE_PALETTE);
 
    //render.clear(0, 0, 0);
-   render.update();
 
    unloadfile(text);
    unloadfile(f);
@@ -201,7 +197,7 @@ static Menu soundmenu[] = {
 
 static Menu graphixmenu[] = {
    { HEAD, "", 0,0,0,0,"GRAPHICS",0,0,0 },
-//   { ADD, "",0,0,35,0,"",0,a_graphix,0 },
+   { ADD, "",0,0,35,0,"",0,a_graphix,0 },
 //   { ADD, "",0,0,55,0,"",0,a_graphix,0 },
 //   { ADD, "",0,0,75,0,"",0,a_graphix,0 },
    { YES, "", 0, 0, 0, 0, "To Option Menu",0,a_tooptions,0 },
@@ -645,9 +641,6 @@ static void initmenu(void)
    tiny->vanilla(215, 65, "registered 1.1", 10);
 #endif
 
-// Copy screen to hardware.
-   render.update();
-
 // Save current game state in case the menu is in SHOP mode.
    gsave = gstate;
    psave = player[nowplayer];
@@ -861,10 +854,9 @@ static void showpicture(char *file)
    input_wait(); input_fire(); input_wait();
    fadeout(FADE_PALETTE);
 
-   render.clear(0, 0, 0);
-	render.update();
-   
 	render.drawTexture(&restore, 0, 0);
+	render.update();
+
    fadein(level.palette);
 
 	restore.destroy();
@@ -915,10 +907,8 @@ static void order(void)
    input_wait(); input_fire(); input_wait();
    fadeout(FADE_PALETTE);
 
-   render.clear(0, 0, 0);
-	render.update();
-
 	render.drawTexture(&restore, 0, 0);
+	render.update();
    fadein(level.palette);
 
 	restore.destroy();
@@ -1229,11 +1219,12 @@ static int a_sound(int index, int subindex)
 static void b_graphix(int n)
 {
    switch (n) {
+
    case 1:
-      //addtext1(graphixmenu[n], "Frames/sec: ", ftext[settings.frate]);
+      addtext1(graphixmenu[n], "Shadows: ", stext[settings.shadows]);
       break;
-   case 2:
-      //addtext1(graphixmenu[n], "Shadows: ", stext[settings.shadows]);
+	case 2:
+      //addtext1(graphixmenu[n], "Frames/sec: ", ftext[settings.frate]);
       break;
    case 3:
       //addtext1(graphixmenu[n], "Show CPU Usage: ", settings.cpu_usage ? "On" : "Off");
@@ -1252,15 +1243,16 @@ static int a_graphix(int index, int subindex)
    }
 
    switch (index) {
-   case 1:     // Frame rate.
+	case 1:
+      if (++settings.shadows > 2) settings.shadows = 0;
+      shadow_level(settings.shadows);
+      b_graphix(index);
+      break;
+   case 2:     // Frame rate.
       if (++settings.frate > 1) settings.frate = 0;
       b_graphix(index);
       break;
-   case 2:
-      if (++settings.shadows > 2) settings.shadows = 0;
-      //shadow_level(settings.shadows);
-      b_graphix(index);
-      break;
+
    case 3:     // CPU Usage
       settings.cpu_usage = !settings.cpu_usage;
       b_graphix(index);
