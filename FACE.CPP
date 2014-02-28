@@ -68,6 +68,7 @@ void title(void)
 
    unloadfile(text);
    unloadfile(f);
+
    delete tiny;
 }
 
@@ -270,7 +271,8 @@ static PlayerState   psave2;     // State save for player not active in DEMO.
 static int     cheatsave;        // Back up variable for cheatvalue.
 
 static void    *scr;             // Another virtual screen.
-static Back    *menuback;        // Menu screen back ground.
+static Back    *menuback;        // Saved menu screen back ground.
+static SDLTexture menuTexture;	// Base menu background
 static Sprite  *head;            // Part of Title.
 static SDLSprite sHead;
 static Sprite  *pointer;         // Mouse pointer.
@@ -419,6 +421,23 @@ static void destroymenu(void)
    }
    menuback->restore();
 }
+
+static void clearmenu(void)
+{
+	void  *f;
+	int size = 0;
+	render.setTarget(&menuTexture);
+
+	f = loadfile("pic\\themenu.pcx", &size);
+	showpcx(f, 0, size);
+   unloadfile(f);
+
+	SDL_RenderPresent(render.getBase());
+	render.setTarget(NULL);
+
+	return;
+}
+
 
 static void buildmenu(Menu *menu)
 {
@@ -588,12 +607,8 @@ void demo(void)
    postprocess_objects();
 }
 
-
 static void initmenu(void)
 {
-   void  *f;
-	int size = 0;
-
 // Allocate second virtual screen.
    scr = allocscreen();
    setscreen(scr);
@@ -601,9 +616,11 @@ static void initmenu(void)
 // Allocate Menu Background backup.
    menuback = new Back(MENUXS, MENUYS);
 // Load menu screen.
-   f = loadfile("pic\\themenu.pcx", &size);
-   showpcx(f, 0, size);
-   unloadfile(f);
+
+   menuTexture.loadPointer(SDL_CreateTexture(render.getBase(), SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, HWXMAX, YMAX), true);
+	clearmenu();
+	render.drawTexture(&menuTexture, 0, 0);
+
 // Take a snapshot of the plain menu screen.
    menuback->save(MENUX, MENUY);
 // .. freeze overlapping part of Title.
@@ -726,6 +743,8 @@ int menu(int mode, int p)
    int      x, y, b;       // Mouse coordinates.
    int      tmp;           // Used for stuff.
    static   int key_allowed;
+	void *f = NULL;
+	int size = 0;
 
 // Initialize menu system.
    nowplayer = p;
@@ -748,17 +767,15 @@ int menu(int mode, int p)
    x = MENUX + MENUXS/2;
    y = MENUY + MENUYS/2;
    do {
-// Switch to game screen.
-      setscreen(0);
+
       demo();
-      if (fast) {
+
 // Restore title.
-         render.x_drawsprite(&sHead, 100, 12, 0);
-// Back to menu screen.
-         //setscreen(scr);
+      render.x_drawsprite(&sHead, 100, 12, 0);
+
 // Restore mouse pointer background.
-         back->restore();
-      }
+      back->restore();
+ 
       b = 0;
 		input_update();
       if (mouse) getmousexy(b, x, y);

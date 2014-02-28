@@ -121,17 +121,13 @@ void drawscreen(void)
 
 // At the bottom, there's map layer 0
    if (map.layer[0]) {
-      //x_layer0(map.layer[0], map.y[0]);
 		render.drawMap(&sMap[0], map.y[0]);
+		//render.drawMap(&sMap[0], sMap[0].getLength() - 2);
    }
 // Next we draw layer 1.
    if (map.layer[1]) {
 		render.drawMap(&sMap[1], map.y[1]);
-      if (_shadows == SH_ALL) {
-         //x_layer2(map.layer[1], map.y[1]);
-      } else {
-         //x_layer1(map.layer[1], map.y[1]);
-      }
+		//render.drawMap(&sMap[1], sMap[1].getLength() - 2);
    }
 
 // Going straight to the objects.
@@ -344,7 +340,7 @@ void loadmap(char *file)
    map.len[0] = (size/XTILES)*TILEYS - YMAX;
 
 	printf("Init map of size: %d, length %d\n", size, map.len[0]);
-	sMap[0].init(size, _shadows == SH_ALL ? true : false);
+	sMap[0].init(size, map.len[0], _shadows == SH_ALL ? true : false);
 
 // Layer 1 might not be present.
    if (anchor[MP_TOP] != 0) {
@@ -353,7 +349,7 @@ void loadmap(char *file)
       map.len[1] = map.len[0]*2;
    }
 
-	sMap[1].init(size - lSize, _shadows == SH_ALL ? true : false);
+	sMap[1].init(size - lSize, map.len[1], _shadows == SH_ALL ? true : false);
 
 // Adjust tile pointers but let NULL pointers stay NULL pointers.
    for (i = 0; i < size; i++) {

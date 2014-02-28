@@ -172,6 +172,7 @@ class SDLMap {
 
 		int numTiles;
 		int length;
+		int pixLength;
 		bool shadows;
 		SDLTile *tiles;
 
@@ -182,13 +183,14 @@ public:
 		tiles = NULL;
 	}
 
-	void init(int nTiles, bool shadowEnabled)
+	void init(int nTiles, int pLength, bool shadowEnabled)
 	{
 		if(tiles)
 			destroy();
 
 		numTiles = nTiles;
 		length = (nTiles/XTILES)*TILEYS - YMAX;
+		pixLength = pLength;
 		shadows = shadowEnabled;
 
 		tiles = new SDLTile[numTiles];
@@ -218,6 +220,11 @@ public:
 	int getLength()
 	{
 		return length;
+	}
+
+	int getPixelLength()
+	{
+		return pixLength;
 	}
 
 	void destroy()

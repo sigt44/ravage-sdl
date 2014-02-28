@@ -359,7 +359,6 @@ void input_update(void)
 				keys++;
 				
 				key_pressed = (int)event.key.keysym.scancode;
-				//printf("Key pressed: %s %d\n", SDL_GetScancodeName((SDL_Scancode)key_pressed), key_pressed);
 
 				switch(event.key.keysym.scancode)
 				{
@@ -372,7 +371,6 @@ void input_update(void)
 
 			case SDL_KEYUP:
 				key_released = (int)event.key.keysym.scancode;
-				//printf("Key depressed: %s %d\n", SDL_GetScancodeName((SDL_Scancode)key_released), key_released);
 
 				switch(event.key.keysym.scancode)
 				{
@@ -389,22 +387,18 @@ void input_update(void)
 				{
 					case SDL_WINDOWEVENT_ENTER:
 					window.enableMouseFocus();
-					puts("Mouse focus gained!");
 					break;
 
 					case SDL_WINDOWEVENT_LEAVE:
 					window.disableMouseFocus();
-					puts("Mouse focus lost!");
 					break;
 
 					case SDL_WINDOWEVENT_FOCUS_LOST:
 					window.disableInputFocus();
-					puts("Input Focus lost!");
 					break;
 
 					case SDL_WINDOWEVENT_FOCUS_GAINED:
 					window.enableInputFocus();
-					puts("Input Focus gained!");
 					break;
 				}
 
@@ -446,8 +440,6 @@ void input_fire(void)
       if (joypad) getjoypad(x, y, j);
       if (mouse) getmouse(x, y, m);
 	} while ((!k && !j && !m) || !window.isFocus());
-
-	if(m) puts("Mouse FIRE!");
 }
 
 

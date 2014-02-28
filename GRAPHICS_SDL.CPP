@@ -271,24 +271,34 @@ void SDLRenderer::drawTile(SDLTile *tile, int x, int y, const SDL_Rect *clip)
 
 void SDLRenderer::drawMap(SDLMap *map, int yOffset)
 {
-	int bodySize = XTILES * ((YMAX/TILEYS));
-	int fullSize = XTILES * (1+ (YMAX/TILEYS));
+	int bodySize = 0;
+	int fullSize = 0;
 
-	int rowStart = (map->getLength()/TILEYS) - (1 + yOffset/TILEYS);
+	yOffset +=16;
+
 	int i = 0;
-	int offset = map->getSize() - (XTILES * rowStart) - 1;
+	int j = 0;
 	int y = 0;
+	int totalRows = (int)floor(map->getLength() / 32.0f);
+	int rowStart = (int)floor((float)yOffset/(float)TILEYS);
 	int yMod = yOffset % TILEYS;
-	int rowsDrawn = -1;
+	int offset = (map->getSize() - 1) - ((totalRows - rowStart) * XTILES);
 
 	SDL_Rect firstRow = {0, TILEYS - yMod, TILEXS, yMod}; //Clipping for first and last rows
 	SDL_Rect lastRow = {0, 0, TILEXS, TILEYS};
 
-	if(yMod < TILEYS/2) 
+	if(yMod < 16)
 	{
-		bodySize += XTILES;
-		fullSize += XTILES;
+		bodySize = 63;
+		fullSize = 81;
 	}
+	else
+	{
+		bodySize = 54;
+		fullSize = 72;
+	}
+
+	printf("yOffset %d, total rows %d, rowStart %d, tiles %d, length %d, offset %d, yMod %d\n", yOffset, totalRows, rowStart, map->getSize(), map->getLength(), offset, yMod);
 
 	//printf("LastRow %d %d\n", lastRow.w, lastRow.h);
 	//All drawing has to be done from right to left
@@ -296,17 +306,17 @@ void SDLRenderer::drawMap(SDLMap *map, int yOffset)
 	//First draw the top row, allow for clipping
 	for(i = 0; i < XTILES; i++)
 	{
-		//printf("First row test [%d, %d]\n", ((XTILES - 1) - (i % 9)) * TILEXS, y);
+		//printf("[%d, %d] First row test [%d, %d]\n",i, offset - i, ((XTILES - 1) - (i % 9)) * TILEXS, y);
 		render.drawTile(map->getTile(offset - i), ((XTILES - 1) - (i % 9)) * TILEXS, y, &firstRow);
 	}
 
-	y+=yMod - TILEYS;
+	y += firstRow.h;
 
 	//Next draw all rows up to the last one, no clipping should be needed
-	for(i = i; i < bodySize; i++)
+	for(i = i; i < bodySize+XTILES; i++)
 	{
 		
-		if(i % 9 == 0)
+		if(i != XTILES && i % 9 == 0)
 			y += TILEYS;
 
 		//printf("Body test [%d, %d]\n", (8 - (i % 9)) * TILEXS, y);
@@ -319,9 +329,10 @@ void SDLRenderer::drawMap(SDLMap *map, int yOffset)
 	//Draw the final row, allow for clipping
 	for(i = i; i < fullSize; i++)
 	{
-		//printf("Last row test [%d, %d]\n", (8 - (i % 9)) * TILEXS, y);
+		//printf("[%d, %d] Last row test [%d, %d]\n",i, offset - i, ((XTILES - 1) - (i % 9)) * TILEXS, y);
 		render.drawTile(map->getTile(offset - i), ((XTILES - 1) - (i % 9)) * TILEXS, y, &lastRow);
 	}
+	//if(lastRow.h > 32) printf("Last row h %d\n", lastRow.h);
 	//printf("Rows drawn %d, final y %d\n", rowsDrawn, y+32);
 
 	return;

@@ -541,7 +541,7 @@ static int playlevel(void)
       if (player[0].active) {
 // Get control commands. (left, right, up, down, fire).
          player[0].control(dx, dy, fire);
-			printf("dx %d dy %d fire %d\n", dx, dy, fire);
+
 #ifdef RECORDER
 // Record player movement if RECORDER is enabled.
          if (rec_enabled && (rec_count<maxrecords)) {
@@ -695,6 +695,8 @@ static int playlevel(void)
 		{
 				SDL_Delay(1);
 		}
+		//input_wait();
+		//input_fire();
 
    } while (1);
 
