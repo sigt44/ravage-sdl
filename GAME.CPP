@@ -458,7 +458,6 @@ void playback_loop(void)
    rec_count = 0;
 }
 
-
 /*---------------------------------------------------------
  Function: playlevel
 
@@ -498,6 +497,7 @@ static int playlevel(void)
 // Start a nearly endless loop.
    do {
 		
+		fast = 1;
 		startTime = SDL_GetTicks();
 // Check Debug keys.
       #ifdef DEBUG
@@ -656,32 +656,18 @@ static int playlevel(void)
 // Display DEBUG statistics if in DEBUG mode.
             pinfo.debug();
          #endif
-// Copy page from virtual screen to real screen memory.
-         cpu = 0;
-         #ifdef DEBUG
-            if (singlestep != 2) while (timer_ticks < 1) cpu++;
-         #else
-      
-         #endif
       }
       tmp = (settings.frate==1) || ((settings.frate==0) && (gstate.frame&1));
-// Another DEBUG feature. Don't wait for retrace if key 'A' has been pressed.
-      #ifdef DEBUG
-         if (singlestep != 2) while (timer_ticks < 2) cpu++;
-      #else
-
-      #endif
-      if (!fast) cpu /= 2;
 
 // Flip pages for smooth animation.
       if (fast) {
 
 			// Start fading if we are just in time.
-			if (delay > 0) {
+			if (delay > 0 && delay <= 32) {
 				// Fade to white if BOSS has been killed.
-				if (master == 2 || 1)
+				if (master == 2)
 					{
-						SDL_SetRenderDrawColor(render.getBase(), 255, 255, 255, delay*SDL_ALPHA_OPAQUE/32);
+						SDL_SetRenderDrawColor(render.getBase(), 255, 255, 255, (32 - delay)*SDL_ALPHA_OPAQUE/32);
 						SDL_RenderFillRect(render.getBase(), NULL);
 				}
 			}
@@ -691,7 +677,6 @@ static int playlevel(void)
 
          render.update();
       }
-      fast = 1;
 
       if (delay) --delay;
 
@@ -702,6 +687,8 @@ static int playlevel(void)
 		{
 				SDL_Delay(1);
 		}
+
+		//Debug step the game loop
 		//input_wait();
 		//input_fire();
 

@@ -411,7 +411,7 @@ void SDLMap::convert(int arrayIndex, long *tileData)
 
 			pix = *(bytePix + (y*(TILEXS) + ((TILEXS*mod)/4) + (x/4))); //Get the pixel index colour from the correct address
 
-			if(palette.sdl_rgb[pix].r == 252 && palette.sdl_rgb[pix].g == 252 && palette.sdl_rgb[pix].b == 252) //Shadow
+			if(pix == 255) //Shadow
 			{
 				if(shadows)
 					surfacePix[x + (y * TILEXS)] = SDL_MapRGBA(surface->format, 1, 1, 1, 64);
