@@ -339,7 +339,7 @@ void loadmap(char *file)
    lSize = size = anchor[MP_BOTTOMSIZE];
    map.len[0] = (size/XTILES)*TILEYS - YMAX;
 
-	printf("Init map of size: %d, length %d\n", size, map.len[0]);
+	//printf("Init map of size: %d, length %d\n", size, map.len[0]);
 	sMap[0].init(size, map.len[0], _shadows == SH_ALL ? true : false);
 
 // Layer 1 might not be present.
@@ -363,14 +363,14 @@ void loadmap(char *file)
 	for (i = 0; i < lSize; i++) {
       if (anchor[MP_DATA+i] > 0)
 		{
-			sMap[0].convert(i, (long *)anchor[MP_DATA+i]);
+			sMap[0].convert(lSize - 1 - i, (long *)anchor[MP_DATA+i]);
 		}
 	}
 
 	for (i = i; i < size; i++) {
       if (anchor[MP_DATA+i] > 0)
 		{
-			sMap[1].convert(i - lSize, (long *)anchor[MP_DATA+i]);
+			sMap[1].convert((size - lSize) - 1 - (i - lSize), (long *)anchor[MP_DATA+i]);
 		}
 	}
 

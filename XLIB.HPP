@@ -129,25 +129,9 @@ extern "C" {
    void __cdecl x_layer2(void *data, int y);
 }
 
-// Virtual screens.
-void *allocscreen(void);
-void freescreen(void *);
-void setscreen(void *);
-void copyfull(void);
-void copyscreen(void);
-void copyregion(int x0, int y0, int xs, int ys);
-void copyboth(int x0, int y0, int xs, int ys);
-void flippage(void);
-void doeffects(void);
-
-void clearregion(int x0, int y0, int xs, int ys);
-void clear(int c);
-
 // Misc.
 void showpcx(void *pic, int line, int size);
 void *getpcxpal(void);
-void pixelate(int dir);
-void retrace();
 
 #endif
 

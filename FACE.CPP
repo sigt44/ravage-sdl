@@ -609,10 +609,6 @@ void demo(void)
 
 static void initmenu(void)
 {
-// Allocate second virtual screen.
-   scr = allocscreen();
-   setscreen(scr);
-
 // Allocate Menu Background backup.
    menuback = new Back(MENUXS, MENUYS);
 // Load menu screen.
@@ -714,6 +710,8 @@ static void shutmenu(void)
 
    unloadfile(head);
 	sHead.destroy();
+
+	menuTexture.destroy();
 
    delete menuback;
 }

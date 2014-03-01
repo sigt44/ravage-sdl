@@ -675,19 +675,26 @@ static int playlevel(void)
 
 // Flip pages for smooth animation.
       if (fast) {
+
+			// Start fading if we are just in time.
+			if (delay > 0) {
+				// Fade to white if BOSS has been killed.
+				if (master == 2 || 1)
+					{
+						SDL_SetRenderDrawColor(render.getBase(), 255, 255, 255, delay*SDL_ALPHA_OPAQUE/32);
+						SDL_RenderFillRect(render.getBase(), NULL);
+				}
+			}
 			//Draw borders
 			render.drawRect(&borderLeft, 0, 0, 0);
 			render.drawRect(&borderRight, 0, 0, 0);
+
          render.update();
       }
       fast = 1;
 
-/*// Start palette fading if we are just in time.
-      if (delay == 32) {
-// Fade to white if BOSS has been killed.
-         if (master == 2) palette.fade(52, 52, 52, 2);
-      }*/
       if (delay) --delay;
+
       if (master && (delay == 0)) return master;
       if (key[KEY_ESC]) return -1;
 
@@ -1003,6 +1010,10 @@ void play(int load)
       if (feedback == -1) break;
 // Add bonus money.
       addbonus();
+// Restore pallete
+		void *p = (void *)loadfile("demo1\\DEMO1.CPA", NULL);
+		palette.set(p);
+		delete p;
 // Enter shop for both players.
       if ((feedback == 2) && (gstate.level < MAXLEVELS)) {
          if (player[0].active) menu(SHOPMENU, 0);

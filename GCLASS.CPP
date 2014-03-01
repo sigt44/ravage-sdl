@@ -257,6 +257,9 @@ void Level::load(char *file)
    char  text[40];
 
 // Loading all the needed stuff.
+	strcpy(text, file); strcat(text, ".cpa");
+   palette = (void *)loadfile(text, NULL);   // Palette
+	mainPalette->set(palette);
 
 // Load Level Description
    strcpy(text, file); strcat(text, ".cds");
@@ -277,9 +280,6 @@ void Level::load(char *file)
       strcpy(text, file); strcat(text, ".uni");
       s_loadmod(text);          // Mod file.
    }
-
-	strcpy(text, file); strcat(text, ".cpa");
-   palette = (void *)loadfile(text, NULL);   // Palette
 
 }
 

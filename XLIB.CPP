@@ -59,23 +59,6 @@ static signed char   pcxpal[PALETTESIZE]; // Palette of last loaded PCX file.
 static unsigned int    currentpage;
 
 
-//-------------------------------------------------------------------
-// Some low level functions.
-//-------------------------------------------------------------------
-
-// BIOS.
-void setvideomode(int mode)
-{
-   
-}
-
-// Wait for vertical retrace.
-void retrace(void)
-{
-
-}
-
-
 /*---------------------------------------------------------
  Function:
 
@@ -113,7 +96,6 @@ static unsigned int sqrt(unsigned long v)
 static inline void setcolor(int c, int r, int g, int b)
 {
 #ifndef NOGRAPHICS
-	//SDL_SetRenderDrawColor(renderer, r, g, b, c);
 #endif
 }
 
@@ -128,7 +110,6 @@ static void setpalette(void *p)
    signed char *pal = (signed char *)p;
    int   i;
 
-   retrace();
    for (i = 0; i < SCREENCOLORS; i++) {
       setcolor(i, pal[0], pal[1], pal[2]);
 
@@ -412,138 +393,6 @@ void *getpcxpal(void)
    return NULL;
 }
 
-/*---------------------------------------------------------
- Function:
-
- Description:
- Pixelate a picture given in virtual screen 'screen'.
- Routine programmed by Dani Doswald.
----------------------------------------------------------*/
-void pixelate(int dir)
-{
-// Define focus size.
-   #define     NFOC           12
-   const int   _focus[NFOC] = {-1, 32, 28, 24, 20, 16, 12, 8, 4, 2, 1, -1};
-
-   unsigned char    *inscr;
-   unsigned char    *outscr;
-   int      focus;
-   int      pos;
-   int      data0, data1, data2, data3;
-   int      i, l, r;
-
-   inscr = (unsigned char *)allocscreen();
-   outscr = _vscreen;
-   memcpy(inscr, outscr, SCREENSIZE);
-
-// Start a new pixelate sequence.
-   if (dir == 1) pos = 1;
-   if (dir == -1) pos = NFOC - 2;
-
-   while ((focus = _focus[pos]) != -1) {
-      for(i = 0; i < PLANESIZE; i++){
-         if (i % (focus*LINEBYTES) == 0) l = i+(focus/2)*LINEBYTES;
-         if (l > (PLANESIZE-LINEBYTES)) l = PLANESIZE-LINEBYTES;
-         if (((i%LINEBYTES)*4)%(focus) == 0) {
-            r = (i%LINEBYTES) + (focus/2);
-            if(r > LINEBYTES) r = LINEBYTES;
-            data0 = inscr[l+r];
-            data1 = inscr[l+r+PLANESIZE];
-            data2 = inscr[l+r+PLANESIZE*2];
-            data3 = inscr[l+r+PLANESIZE*3];
-            if (focus > 3) data2 = data0;
-            if (focus > 1) {
-               data1 = data0;
-               data3 = data2;
-            }
-         }
-         outscr[i] = data0;
-         outscr[i+PLANESIZE] = data1;
-         outscr[i+PLANESIZE*2] = data2;
-         outscr[i+PLANESIZE*3] = data3;
-      }
-      pos += dir;
-      //copyfull();
-      retrace();
-      flippage();
-   }
-   freescreen(inscr);
-}
-
-
-/*---------------------------------------------------------
- Function:
-
- Description:
----------------------------------------------------------*/
-// Clear the whole Video ram.
-static void clear_vram()
-{
-
-}
-
-
-// Enable one or more plane for write access.
-static void enableplane(int plane)
-{
-
-}
-
-// Copy region of the VIRTUAL SCREEN to hardware screen memory.
-void copyregion(int x0, int y0, int xs, int ys)
-{
-
-}
-
-
-void copyboth(int x0, int y0, int xs, int ys)
-{
-
-}
-
-
-// Flip pages to update screen.
-void flippage(void)
-{
-// Handle palette special effects.
-   doeffects();
-}
-
-// Clear virtual screen memory.
-void clear(int c)
-{
-   memset(_vscreen, c, SCREENSIZE);
-}
-
-// Clear VIRTUAL SCREEN region.
-void clearregion(int x0, int y0, int xs, int ys)
-{
-
-}
-
-// Set active virtual screen.
-void setscreen(void *screen)
-{
-
-}
-
-
-// Allocate another virtual screen.
-void *allocscreen(void)
-{
-	return NULL;
-}
-
-// Free virtual screen previously allocated with "allocscreen".
-void freescreen(void *scr)
-{
-
-}
-
-
-
-
-
 //-------------------------------------------------------------------
 // Font class
 //-------------------------------------------------------------------
@@ -725,10 +574,6 @@ void initgraphics(void)
 
 // Clear palette.
    palette.set(0, 0, 0); palette.lock();
-
-// Clear all special effects that may be active.
-   for (i = 0; i < MAXCYCLES; i++) _cycle[i].active = 0;
-   _fade.active = 0;
 
 // Graphic system successfully installed.
    ingraphics = 1;
