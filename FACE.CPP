@@ -272,7 +272,7 @@ static int     cheatsave;        // Back up variable for cheatvalue.
 
 static void    *scr;             // Another virtual screen.
 static Back    *menuback;        // Saved menu screen back ground.
-static SDLTexture menuTexture;	// Base menu background
+static SDLTexture demoTexture;	// The texture the game demo is rendered to.
 static Sprite  *head;            // Part of Title.
 static SDLSprite sHead;
 static Sprite  *pointer;         // Mouse pointer.
@@ -426,14 +426,10 @@ static void clearmenu(void)
 {
 	void  *f;
 	int size = 0;
-	render.setTarget(&menuTexture);
 
 	f = loadfile("pic\\themenu.pcx", &size);
 	showpcx(f, 0, size);
    unloadfile(f);
-
-	SDL_RenderPresent(render.getBase());
-	render.setTarget(NULL);
 
 	return;
 }
@@ -602,9 +598,15 @@ void demo(void)
    } else {
       movelayer(0, 0); movelayer(1, 0);
    }
+
+	//Draw game to demo texture
+	render.setTarget(&demoTexture);
+
    process_objects();
    if (fast) drawscreen();
    postprocess_objects();
+
+	render.setTarget(NULL);
 }
 
 static void initmenu(void)
@@ -613,9 +615,8 @@ static void initmenu(void)
    menuback = new Back(MENUXS, MENUYS);
 // Load menu screen.
 
-   menuTexture.loadPointer(SDL_CreateTexture(render.getBase(), SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, HWXMAX, YMAX), true);
+   demoTexture.loadPointer(SDL_CreateTexture(render.getBase(), SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, HWXMAX, YMAX), true);
 	clearmenu();
-	render.drawTexture(&menuTexture, 0, 0);
 
 // Take a snapshot of the plain menu screen.
    menuback->save(MENUX, MENUY);
@@ -711,7 +712,7 @@ static void shutmenu(void)
    unloadfile(head);
 	sHead.destroy();
 
-	menuTexture.destroy();
+	demoTexture.destroy();
 
    delete menuback;
 }
@@ -768,9 +769,6 @@ int menu(int mode, int p)
 
       demo();
 
-// Restore title.
-      render.x_drawsprite(&sHead, 100, 12, 0);
-
 // Restore mouse pointer background.
       back->restore();
  
@@ -806,14 +804,15 @@ int menu(int mode, int p)
          if (key_allowed && key[KEY_ESC] && backoff) {
             buildmenu(backoff);
             key_allowed = 0;
+				escape_wait();
          }
          back->save(x, y);
          if (pointer_enabled) render.x_drawsprite(&sPointer, x, y, 0);
 
-// Copy stuff to Hardware Screen.
-         //copyregion(DEMOX, DEMOY, DEMOXS, DEMOYS);
-         //setscreen(scr);
-        // copyregion(MENUX, MENUY, MENUXS, MENUYS);
+// Copy demo display to restricted area of screen
+			render.drawTexture(&demoTexture, BORDER, 0, 16, 0, 4*32 + 16, YMAX);
+// Restore title logo.
+			render.x_drawsprite(&sHead, 100, 12, 0);
       }
 // Test frame rate and adjust if needed.
       //tmp = (settings.frate==1) || ((settings.frate==0) && (gstate.frame&1));

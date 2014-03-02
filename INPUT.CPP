@@ -22,6 +22,7 @@
 #define MAXINPUTS          4     // Number of input devices supported.
 
 SDL_Joystick* joystick = NULL;
+bool joystickFire = false; //Is the fire button pressed for the joystick 
 
 // Next struct is a REGISTER structure for all input devices available.
 // A device must be registered in this structure to get active.
@@ -61,7 +62,15 @@ void keyboard_wait(void)
 		getkeyboard(x, y, fire);
 	}
 	while(x || y || fire || key[KEY_ESC]);
+}
 
+void escape_wait(void)
+{
+	do
+	{
+		input_update();
+	}
+	while(key[KEY_ESC]);
 }
 
 void getkeyboard(int &x, int &y, int &fire)
@@ -107,7 +116,13 @@ static void shutkeyboard(void)
 
 #define JOY_TIMEOUT     20000          // Joystick timeout value.
 
-static   int   x0 = -32768/8, y0 = -32767/8, x1 = 32767/8, y1 = 32767/8;         // Joystick corner values.
+static int  joy_left = SDL_SCANCODE_LEFT;
+static int  joy_right = SDL_SCANCODE_RIGHT;
+static int  joy_up = SDL_SCANCODE_UP;
+static int  joy_down = SDL_SCANCODE_DOWN;
+static int  joy_fire = SDL_SCANCODE_SPACE;
+
+static   int   x0 = -32768/4, y0 = -32767/4, x1 = 32767/4, y1 = 32767/4;         // Joystick corner values.
 
 static int measure(int &x, int &y, int &fire)
 {
@@ -116,7 +131,7 @@ static int measure(int &x, int &y, int &fire)
 	y = SDL_JoystickGetAxis(joystick, 1);
 
 // Check FIRE button.
-   fire = SDL_JoystickGetButton(joystick, JOYA_B1) | SDL_JoystickGetButton(joystick, JOYA_B2);
+   fire = (int)joystickFire;
    
    return 0;
 
@@ -137,7 +152,6 @@ void joypad_wait(void)
 		input_update();
       measure(x, y, fire);
    } while (fire);
-   SDL_Delay(10);
 }
 
 
@@ -147,11 +161,11 @@ void getjoypad(int &x, int &y, int &fire)
 
    x = y = 0;
    measure(dx, dy, fire);
+
    if (dx < x0) x--;
    if (dy < y0) y--;
    if (dx > x1) x++;
    if (dy > y1) y++;
-
 }
 
 
@@ -161,19 +175,21 @@ int calibrate_joypad(void)
    int   yes;
 
    yes = measure(x, y, fire);
-   /*x0 = x - (x / 2);
+   x0 = x - (x / 2);
    x1 = x + (x / 2);
    y0 = y - (y / 2);
-   y1 = y + (y / 2);*/
+   y1 = y + (y / 2);
    return yes;
 }
 
 
 void initjoypad(void)
 {
+	printf("Joypads detected %d\n", SDL_NumJoysticks());
 	if (SDL_NumJoysticks() > 0) {
 
 		joystick = SDL_JoystickOpen(0);
+		SDL_JoystickEventState(SDL_ENABLE);
 
 		if (joystick) {
 			printf("Opened Joystick 0\n");
@@ -311,6 +327,7 @@ void getmouse(int &x, int &y, int &fire)
    x = y = 0;
    getmousexy(fire, dx, dy);
    getmousemotion(dx, dy);
+
    if (dx > m_sensx) x++;
    if (dx < -m_sensx) x--;
    if (dy > m_sensy) y++;
@@ -322,6 +339,7 @@ void initmouse(void)
 {
 	mouse = 1;
 	setmousesens(M_MEDIUM);
+	SDL_ShowCursor(0);
 }
 
 void shutmouse(void)
@@ -349,6 +367,14 @@ void input_update(void)
 	{
 		switch(event.type)
 		{
+			case SDL_JOYBUTTONDOWN:
+				joystickFire = true;
+			break;
+
+			case SDL_JOYBUTTONUP:
+				joystickFire = false;
+			break;
+
 			case SDL_MOUSEBUTTONDOWN:
 			break;
 

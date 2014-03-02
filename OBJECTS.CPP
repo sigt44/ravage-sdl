@@ -241,8 +241,8 @@ void Object::changeshadow(Sprite *spr)
 	if(spr)
 	{
 		sShadow.load(shadow, false);
-		sShadow.getTexture()->setAlpha(128);
-		SDL_SetTextureColorMod(sShadow.getTexture()->getBase(), 32, 32, 32);
+		sShadow.getTexture()->setAlpha(64);
+		SDL_SetTextureColorMod(sShadow.getTexture()->getBase(), 1, 1, 1);
 	}
 }
 

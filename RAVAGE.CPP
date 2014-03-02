@@ -225,7 +225,7 @@ static void powerup(void)
 {
 	// Init SDL
 
-	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_AUDIO) != 0) 
+	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK) != 0) 
 	{
 		fprintf(stderr, "\nUnable to initialize SDL:  %s\n", SDL_GetError());
 		return;
@@ -248,11 +248,7 @@ static void powerup(void)
 	loadsettings(CONFIGFILE);
 
 // Initialize Inputs.
-   if (incmd("/j")) {
-      initinputs(INPUT_KEYBOARD | INPUT_MOUSE);
-   } else {
-      initinputs(INPUT_KEYBOARD | INPUT_MOUSE | INPUT_JOYPAD);
-   }
+   initinputs(INPUT_KEYBOARD | INPUT_MOUSE | INPUT_JOYPAD);
 
    reg_exit(shutinputs);
    if (!lockdevice(settings.device[0])) {
@@ -263,6 +259,7 @@ static void powerup(void)
       settings.device[1] = nextdevice(0);
       lockdevice(settings.device[1]);
    }
+
 // Define keys according to loaded settings.
    setkeys(settings.key[0], settings.key[1],
             settings.key[2], settings.key[3], settings.key[4]);

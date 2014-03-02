@@ -25,6 +25,7 @@ _extrn volatile int   key_pressed;      // Scan code of last pressed key.
 _extrn volatile int   key_released;     // Scan code of last released key.
 _extrn volatile char  key[0x80];        // Array of pressed keys.
 void keyboard_wait(void);
+void escape_wait(void);
 void getkeyboard(int &x, int &y, int &fire);
 void setkeys(int, int, int, int, int);
 

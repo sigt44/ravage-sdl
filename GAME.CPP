@@ -899,12 +899,16 @@ static void addbonus(void)
    int   money;
 
 // Decide how much money we go to distribute among players.
-   money = level.descript->money;
+   money = (int)level.descript->money;
 
 // Distribute money.
    for (i = 0; i < MAXPLAYERS; i++) {
       if (player[i].active) player[i].money += money;
+
+		if(player[i].active && player[i].money < 0) printf("Warning player money < 0: %d, level money %d\n", player[i].money, (int)level.descript->money);
    }
+
+
 }
 
 /*---------------------------------------------------------

@@ -281,6 +281,8 @@ void Level::load(char *file)
       s_loadmod(text);          // Mod file.
    }
 
+	if(descript->money < 0) printf("Error level money < 0: %d\n", descript->money);
+
 }
 
 void Level::unload(void)
