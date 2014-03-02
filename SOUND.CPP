@@ -19,6 +19,7 @@
 #include "memory.hpp"
 #include "diskio.hpp"
 #include "sound.hpp"
+#include "RAVAGE.HPP"
 
 #include "SOUND_SDL.HPP"
 
@@ -180,7 +181,7 @@ void s_startmod(void)
 {
 	#ifndef NO_SOUND
    if (mf) mod_play = 1;
-	if(Mix_PlayMusic(mf, 1) == -1) printf("Mix_PlayMusic(): %s\n", Mix_GetError());
+	if(Mix_PlayMusic(mf, settings.loop_music ? -1 : 1) == -1) printf("Mix_PlayMusic(): %s\n", Mix_GetError());
 #endif
 }
 

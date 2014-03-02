@@ -566,7 +566,7 @@ void initgraphics(void)
 
 	//IMG_Init();
 	
-	window.create("Ravage SDL", 640, 480);
+	window.create("Ravage SDL", XSCALE, YSCALE);
 
 	render.init(&window, HWXMAX, HWYMAX);
 

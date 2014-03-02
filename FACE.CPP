@@ -162,7 +162,7 @@ static Menu controlmenu[] = {
    { ADD, "",0,0,47,0,"",0,a_control,0 },
    { ADD, "",0,0,65,0,"",0,a_control,0 },
    { ADD, "",0,0,83,0,"",0,a_control,0 },
-   //{ ADD, "",0,0,101,0,"",0,a_control,0 },
+   { ADD, "",0,0,101,0,"",0,a_control,0 },
    { YES, "", 0, 0, 0, 0, "To Option Menu",0,a_tooptions,0 },
    { END, "",0,0,0,0,"",0,a_control,0 }
 };
@@ -201,7 +201,7 @@ static Menu soundmenu[] = {
    { HEAD, "", 0,0,0,0,"SOUND",0,0,0 },
    { ADDSUB, "",0,0,40,0,"",0,a_sound,1 },
    { ADDSUB, "",0,0,60,0,"",0,a_sound,1 },
-   { NONE, "",0,0,80,0,"",0,a_sound,1 }, //Kept for element 6
+   { ADD, "",0,0,80,0,"",0,a_sound,0 }, //Kept for element 6
    { NONE, "",0,0,100,0,"",0,a_sound,1 }, //Kept for element 6
    { YES, "", 0, 0, 0, 0, "To Option Menu",0,a_tooptions,0 },
    { TEXT, "",0,-1,25,12,"123456789012345678901234567890",0,0,0 }, // Must be element 6
@@ -804,8 +804,8 @@ int menu(int mode, int p)
             key_released = 0;
          }
 // Send joypad messages.
-         if (joy_enabled && joy_last && !joy_fire) {
-            if (nowmenu[0].action) nowmenu[0].action(M_JOYPAD, 0);
+         if (joy_enabled && button_released != -1) {
+            if (nowmenu[0].action) nowmenu[0].action(M_JOYPAD, button_released);
          }
          joy_last = joy_fire;
 // Send mouse messages.
@@ -1066,7 +1066,6 @@ static void b_control(int n)
       break;
    case 4:
 		addtext1(controlmenu[n], "Mouse Sensitivity: ", mtext[settings.msens]);
-      
       break;
    case 5:
 		addtext1(controlmenu[n], "Joypad Buttons", "");
@@ -1156,13 +1155,13 @@ static int a_joy(int index, int subindex)
    if (index == M_INIT) {
       k = 0;      // First button to enter now.
       pointer_enabled = 0;
-      joypad_enabled = 1;
+      joy_enabled = 1;
       backoff = 0;
       return 0;
    }
 
    if (k < 5) {
-		itoa(text, subindex, 10);
+		itoa(subindex, text, 10);
 		//strncpy(text, SDL_GetScancodeName((SDL_Scancode)subindex), 15);
       tiny->vanilla(MENUX+80, MENUY+nowmenu[k+2].y, text, 12);
       settings.joypadbutton[k] = subindex;
@@ -1211,6 +1210,13 @@ static void b_sound(int n)
       }
       addtext1(soundmenu[n], "SFx Volume: ", text);
       break;
+	case 3:
+		if (settings.loop_music) {
+			strcpy(text, "on");
+      } else {
+         strcpy(text, "off");
+      }
+      addtext1(soundmenu[n], "Loop Music: ", text);
    }
 }
 
@@ -1221,7 +1227,7 @@ static int a_sound(int index, int subindex)
    if (index == M_INIT) {
       b_sound(1);
       b_sound(2);
-      //b_sound(3);
+      b_sound(3);
       //b_sound(4);
       for (i = 0; i < 3; i++) {
          if (sfreq[i] > settings.mix_freq) break;
@@ -1255,7 +1261,16 @@ static int a_sound(int index, int subindex)
       s_setwavvol(settings.wav_vol);
       b_sound(index);
       break;
+
+	case 3:     // Loop Music
+      settings.loop_music = settings.loop_music ? 0 : 1;
+		s_startmod();
+		input_wait();
+      b_sound(index);
+		
+      break;
    }
+
    return 0;
 }
 
@@ -1293,12 +1308,12 @@ static int a_graphix(int index, int subindex)
       b_graphix(index);
       break;
    case 2:     // Frame rate.
-      if (++settings.frate > 1) settings.frate = 0;
+      //if (++settings.frate > 1) settings.frate = 0;
       b_graphix(index);
       break;
 
    case 3:     // CPU Usage
-      settings.cpu_usage = !settings.cpu_usage;
+      //settings.cpu_usage = !settings.cpu_usage;
       b_graphix(index);
    }
 

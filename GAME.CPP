@@ -657,7 +657,6 @@ static int playlevel(void)
             pinfo.debug();
          #endif
       }
-      tmp = (settings.frate==1) || ((settings.frate==0) && (gstate.frame&1));
 
 // Flip pages for smooth animation.
       if (fast) {

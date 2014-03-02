@@ -76,6 +76,7 @@ void getkeyboard(int &x, int &y, int &fire)
 	const Uint8 *keyState = SDL_GetKeyboardState(NULL);
 
    x = 0; y = 0; fire = 0;
+
    if (keyState[key_left]) x--;
    if (keyState[key_right]) x++;
    if (keyState[key_up]) y--;
@@ -107,13 +108,13 @@ static void shutkeyboard(void)
 // Joystick interface routines.
 //-------------------------------------------------------------------
 
-volatile int   button_released;
+volatile int button_released;
 
-static int  joy_left = SDL_SCANCODE_LEFT;
-static int  joy_right = SDL_SCANCODE_RIGHT;
-static int  joy_up = SDL_SCANCODE_UP;
-static int  joy_down = SDL_SCANCODE_DOWN;
-static int  joy_fire = SDL_SCANCODE_SPACE;
+static int  joy_left = -1;
+static int  joy_right = -1;
+static int  joy_up = -1;
+static int  joy_down = -1;
+static int  joy_fire = -1;
 
 SDL_Joystick* joystick = NULL;
 bool joystickFire = false; //Is the fire button pressed for the joystick
@@ -376,63 +377,35 @@ void input_update(void)
 	SDL_Event event;
 
 	keys = 0;
+	button_released = -1;
 	
 	while(SDL_PollEvent(&event))
 	{
 		switch(event.type)
 		{
 			case SDL_JOYBUTTONDOWN:
-			switch(event.jbutton.button)
-			{
-				case joy_left:
-					joystickLeft = true;
-				break;
-				
-				case joy_right
-					joystickRight = true;
-				break;
-				
-				case joy_up:
-					joystickUp = true;
-				break;
-				
-				case joy_down:
-					joystickDown = true;
-				break;
-				
-				case joy_fire:
-					joystickFire = true;
-				break;
-			}
+
+			if(event.jbutton.button == joy_left) joystickLeft = true;
+			else if(event.jbutton.button == joy_right) joystickRight = true;
+			else if(event.jbutton.button == joy_up) joystickUp = true;
+			else if(event.jbutton.button == joy_down) joystickDown = true;
+			else if(event.jbutton.button == joy_fire) joystickFire = true;
+
+			if(joy_fire == -1) joystickFire = true;
 
 			break;
 
 			case SDL_JOYBUTTONUP:
-			
+
 			button_released = event.jbutton.button;
 			
-			switch(event.jbutton.button)
-			{
-				case joy_left:
-					joystickLeft = false;
-				break;
-				
-				case joy_right
-					joystickRight = false;
-				break;
-				
-				case joy_up:
-					joystickUp = false;
-				break;
-				
-				case joy_down:
-					joystickDown = false;
-				break;
-				
-				case joy_fire:
-					joystickFire = false;
-				break;
-			}
+			if(event.jbutton.button == joy_left) joystickLeft = false;
+			else if(event.jbutton.button == joy_right) joystickRight = false;
+			else if(event.jbutton.button == joy_up) joystickUp = false;
+			else if(event.jbutton.button == joy_down) joystickDown = false;
+			else if(event.jbutton.button == joy_fire) joystickFire = false;
+
+			if(joy_fire == -1) joystickFire = false;
 			
 			break;
 

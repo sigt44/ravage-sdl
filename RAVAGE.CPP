@@ -139,8 +139,8 @@ static void loadsettings(char *file)
 // Sound settings.
    settings.voices = 2;
    settings.mix_freq = 44100;
-   settings.mod_vol = 10;
-   settings.wav_vol = 30;
+   settings.mod_vol = 20;
+   settings.wav_vol = 35;
    settings.loop_music = 1;
 
 // Control settings.
@@ -157,14 +157,14 @@ static void loadsettings(char *file)
    settings.device[1] = 3;       // Player 2 input: Mouse.
    
 // joystick
-   settings.key[0] = -1;      
-   settings.key[1] = -1;     
-   settings.key[2] = -1;     
-   settings.key[3] = -1;      
-   settings.key[4] = -1;     
+   settings.joypadbutton[0] = -1;      
+   settings.joypadbutton[1] = -1;     
+   settings.joypadbutton[2] = -1;     
+   settings.joypadbutton[3] = -1;      
+   settings.joypadbutton[4] = -1;     
 
 // Graphix
-   settings.shadows = 0;
+   settings.shadows = SH_ALL;
 
 // Try to load configuration file.
    if (myfile.open(file)) {
@@ -268,6 +268,9 @@ static void powerup(void)
 // Define keys according to loaded settings.
    setkeys(settings.key[0], settings.key[1],
             settings.key[2], settings.key[3], settings.key[4]);
+
+	setbuttons(settings.joypadbutton[0], settings.joypadbutton[1],
+            settings.joypadbutton[2], settings.joypadbutton[3], settings.joypadbutton[4]);
 
    if (joypad) cout << "Joypad detected." << endl;
    if (mouse) cout << "Mouse detected." << endl;

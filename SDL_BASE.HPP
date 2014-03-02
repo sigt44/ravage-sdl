@@ -7,6 +7,10 @@
 #include "XLIB.HPP"
 #include "ERROR.HPP"
 
+//Window size constants
+#define XSCALE 640
+#define YSCALE 480
+
 extern class SDLWindow window;
 extern class SDLRenderer render;
 
