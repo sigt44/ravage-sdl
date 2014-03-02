@@ -113,16 +113,15 @@ struct Settings {
    int      msens;               // Mouse sensitivity.
 // Keyboard settings.
    int      key[5];              // Defined keys. (lt, rt, up, dn, fire).
+   int      joypadbutton[5]; 
 // Sound settings.
-   int      sound_device;        // Sound device to use.
+   int      loop_music;				// Ensure music is looped
    int      voices;              // Number of SFX voices to mix.
    int      mix_freq;            // Mixing frequency.
    int      mod_vol;             // Volume of MOD Music.
    int      wav_vol;             // Volume of WAVES.
 // Graphic settings.
    int      shadows;             // Shadow level. (None, Some or All).
-   int      frate;               // Frame rate. (Auto, 15fps or 30fps).
-   int      cpu_usage;           // "Display CPU Usage" FLAG.
 };
 
 

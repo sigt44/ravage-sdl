@@ -21,8 +21,6 @@
 
 #define MAXINPUTS          4     // Number of input devices supported.
 
-SDL_Joystick* joystick = NULL;
-bool joystickFire = false; //Is the fire button pressed for the joystick 
 
 // Next struct is a REGISTER structure for all input devices available.
 // A device must be registered in this structure to get active.
@@ -108,13 +106,8 @@ static void shutkeyboard(void)
 //-------------------------------------------------------------------
 // Joystick interface routines.
 //-------------------------------------------------------------------
-#define JOYSTICK        0x201          // Joystick port.
-#define JOYA_X          0x01
-#define JOYA_Y          0x02
-#define JOYA_B1         0
-#define JOYA_B2         1
 
-#define JOY_TIMEOUT     20000          // Joystick timeout value.
+volatile int   button_released;
 
 static int  joy_left = SDL_SCANCODE_LEFT;
 static int  joy_right = SDL_SCANCODE_RIGHT;
@@ -122,14 +115,35 @@ static int  joy_up = SDL_SCANCODE_UP;
 static int  joy_down = SDL_SCANCODE_DOWN;
 static int  joy_fire = SDL_SCANCODE_SPACE;
 
+SDL_Joystick* joystick = NULL;
+bool joystickFire = false; //Is the fire button pressed for the joystick
+bool joystickLeft = false;
+bool joystickRight = false;
+bool joystickUp = false;
+bool joystickDown = false;
+
 static   int   x0 = -32768/4, y0 = -32767/4, x1 = 32767/4, y1 = 32767/4;         // Joystick corner values.
+
+void setbuttons(int left, int right, int up, int down, int fire)
+{
+   joy_left = left;
+   joy_right = right;
+   joy_up = up;
+   joy_down = down;
+   joy_fire = fire;
+}
 
 static int measure(int &x, int &y, int &fire)
 {
 // Start new measure.
 	x = SDL_JoystickGetAxis(joystick, 0);
 	y = SDL_JoystickGetAxis(joystick, 1);
-
+	
+	if(joystickUp) y+=y1 + 1;
+	if(joystickDown) y+=y0 - 1;
+	if(joystickLeft) x+=x0 - 1;
+	if(joystickRight) x+=x1 + 1;
+	
 // Check FIRE button.
    fire = (int)joystickFire;
    
@@ -368,11 +382,58 @@ void input_update(void)
 		switch(event.type)
 		{
 			case SDL_JOYBUTTONDOWN:
-				joystickFire = true;
+			switch(event.jbutton.button)
+			{
+				case joy_left:
+					joystickLeft = true;
+				break;
+				
+				case joy_right
+					joystickRight = true;
+				break;
+				
+				case joy_up:
+					joystickUp = true;
+				break;
+				
+				case joy_down:
+					joystickDown = true;
+				break;
+				
+				case joy_fire:
+					joystickFire = true;
+				break;
+			}
+
 			break;
 
 			case SDL_JOYBUTTONUP:
-				joystickFire = false;
+			
+			button_released = event.jbutton.button;
+			
+			switch(event.jbutton.button)
+			{
+				case joy_left:
+					joystickLeft = false;
+				break;
+				
+				case joy_right
+					joystickRight = false;
+				break;
+				
+				case joy_up:
+					joystickUp = false;
+				break;
+				
+				case joy_down:
+					joystickDown = false;
+				break;
+				
+				case joy_fire:
+					joystickFire = false;
+				break;
+			}
+			
 			break;
 
 			case SDL_MOUSEBUTTONDOWN:

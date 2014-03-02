@@ -138,10 +138,10 @@ static void loadsettings(char *file)
 
 // Sound settings.
    settings.voices = 2;
-   settings.sound_device = 1;
    settings.mix_freq = 44100;
    settings.mod_vol = 10;
    settings.wav_vol = 30;
+   settings.loop_music = 1;
 
 // Control settings.
 // mouse.
@@ -155,11 +155,16 @@ static void loadsettings(char *file)
 
    settings.device[0] = 1;       // Player 1 input: Keyboard.
    settings.device[1] = 3;       // Player 2 input: Mouse.
+   
+// joystick
+   settings.key[0] = -1;      
+   settings.key[1] = -1;     
+   settings.key[2] = -1;     
+   settings.key[3] = -1;      
+   settings.key[4] = -1;     
 
 // Graphix
-   settings.frate = 1;
    settings.shadows = 0;
-   settings.cpu_usage = 0;
 
 // Try to load configuration file.
    if (myfile.open(file)) {

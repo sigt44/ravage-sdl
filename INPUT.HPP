@@ -30,9 +30,11 @@ void getkeyboard(int &x, int &y, int &fire);
 void setkeys(int, int, int, int, int);
 
 // Joystick stuff.
+_extrn volatile int   button_released;      // Code of last released button.
 void joypad_wait(void);
 int calibrate_joypad(void);
 void getjoypad(int &x, int &y, int &fire);
+void setbuttons(int, int, int, int, int);
 
 
 // Mouse functions.

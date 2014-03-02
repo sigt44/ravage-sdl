@@ -178,12 +178,24 @@ static Menu keymenu[] = {
    { END, "",0,0,0,0,"",0,a_key,0 }
 };
 
-static Menu joymenu[] = {
+/*static Menu joymenu[] = {
    { HEAD,"",0,0,0,0,"JOYPAD",0,a_joy,0 },
    { TEXT,"",0,-1,60,15,"Center Pad and Press Fire.",0,0,0 },
    { TEXT,"",0,-1,70,12,"ESC aborts.",0,0,0 },
    { END,"",0,0,0,0,"",0,a_joy,0 }
+};*/
+
+static Menu joymenu[] = {
+   { HEAD, "", 0, 0, 0, 0, "JOYPAD", 0,a_joy,0 },
+   { TEXT, "", 0, -1, 25, 12,"Press Button for Function",0,0,0 },
+   { TEXT, "", 0, 5, 50, 15, "Left:",0,0,0 },
+   { TEXT, "", 0, 5, 65, 15, "Right:",0,0,0 },
+   { TEXT, "", 0, 5, 80, 15, "Up:",0,0,0 },
+   { TEXT, "", 0, 5, 95, 15, "Down:",0,0,0 },
+   { TEXT, "", 0, 5, 110, 15, "Fire:",0,0,0 },
+   { END, "",0,0,0,0,"",0,a_joy,0 }
 };
+
 
 static Menu soundmenu[] = {
    { HEAD, "", 0,0,0,0,"SOUND",0,0,0 },
@@ -682,7 +694,7 @@ static void shutmenu(void)
    fadeout(FADE_ALL);
    s_unloadmod();
 	
-	// Housekeeping.
+// Housekeeping.
    weapon_removeall(nowplayer);
    palette.unlock();
    shutlevel();
@@ -1057,7 +1069,7 @@ static void b_control(int n)
       
       break;
    case 5:
-      //addtext1(controlmenu[n], "Calibrate Joypad", "");
+		addtext1(controlmenu[n], "Joypad Buttons", "");
       break;
    }
 }
@@ -1098,8 +1110,8 @@ static int a_control(int index, int subindex)
       setmousesens(settings.msens);
       b_control(4);
       break;
-	case 5:     // Calibrate joypad.
-      //buildmenu(joymenu);
+	case 5:     // Define joypad buttons.
+      buildmenu(joymenu);
       break;
    }
    return 0;
@@ -1138,15 +1150,33 @@ static int a_key(int index, int subindex)
 
 static int a_joy(int index, int subindex)
 {
+   static int  k;
+   char   text[16];
+
    if (index == M_INIT) {
+      k = 0;      // First button to enter now.
       pointer_enabled = 0;
-      joy_enabled = 1;
-      backoff = controlmenu;
+      joypad_enabled = 1;
+      backoff = 0;
       return 0;
    }
 
-   calibrate_joypad();
-   buildmenu(controlmenu);
+   if (k < 5) {
+		itoa(text, subindex, 10);
+		//strncpy(text, SDL_GetScancodeName((SDL_Scancode)subindex), 15);
+      tiny->vanilla(MENUX+80, MENUY+nowmenu[k+2].y, text, 12);
+      settings.joypadbutton[k] = subindex;
+      if (k == 4) {
+         tiny->vanilla_c(MENUX+(MENUXS+BORDER)/2,
+                         MENUY+140, "Press any button to continue", 12);
+      }
+   }
+   if (k==5) {
+      setbuttons(settings.joypadbutton[0], settings.joypadbutton[1], settings.joypadbutton[2],
+              settings.joypadbutton[3], settings.joypadbutton[4]);
+      buildmenu(controlmenu);
+   }
+   k++;
    return 0;
 }
 
