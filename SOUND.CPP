@@ -143,7 +143,7 @@ void s_loadmod(char *f)
 	mod = SDL_RWFromMem(myfile.getMemory(), myfile.getsize());
 
 	if(mod == NULL)
-		error("SDL_RWFromMem: ", (char *)SDL_GetError());
+		error("SDL_RWFromMem: ", SDL_GetError());
 
 	mf = Mix_LoadMUS_RW(mod, SDL_TRUE);
 
@@ -284,12 +284,12 @@ void initsound()
 
 	if(Mix_OpenAudio(8000, AUDIO_S16SYS, 2, 512) == -1)
 	{
-			error("Unable to open audio device: ", (char *)Mix_GetError());
+			error("Unable to open audio device: ", Mix_GetError());
 	}
 
 	if(!Mix_Init(MIX_INIT_MOD))
 	{
-		printf("Unable to support MOD files: %s\n", (char *)Mix_GetError());
+		printf("Unable to support MOD files: %s\n", Mix_GetError());
 	}
 
 #ifndef NO_SOUND
@@ -305,7 +305,7 @@ void initsound()
 
 
    if (sound_Init(128, 8, 100, 1)) {
-      error("Sound Driver Error: ", (char *)Mix_GetError());
+      error("Sound Driver Error: ", Mix_GetError());
    } else {
       initialized = 1;
    }

@@ -193,14 +193,8 @@ void playback_loop(void);
 // Save Game I/O
 SaveGame *get_savegame(void);
 void put_savegame(SaveGame &);
-#ifdef DONT_DEF
 
-#ifdef DEBUG
-_ext int       recorder;         // 1 if GamePlay recorder is enabled.
-#endif
-_ext volatile int cpu_power;     // CPU Power measured at start up.
+//Shut down program
+int end_ravage(void);
 
-extern volatile int timer_ticks;
-
-#endif
 #endif

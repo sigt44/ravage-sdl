@@ -16,6 +16,7 @@
 #include "ERROR.HPP"
 #define AH_INPUTMANAGER
 #include "INPUT.HPP"
+#include "RAVAGE.HPP"
 
 // Globaler Schrott
 
@@ -383,6 +384,10 @@ void input_update(void)
 	{
 		switch(event.type)
 		{
+            case SDL_QUIT:
+                end_ravage();
+            break;
+
 			case SDL_JOYBUTTONDOWN:
 
 			if(event.jbutton.button == joy_left) joystickLeft = true;
@@ -425,6 +430,9 @@ void input_update(void)
 					case SDL_SCANCODE_ESCAPE:
 						key[KEY_ESC] = 1;
 					break;
+
+					default:
+                    break;
 				}
 
 			break;
@@ -437,6 +445,9 @@ void input_update(void)
 					case SDL_SCANCODE_ESCAPE:
 						key[KEY_ESC] = 0;
 					break;
+
+					default:
+                    break;
 				}
 
 			break;
@@ -460,9 +471,15 @@ void input_update(void)
 					case SDL_WINDOWEVENT_FOCUS_GAINED:
 					window.enableInputFocus();
 					break;
+
+					default:
+                    break;
 				}
 
 			break;
+
+            default:
+            break;
 		}
 	}
 }
@@ -491,7 +508,7 @@ void input_fire(void)
 {
    int  j, k, m;
    int  x, y;
-	int hasFocus = 0;
+
    k = j = m = 0;
    do {
 		input_update();

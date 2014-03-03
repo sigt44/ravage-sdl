@@ -25,11 +25,11 @@ void reg_exit(void (*f)(void))
    if (nregs < MAXREGS) reg_func[nregs++] = f;
 }
 
-void error(char *text1, char *text2)
+void error(const char *text1, const char *text2)
 {
    if (enabled) {
 // Set error variables for postprocessing.
-      err_text = text1;
+      err_text = (char *)text1;
       if (text2) strcpy(err_arg0, text2); else err_arg0[0] = 0;
 // WARP speed, Mr. Sulu.
       longjmp(_err_jmp, 1);

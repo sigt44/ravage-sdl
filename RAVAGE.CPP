@@ -595,7 +595,13 @@ int main(int argc, char *argv[])
    filepool[1].close();
    filepool[0].close();
 
-// Done for the game. Back to OS.
+    end_ravage();
+    return 0;
+}
+
+int end_ravage(void)
+{
+    // Done for the game. Back to OS.
    reg_down();                // Execute registered shutdown functions.
    savesettings(CONFIGFILE);  // Save current game settings.
 
