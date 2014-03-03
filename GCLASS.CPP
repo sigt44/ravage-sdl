@@ -8,10 +8,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "memory.hpp"
-#include "xlib.hpp"
-#include "gclass.hpp"
-#include "error.hpp"
+#include "MEMORY.HPP"
+#include "XLIB.HPP"
+#include "GCLASS.HPP"
+#include "ERROR.HPP"
 
 // Memory Management
 static Memory<Weapon>   wmem;

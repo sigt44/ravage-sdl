@@ -3,7 +3,7 @@
 #include <string.h>
 
 #define AH_ERROR
-#include "error.hpp"
+#include "ERROR.HPP"
 
 using namespace std;
 

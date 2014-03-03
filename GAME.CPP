@@ -3,14 +3,14 @@
 #include <string.h>
 #include <time.h>
 
-#include "diskio.hpp"
-#include "memory.hpp"
-#include "error.hpp"
-#include "input.hpp"
+#include "DISKIO.HPP"
+#include "MEMORY.HPP"
+#include "ERROR.HPP"
+#include "INPUT.HPP"
 #include "SDL_BASE.HPP"
 #include "SOUND.HPP"
 #include "SOUND_SDL.HPP"
-#include "ravage.hpp"
+#include "RAVAGE.HPP"
 #include "WINDOWS.HPP"
 
 #ifdef DEBUG
@@ -104,7 +104,8 @@ public:
    {
       char  text[4];
 
-      itoa(5*(usage/5), text, 10);
+      snprintf(text, 3, "%d", 5*(usage/5));
+      //itoa(5*(usage/5), text, 10);
       render.x_drawsprite(&cpubanner, 5, 230, 0);
       digit->print(80, 230, text);
    }
@@ -296,7 +297,7 @@ void shutgame(void)
 void newlevel(char *name)
 {
    level.load(name);
-	
+
    gstate.bosses = level.descript->bigboss_count;
    gstate.frame = 0;             // Reset frame counter.
 // Set initial layer speeds.
@@ -496,7 +497,7 @@ static int playlevel(void)
 
 // Start a nearly endless loop.
    do {
-		
+
 		fast = 1;
 		startTime = SDL_GetTicks();
 // Check Debug keys.
@@ -642,10 +643,9 @@ static int playlevel(void)
 // Start building new screen.
 // Process objects.
       process_objects();
-      if (fast) {
 // Draw Background and Sprites on virtual screen.
-         drawscreen();
-      }
+        drawscreen();
+
       postprocess_objects();
       if (fast) {
 // Write Player information on top of the whole mess.

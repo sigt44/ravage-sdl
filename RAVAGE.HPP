@@ -2,8 +2,8 @@
 #ifndef AH_RAVAGE
 #define AH_RAVAGE
 
-#include "types.h"
-#include "gclass.hpp"
+#include "TYPES.H"
+#include "GCLASS.HPP"
 #include "DISKIO.HPP"
 #include "SDL_BASE.HPP"
 
@@ -113,7 +113,7 @@ struct Settings {
    int      msens;               // Mouse sensitivity.
 // Keyboard settings.
    int      key[5];              // Defined keys. (lt, rt, up, dn, fire).
-   int      joypadbutton[5]; 
+   int      joypadbutton[5];
 // Sound settings.
    int      loop_music;				// Ensure music is looped
    int      voices;              // Number of SFX voices to mix.

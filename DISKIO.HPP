@@ -14,7 +14,7 @@ class myFile {
    int   base;
    int   size;
 public:
-	myFile::myFile();
+	myFile();
    ~myFile() { close(); }
    int   open(char *f);
    int   creat(char *f);

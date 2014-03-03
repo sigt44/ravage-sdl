@@ -118,17 +118,6 @@ void initgraphics(void);
 void shutgraphics(void);
 void setvideomode(int mode);
 
-// THESE ARE THE ONLY 7 FUNCTIONS WRITTEN IN PURE ASSEMBLY. YES !!
-extern "C" {
-   void __cdecl x_drawsprite(Sprite *sprite, int x, int y, int n);
-   void __cdecl x_drawshadow(Sprite *sprite, int x, int y, int n);
-   void __cdecl x_drawvanilla(Sprite *sprite, int x, int y, int n, int c);
-   void __cdecl x_drawcrispy(Sprite *sprite, int x, int y, int n, int c);
-   void __cdecl x_layer0(void *data, int y);
-   void __cdecl x_layer1(void *data, int y);
-   void __cdecl x_layer2(void *data, int y);
-}
-
 // Misc.
 void showpcx(void *pic, int line, int size);
 void *getpcxpal(void);

@@ -1,6 +1,8 @@
 
 #include <stdlib.h>
 
+#include "ERROR.HPP"
+
 #ifdef DEBUG
 
 void *operator new(size_t size);
@@ -33,8 +35,8 @@ public:
    Memory(int maxelements) { init(maxelements); }
    ~Memory() { shut(); }
    void  init(int);
-   void  shut(void) 
-   { 
+   void  shut(void)
+   {
       if (initialized) { delete []base; initialized = 0; }
    }
    T     *alloc(size_t);
@@ -71,9 +73,9 @@ void Memory<T>::init(int maxelements)
 template <class T>
 T *Memory<T>::alloc(size_t s)
 {
-   if (!initialized) error("(Memory::alloc): system not initialized.");
-   if (s != sizeof(T)) error("(Memory::alloc): wrong block size.");
-   if (nfree <= 0) error("(Memory::alloc): no free blocks.");
+   if (!initialized) error("(Memory::alloc): system not initialized.", NULL);
+   if (s != sizeof(T)) error("(Memory::alloc): wrong block size.", NULL);
+   if (nfree <= 0) error("(Memory::alloc): no free blocks.", NULL);
    do {
       if (++last >= n) {
          last = 0; l = base;

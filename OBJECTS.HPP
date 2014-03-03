@@ -3,7 +3,7 @@
 #define AH_OBJECTS
 
 #include "SDL_BASE.HPP"
-#include "xlib.hpp"
+#include "XLIB.HPP"
 
 // Shadow Flags
 #define SH_NONE         0     // No shadows are displayed.
@@ -68,9 +68,9 @@ public:  // functions.
       moveshadow(dx, dy);
    }
    void     setlayer(int layer) { Object::layer = layer; }
-   void     flash(void) { 
-		flags |= O_FLASH; 
-		if(sprite) SDL_SetTextureColorMod(sSprite.getTexture()->getBase(), 128, 128, 128); 
+   void     flash(void) {
+		flags |= O_FLASH;
+		if(sprite) SDL_SetTextureColorMod(sSprite.getTexture()->getBase(), 128, 128, 128);
 	}
    void     animation(int dir) { f_direction = dir; }
    void     setbounds(int low, int high)
@@ -106,7 +106,7 @@ public:  // functions.
 
 // Crash analysis. This is a cool one and it should be inlined.
 // Crash just checks whether the two OBJECTS do overlap and returns 1 if so.
-static inline int crash(Object *obj1, Object *obj2)
+inline int crash(Object *obj1, Object *obj2)
 {
    Sprite *s1 = obj1->sprite;
    Sprite *s2 = obj2->sprite;
@@ -120,7 +120,7 @@ static inline int crash(Object *obj1, Object *obj2)
 
 // crashcore is bit more complex.
 // It tests the core of the two objects for overlapping.
-static inline int crashcore(Object *obj1, Object *obj2)
+inline int crashcore(Object *obj1, Object *obj2)
 {
    Sprite *s1 = obj1->sprite;
    Sprite *s2 = obj2->sprite;

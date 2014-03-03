@@ -7,11 +7,11 @@
 
 #include <stdlib.h>
 
-#include "error.hpp"
-#include "memory.hpp"
-#include "diskio.hpp"
+#include "ERROR.HPP"
+#include "MEMORY.HPP"
+#include "DISKIO.HPP"
 #include "SDL_BASE.HPP"
-#include "objects.hpp"
+#include "OBJECTS.HPP"
 #include "TYPES.H"
 
 // The Map class.
@@ -120,12 +120,13 @@ void drawscreen(void)
    Object  *ptr;
 
 // At the bottom, there's map layer 0
-   if (map.layer[0]) {
+   if (map.layer[0] != NULL) {
 		render.drawMap(&sMap[0], map.y[0]);
 		//render.drawMap(&sMap[0], sMap[0].getLength() - 2);
    }
+
 // Next we draw layer 1.
-   if (map.layer[1]) {
+   if (map.layer[1] != NULL) {
 		render.drawMap(&sMap[1], map.y[1]);
 		//render.drawMap(&sMap[1], sMap[1].getLength() - 2);
    }
@@ -230,7 +231,7 @@ void Object::changeshadow(Sprite *spr)
 
    if (!shadow) {
       shadow = spr;
-		
+
       shadowx = shadowy = 0;
    } else {
       shadow = spr;
@@ -269,7 +270,7 @@ void Object::drawshadow(void)
 void Object::draw(void)
 {
 	render.x_drawsprite(&sSprite, x, y, frame);
-	
+
    if (flags & O_FLASH) {
 		SDL_SetTextureColorMod(sSprite.getTexture()->getBase(), 255, 255, 255);
       flags &= ~O_FLASH;
@@ -353,7 +354,7 @@ void loadmap(char *file)
 
 // Adjust tile pointers but let NULL pointers stay NULL pointers.
    for (i = 0; i < size; i++) {
-      if (anchor[MP_DATA+i] > 0)
+      if (anchor[MP_DATA+i] != NULL)
 		{
 			anchor[MP_DATA+i] += ptr; //ANCHOR[MP_DATA + i] now refers to the actual location of the tile data instead of being an offset from ptr
 		}
@@ -361,14 +362,14 @@ void loadmap(char *file)
 	}
 
 	for (i = 0; i < lSize; i++) {
-      if (anchor[MP_DATA+i] > 0)
+      if (anchor[MP_DATA+i] != NULL)
 		{
 			sMap[0].convert(lSize - 1 - i, (long *)anchor[MP_DATA+i]);
 		}
 	}
 
 	for (i = i; i < size; i++) {
-      if (anchor[MP_DATA+i] > 0)
+      if (anchor[MP_DATA+i] != NULL)
 		{
 			sMap[1].convert((size - lSize) - 1 - (i - lSize), (long *)anchor[MP_DATA+i]);
 		}

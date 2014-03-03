@@ -10,8 +10,8 @@
 #include <string.h>
 
 #include "SDL_BASE.HPP"
-#include "sound.hpp"
-#include "ravage.hpp"
+#include "SOUND.HPP"
+#include "RAVAGE.HPP"
 
 
 #define FADESPEED       2
@@ -32,7 +32,7 @@ void fadeout(int mode)
 	const int alphaStep = 4;
 
 	SDLTexture originalTexture;
-	
+
 	originalTexture.loadPointer(render.createScreenTexture(), true);
 
 // Setup palette fading if required.
@@ -44,7 +44,7 @@ void fadeout(int mode)
 
 // Do fading.
    for (i = 64; i >= 0; i-=FADESPEED) {
-		
+
 		render.fade(&originalTexture, (64-i) * alphaStep);
 
 		render.update();
@@ -71,12 +71,12 @@ void fadein(void *p)
 	SDL_Surface *fadeSurface = NULL;
 
 	SDLTexture originalTexture;
-	
+
 	originalTexture.loadPointer(render.createScreenTexture(), true);
 
 // Do fading.
    for (i = 64; i >= 0; i-=FADESPEED) {
-		
+
 		render.fade(&originalTexture, i * alphaStep);
 
 		render.update();

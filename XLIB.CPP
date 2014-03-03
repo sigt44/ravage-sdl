@@ -13,16 +13,16 @@
 
 
 #include <string.h>
-#include <conio.h>
 #include <stdlib.h>
+#include <math.h>
 
 #include <SDL_image.h>
 
 #include "SDL_BASE.HPP"
 #include "XLIB.HPP"
-#include "error.hpp"
-#include "memory.hpp"
-#include "diskio.hpp"
+#include "ERROR.HPP"
+#include "MEMORY.HPP"
+#include "DISKIO.HPP"
 
 // Global variables. World Access.
 #define HWLINEBYTES 80
@@ -174,15 +174,15 @@ void Palette::calcshadows(void *p, int v)
       r0 = (pal[c0*3+0] * v) / 100;
       g0 = (pal[c0*3+1] * v) / 100;
       b0 = (pal[c0*3+2] * v) / 100;
-      rlen = sqrt(r0*r0 + g0*g0 + b0*b0);
+      rlen = sqrt((long unsigned int)(r0*r0 + g0*g0 + b0*b0));
 // Now try to find a colour that matches ours. (but with half the intensity).
       min = 100000;
       for (c1 = 0; c1 < SCREENCOLORS; c1++) {
          r1 = pal[c1*3+0]; rd = r1 - r0;
          g1 = pal[c1*3+1]; gd = g1 - g0;
          b1 = pal[c1*3+2]; bd = b1 - b0;
-         if (rlen >= sqrt(r1*r1 + g1*g1 + b1*b1)) {
-            len = sqrt(rd*rd + gd*gd + bd*bd);
+         if (rlen >= sqrt((long unsigned int)(r1*r1 + g1*g1 + b1*b1))) {
+            len = sqrt((long unsigned int)(rd*rd + gd*gd + bd*bd));
             if ((len < min)) {
                min = len; best = c1;
             }
@@ -380,7 +380,7 @@ void showpcx(void *pic, int line, int size)
 	SDLTexture pcxTexture;
 
 	pcxTexture.loadMemory(pic, size);
-	
+
 	render.drawTexture(&pcxTexture, 0, line);
 
 	pcxTexture.destroy();
@@ -494,7 +494,7 @@ void Back::save(int dx, int dy)
 	SDL_RenderPresent(render.getBase());
 
 	render.setTarget(NULL);
-	
+
 	/*printf("SCREEN TEST %d %d (%d, %d) vs (%d, %d):\n", x, y, xs, ys, background.getWidth(), background.getHeight());
 	puts("Draw screen");
 	render.clear();
@@ -511,7 +511,7 @@ void Back::save(int dx, int dy)
 
 	screen.destroy();
 	valid = 1;
- 
+
 }
 
 // restore background previously saved using Back::save.
@@ -558,14 +558,14 @@ void SpritePool::unload(void)
  Function: initgraphics
 
  Description:
- Initilize the whole graphic system. 
+ Initilize the whole graphic system.
 ---------------------------------------------------------*/
 void initgraphics(void)
 {
    int   i;		// Loop counter.
 
 	//IMG_Init();
-	
+
 	window.create("Ravage SDL", XSCALE, YSCALE);
 
 	render.init(&window, HWXMAX, HWYMAX);

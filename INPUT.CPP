@@ -13,9 +13,9 @@
 #include <stdio.h>
 
 #include "SDL_BASE.HPP"
-#include "error.hpp"
+#include "ERROR.HPP"
 #define AH_INPUTMANAGER
-#include "input.hpp"
+#include "INPUT.HPP"
 
 // Globaler Schrott
 
@@ -123,7 +123,7 @@ bool joystickRight = false;
 bool joystickUp = false;
 bool joystickDown = false;
 
-static   int   x0 = -32768/4, y0 = -32767/4, x1 = 32767/4, y1 = 32767/4;         // Joystick corner values.
+static   int   xAxis0 = -32768/4, yAxis0 = -32767/4, xAxis1 = 32767/4, yAxis1 = 32767/4;         // Joystick corner values.
 
 void setbuttons(int left, int right, int up, int down, int fire)
 {
@@ -139,15 +139,15 @@ static int measure(int &x, int &y, int &fire)
 // Start new measure.
 	x = SDL_JoystickGetAxis(joystick, 0);
 	y = SDL_JoystickGetAxis(joystick, 1);
-	
-	if(joystickUp) y+=y1 + 1;
-	if(joystickDown) y+=y0 - 1;
-	if(joystickLeft) x+=x0 - 1;
-	if(joystickRight) x+=x1 + 1;
-	
+
+	if(joystickUp) y+=yAxis1 + 1;
+	if(joystickDown) y+=yAxis0 - 1;
+	if(joystickLeft) x+=xAxis0 - 1;
+	if(joystickRight) x+=xAxis1 + 1;
+
 // Check FIRE button.
    fire = (int)joystickFire;
-   
+
    return 0;
 
 }
@@ -177,10 +177,10 @@ void getjoypad(int &x, int &y, int &fire)
    x = y = 0;
    measure(dx, dy, fire);
 
-   if (dx < x0) x--;
-   if (dy < y0) y--;
-   if (dx > x1) x++;
-   if (dy > y1) y++;
+   if (dx < xAxis0) x--;
+   if (dy < yAxis0) y--;
+   if (dx > xAxis1) x++;
+   if (dy > yAxis1) y++;
 }
 
 
@@ -190,10 +190,10 @@ int calibrate_joypad(void)
    int   yes;
 
    yes = measure(x, y, fire);
-   x0 = x - (x / 2);
-   x1 = x + (x / 2);
-   y0 = y - (y / 2);
-   y1 = y + (y / 2);
+   xAxis0 = x - (x / 2);
+   xAxis1 = x + (x / 2);
+   yAxis0 = y - (y / 2);
+   yAxis1 = y + (y / 2);
    return yes;
 }
 
@@ -212,7 +212,7 @@ void initjoypad(void)
 			printf("Number of Axes: %d\n", SDL_JoystickNumAxes(joystick));
 			printf("Number of Buttons: %d\n", SDL_JoystickNumButtons(joystick));
 			printf("Number of Balls: %d\n", SDL_JoystickNumBalls(joystick));
-			
+
 			joypad = 1;
 		} else {
 			printf("Couldn't open Joystick 0\n");
@@ -225,7 +225,7 @@ void shutjoypad(void)
 {
 	if (SDL_JoystickGetAttached(joystick)) {
 		SDL_JoystickClose(joystick);
-		
+
 		joypad = 0;
 	}
 }
@@ -259,7 +259,7 @@ void getmousexy(int &b, int &x, int &y)
    else if(x > m_limx1) x = m_limx1;
    if(y < m_limy0) y = m_limy0;
    else if (y > m_limy1) y = m_limy1;
-   
+
 }
 
 // Return the net mouse displacement since the last call to this function.
@@ -305,7 +305,7 @@ void mouse_wait(void)
    int   x, y, b;
 
    getmousexy(b, x, y);
-   while (b) 
+   while (b)
 	{
 		input_update();
 		getmousexy(b, x, y);
@@ -378,7 +378,7 @@ void input_update(void)
 
 	keys = 0;
 	button_released = -1;
-	
+
 	while(SDL_PollEvent(&event))
 	{
 		switch(event.type)
@@ -398,7 +398,7 @@ void input_update(void)
 			case SDL_JOYBUTTONUP:
 
 			button_released = event.jbutton.button;
-			
+
 			if(event.jbutton.button == joy_left) joystickLeft = false;
 			else if(event.jbutton.button == joy_right) joystickRight = false;
 			else if(event.jbutton.button == joy_up) joystickUp = false;
@@ -406,7 +406,7 @@ void input_update(void)
 			else if(event.jbutton.button == joy_fire) joystickFire = false;
 
 			if(joy_fire == -1) joystickFire = false;
-			
+
 			break;
 
 			case SDL_MOUSEBUTTONDOWN:
@@ -417,7 +417,7 @@ void input_update(void)
 
 			case SDL_KEYDOWN:
 				keys++;
-				
+
 				key_pressed = (int)event.key.keysym.scancode;
 
 				switch(event.key.keysym.scancode)
@@ -427,7 +427,7 @@ void input_update(void)
 					break;
 				}
 
-			break; 
+			break;
 
 			case SDL_KEYUP:
 				key_released = (int)event.key.keysym.scancode;

@@ -11,14 +11,14 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "diskio.hpp"
-#include "error.hpp"
-#include "memory.hpp"
+#include "DISKIO.HPP"
+#include "ERROR.HPP"
+#include "MEMORY.HPP"
 #include "SDL_BASE.HPP"
-#include "xlib.hpp"
-#include "input.hpp"
-#include "sound.hpp"
-#include "ravage.hpp"
+#include "XLIB.HPP"
+#include "INPUT.HPP"
+#include "SOUND.HPP"
+#include "RAVAGE.HPP"
 #include "WINDOWS.HPP"
 
 #ifdef DEBUG
@@ -79,21 +79,21 @@ void title(void)
  Custom MENU definitions.
 ---------------------------------------------------------*/
 // Prototypes of custom menu functions.
-int a_main(int, int);
-int a_quit(int, int);
-int a_options(int, int);
-int a_stuff(int, int);
-int a_tooptions(int, int);
-int a_play1(int, int);
-int a_play2(int, int);
-int a_control(int, int);
-int a_key(int, int);
-int a_joy(int, int);
-int a_sound(int, int);
-int a_graphix(int, int);
-int a_load(int, int);
-int a_save(int, int);
-int a_shop(int, int);
+static int a_main(int, int);
+static int a_quit(int, int);
+static int a_options(int, int);
+static int a_stuff(int, int);
+static int a_tooptions(int, int);
+static int a_play1(int, int);
+static int a_play2(int, int);
+static int a_control(int, int);
+static int a_key(int, int);
+static int a_joy(int, int);
+static int a_sound(int, int);
+static int a_graphix(int, int);
+static int a_load(int, int);
+static int a_save(int, int);
+static int a_shop(int, int);
 // -
 
 enum Control { END, HEAD, TEXT, STEXT, ADD, ADDSUB, YES, YESNO, UPDOWN, CUSTOM, NONE };
@@ -343,8 +343,7 @@ Button::Button(int dx, int dy, Sprite *sprite, int dn, int idx)
 
 
 
-
-static void destroybuttons(void)
+void destroybuttons(void)
 {
    Button   *b = anchor;
    Button   *keep;
@@ -358,7 +357,7 @@ static void destroybuttons(void)
 }
 
 // Check mouse coordinates and return number of button mouse hits.
-static Button *checkbuttons(int x0, int y0, int &index, int &subindex)
+Button *checkbuttons(int x0, int y0, int &index, int &subindex)
 {
    Button   *b = anchor;
    int      dx, dy;
@@ -596,7 +595,7 @@ int checkmenu(int mb, int x, int y)
 void demo(void)
 {
    int  dx, dy, fire;
-	
+
    newwave();
    enemystep();
 	s_update();
@@ -693,7 +692,7 @@ static void shutmenu(void)
 {
    fadeout(FADE_ALL);
    s_unloadmod();
-	
+
 // Housekeeping.
    weapon_removeall(nowplayer);
    palette.unlock();
@@ -756,6 +755,7 @@ int menu(int mode, int p)
    static   int key_allowed;
 	void *f = NULL;
 	int size = 0;
+	Uint32 startTime = 0;
 
 // Initialize menu system.
    nowplayer = p;
@@ -778,12 +778,12 @@ int menu(int mode, int p)
    x = MENUX + MENUXS/2;
    y = MENUY + MENUYS/2;
    do {
-
+      startTime = SDL_GetTicks();
       demo();
 
 // Restore mouse pointer background.
       back->restore();
- 
+
       b = 0;
 		input_update();
       if (mouse) getmousexy(b, x, y);
@@ -832,11 +832,12 @@ int menu(int mode, int p)
 // Flip (aber ned z'knapp).
       if (fast) render.update();
       fast = 1;
-		//printf("tmp: %d\n", tmp);
-		SDL_Delay(32);
-#ifdef DEBUG
-      if (key[0x20]) debugint();
-#endif
+
+        while(SDL_GetTicks() - startTime < 32)
+        {
+            SDL_Delay(1);
+        }
+
    } while (1);
 
    destroymenu();
@@ -867,7 +868,7 @@ static void showpicture(char *file)
    void  *f;
 	int size = 0;
 	SDLTexture restore;
-	
+
 	restore.loadPointer(render.createScreenTexture(), true);
 
    f = loadfile(file, &size);
@@ -895,7 +896,7 @@ static void order(void)
    int   x, y;
 	int size = 0;
 	SDLTexture restore;
-	
+
 	restore.loadPointer(render.createScreenTexture(), true);
 
    f = loadfile("pic\\order.pcx", &size);
@@ -989,7 +990,7 @@ static int a_quit(int index, int subindex)
 
 static int a_options(int index, int subindex)
 {
-	
+
    if (index == M_INIT) {
       backoff = mainmenu;
       return 0;
@@ -1161,7 +1162,8 @@ static int a_joy(int index, int subindex)
    }
 
    if (k < 5) {
-		itoa(subindex, text, 10);
+        snprintf(text, 10, "%d", subindex);
+		//itoa(subindex, text, 10);
 		//strncpy(text, SDL_GetScancodeName((SDL_Scancode)subindex), 15);
       tiny->vanilla(MENUX+80, MENUY+nowmenu[k+2].y, text, 12);
       settings.joypadbutton[k] = subindex;
@@ -1196,7 +1198,8 @@ static void b_sound(int n)
 	*/
    case 1:
       if (settings.mod_vol) {
-         itoa(settings.mod_vol, text, 10); strcat(text, "/64");
+        snprintf(text, 16, "%d", settings.mod_vol);
+         //itoa(settings.mod_vol, text, 10); strcat(text, "/64");
       } else {
          strcpy(text, "off");
       }
@@ -1204,7 +1207,8 @@ static void b_sound(int n)
       break;
    case 2:
       if (settings.wav_vol) {
-         itoa(settings.wav_vol, text, 10); strcat(text, "/64");
+         snprintf(text, 16, "%d", settings.wav_vol);
+         //itoa(settings.wav_vol, text, 10); strcat(text, "/64");
       } else {
          strcpy(text, "off");
       }
@@ -1267,7 +1271,7 @@ static int a_sound(int index, int subindex)
 		s_startmod();
 		input_wait();
       b_sound(index);
-		
+
       break;
    }
 
@@ -1583,7 +1587,8 @@ static void shop_display(void)
          strcpy(text1, "Price: ");
 // If weapon is last in a power chain, we display "----".
          if (w[j].price) {
-            itoa(w[j].price, text2, 10);
+            snprintf(text2, 9, "%d", w[j].price);
+            //itoa(w[j].price, text2, 10);
          } else {
             strcpy(text2, "----");
          }
@@ -1591,9 +1596,14 @@ static void shop_display(void)
          addtext2(shopmenu[i+2], weapons.weapon[j]->name, text1);
          strcpy(text1, "Lvl: ");
          if (w[j].type == WT_LIFE)
-            itoa(player[nowplayer].ships-1, text2, 10);
+            snprintf(text2, 9, "%d", player[nowplayer].ships-1);
+            //itoa(player[nowplayer].ships-1, text2, 10);
          else
-            itoa(w[j].you_own, text2, 10);
+         {
+             snprintf(text2, 9, "%d", w[j].you_own);
+             //itoa(w[j].you_own, text2, 10);
+         }
+
          strcat(text1, text2);
          addtext1dn(64, shopmenu[i+2], text1, 7);
       }
@@ -1621,7 +1631,8 @@ static void your_money(int money)
    shopmenu[1].back->restore();
    y = MENUY + shopmenu[1].y;
    tiny->vanilla(MENUX+35, y, "Your money:", 15);
-   itoa(money, text, 10);
+   snprintf(text, 19, "%d", money);
+   //itoa(money, text, 10);
    tiny->vanilla(MENUX+95, y, text, 12);
 }
 

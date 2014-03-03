@@ -29,25 +29,24 @@
 
 #include <malloc.h>
 #include <setjmp.h>
-#include <sys\types.h>
-#include <conio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <iostream>
 #include <SDL.h>
 #include <SDL_image.h>
 #include <climits>
+#include <string.h>
 
 #define AH_MAINMODULE
-#include "error.hpp"
-#include "memory.hpp"
+#include "ERROR.HPP"
+#include "MEMORY.HPP"
 #include "WINDOWS.HPP"
 #include "SDL_BASE.HPP"
 
-#include "input.hpp"
-#include "diskio.hpp"
-#include "ravage.hpp"
-#include "sound.hpp"
+#include "INPUT.HPP"
+#include "DISKIO.HPP"
+#include "RAVAGE.HPP"
+#include "SOUND.HPP"
 
 #include "XLIB.HPP"
 
@@ -109,6 +108,17 @@ static int cmdnumber(char *text, int def)
    return i[strlen(text)] - '0';
 }
 
+#ifdef LINUX
+static void strlwr(char *str)
+{
+    while(*str != '\0')
+    {
+        if(isupper(*str)) *str = tolower(*str);
+        str++;
+    }
+}
+#endif
+
 static void cmdline(int argc, char *argv[])
 {
    int   i;
@@ -147,21 +157,21 @@ static void loadsettings(char *file)
 // mouse.
    settings.msens = M_MEDIUM;
 // keyboard
-   settings.key[0] = SDL_SCANCODE_LEFT;      
-   settings.key[1] = SDL_SCANCODE_RIGHT;     
-   settings.key[2] = SDL_SCANCODE_UP;     
-   settings.key[3] = SDL_SCANCODE_DOWN;      
-   settings.key[4] = SDL_SCANCODE_SPACE;      
+   settings.key[0] = SDL_SCANCODE_LEFT;
+   settings.key[1] = SDL_SCANCODE_RIGHT;
+   settings.key[2] = SDL_SCANCODE_UP;
+   settings.key[3] = SDL_SCANCODE_DOWN;
+   settings.key[4] = SDL_SCANCODE_SPACE;
 
    settings.device[0] = 1;       // Player 1 input: Keyboard.
    settings.device[1] = 3;       // Player 2 input: Mouse.
-   
+
 // joystick
-   settings.joypadbutton[0] = -1;      
-   settings.joypadbutton[1] = -1;     
-   settings.joypadbutton[2] = -1;     
-   settings.joypadbutton[3] = -1;      
-   settings.joypadbutton[4] = -1;     
+   settings.joypadbutton[0] = -1;
+   settings.joypadbutton[1] = -1;
+   settings.joypadbutton[2] = -1;
+   settings.joypadbutton[3] = -1;
+   settings.joypadbutton[4] = -1;
 
 // Graphix
    settings.shadows = SH_ALL;
@@ -205,7 +215,6 @@ static void powerdown(void)
    cout << "Enemy peak usage: " << enemy_usage() << " of "
         << G_MAXENEMIES << " used." << endl;
 #endif
-   _heapmin();
 
    SDL_Quit();
 
@@ -230,7 +239,7 @@ static void powerup(void)
 {
 	// Init SDL
 
-	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK) != 0) 
+	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK) != 0)
 	{
 		fprintf(stderr, "\nUnable to initialize SDL:  %s\n", SDL_GetError());
 		return;
@@ -280,7 +289,7 @@ static void powerup(void)
    s_setmodvol(settings.mod_vol);
    s_setwavvol(settings.wav_vol);
    cout << "Sound driver: " << s_drivername() << endl;
-	
+
 	// Enter graphics.
    initgraphics(); reg_exit(shutgraphics);
 
@@ -340,7 +349,7 @@ static void powerup(void)
 
 	spriteTest.load(sprite, false);
 	printf("Texture width: %d\n", spriteTest.getTexture()->getWidth());
-	
+
 	render.x_drawsprite(&spriteTest, 0, 0, -1);
 
 	render.update();
@@ -355,12 +364,12 @@ int sdl_drawpcx(char *name)
 {
 	myFile myFile;
 	SDLTexture pcxTexture;
-	
+
 	if(!myFile.open(name)) error("Unable to open file.", name);
 
 	SDL_RenderClear(render.getBase());
 	pcxTexture.loadMemory(myFile.getMemory(), myFile.getsize());
-	
+
 	render.drawTexture(&pcxTexture, 0, 0, 50, 0, 100, 120);
 
 	render.update();
@@ -502,7 +511,7 @@ int main(int argc, char *argv[])
 	// Start music
    //s_startmod();
 	//s_setmodvol(64);
-	
+
 	//Load palette
 	void *p = (void *)loadfile("demo1\\DEMO1.CPA", NULL);
 	palette.set(p);
@@ -525,7 +534,7 @@ int main(int argc, char *argv[])
 	sdl_reportsprite(label);
 		label = (Sprite *)loadfile("pic\\players.spr");
 	sdl_reportsprite(label);
-	
+
 	sdl_drawpcx("pic\\STORY.PCX");
 	sdl_drawpcx("pic\\TITLE.PCX");
 	sdl_drawpcx("pic\\ORDER.PCX");

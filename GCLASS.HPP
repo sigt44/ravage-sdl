@@ -1,10 +1,10 @@
 #ifndef AH_GCLASS
 #define AH_GCLASS
 
-#include "types.h"
-#include "objects.hpp"
-#include "sound.hpp"
-#include "diskio.hpp"
+#include "TYPES.H"
+#include "OBJECTS.HPP"
+#include "SOUND.HPP"
+#include "DISKIO.HPP"
 
 
 #define G_MAXWEAPONS      150  // Max weapons & friendly shots on screen.

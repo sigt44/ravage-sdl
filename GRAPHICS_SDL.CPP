@@ -30,7 +30,7 @@ void SDLSprite::convert(void)
 	unsigned char pix;
 	SDL_Surface *surface = NULL;
 
-	if(!sprite) 
+	if(!sprite)
 	{
 		converted = false;
 		return;
@@ -40,7 +40,7 @@ void SDLSprite::convert(void)
 	surface = SDL_CreateRGBSurface(0, sprite->xs, sprite->ys_data * sprite->frames, 32, 0, 0, 0, 0);
 	SDL_FillRect(surface, NULL, SDL_MapRGB(surface->format, 0, 0, 0));
 
-	
+
 	//Prepare for direct pixel access
 	SDL_LockSurface(surface);
 
@@ -54,13 +54,13 @@ void SDLSprite::convert(void)
 			mod = x % 4; //Find the plane the requested pixel (x,y) is in
 
 			pix = *(bytePix + (y*(sprite->xs_data) + ((sprite->xs_data*mod)/4) + (x/4))); //Get the pixel index colour from the correct address
-			
+
 			surfacePix[x + (y * sprite->xs)] = SDL_MapRGB(surface->format, palette.sdl_rgb[pix].r, palette.sdl_rgb[pix].g, palette.sdl_rgb[pix].b);
 		}
 	}
 
 	SDL_UnlockSurface(surface);
-	
+
 	//Use first colour of palette as colour key.
 	SDL_SetColorKey(surface, 1, SDL_MapRGB(surface->format, palette.sdl_rgb[0].r, palette.sdl_rgb[0].g, palette.sdl_rgb[0].b));
 
@@ -78,7 +78,7 @@ void SDLSprite::convert(void)
 SDL_Rect SDLSprite::getFrameRect(int n)
 {
 	SDL_Rect frame;
-	
+
 	frame.x = 0;
 	frame.y = n*sprite->ys;
 	frame.w = texture.getWidth();
@@ -124,13 +124,13 @@ int SDLTexture::loadFile(char *filePath)
 int SDLTexture::loadMemory(void *memory, int memSize)
 {
 	SDL_RWops *texMem = NULL;
-	
+
 	if(tex) destroy();
 
 	texMem = SDL_RWFromMem(memory, memSize);
 
 	tex = IMG_LoadTexture_RW(render.getBase(), texMem, SDL_TRUE);
-	
+
 	if(tex == NULL)
 	{
 		error("Unable to load texture from memory: ", (char *)IMG_GetError());
@@ -199,7 +199,7 @@ void SDLRenderer::init(SDLWindow *window, int logicalWidth, int logicalHeight)
 	return;
 }
 
-void SDLRenderer::update(void) { 
+void SDLRenderer::update(void) {
 
 	SDL_RenderPresent(renderer);
 	SDL_SetRenderTarget(renderer, NULL);
@@ -286,7 +286,7 @@ void SDLRenderer::drawMap(SDLMap *map, int yOffset)
 	int rowStart = (int)floor((float)yOffset/(float)TILEYS);
 	int yMod = yOffset % TILEYS;
 	int offset = (map->getSize() - MIN_TILE_DRAW) - (rowStart * XTILES);
-	
+
 	//Clipping for first and last row
 	SDL_Rect firstRow = {0, TILEYS - yMod, TILEXS, yMod};
 	SDL_Rect lastRow = {0, 0, TILEXS, TILEYS};
@@ -302,7 +302,7 @@ void SDLRenderer::drawMap(SDLMap *map, int yOffset)
 		fullSize = MIN_TILE_DRAW;
 	}
 
-	//printf("yOffset %d, total rows %d, rowStart %d, tiles %d, length %d, offset %d, yMod %d\n", yOffset, totalRows, rowStart, map->getSize(), map->getLength(), offset, yMod);
+	//printf("yOffset %d, rowStart %d, tiles %d, length %d, offset %d, yMod %d\n", yOffset, rowStart, map->getSize(), map->getLength(), offset, yMod);
 
 	//printf("LastRow %d %d\n", lastRow.w, lastRow.h);
 
@@ -320,7 +320,7 @@ void SDLRenderer::drawMap(SDLMap *map, int yOffset)
 	//Next draw all rows up to the last one, no clipping should be needed
 	for(i = i; i < bodySize + XTILES; i++)
 	{
-		
+
 		if(i != XTILES && i % 9 == 0)
 			y += TILEYS;
 
@@ -395,7 +395,7 @@ void SDLMap::convert(int arrayIndex, long *tileData)
 		surface = temp;
 	}
 
-	SDL_FillRect(surface, NULL, SDL_MapRGB(surface->format, 0, 0, 0));
+	SDL_FillRect(surface, NULL, SDL_MapRGBA(surface->format, 0, 0, 0, SDL_ALPHA_OPAQUE));
 
 	//Prepare for direct pixel access
 	SDL_LockSurface(surface);
@@ -413,18 +413,20 @@ void SDLMap::convert(int arrayIndex, long *tileData)
 
 			if(pix == 255) //Shadow
 			{
-				if(shadows)
+				if(shadows == true)
 					surfacePix[x + (y * TILEXS)] = SDL_MapRGBA(surface->format, 1, 1, 1, 64);
 				else
-					surfacePix[x + (y * TILEXS)] = SDL_MapRGBA(surface->format, palette.sdl_rgb[0].r, palette.sdl_rgb[0].g, palette.sdl_rgb[0].b, 64);			
+					surfacePix[x + (y * TILEXS)] = SDL_MapRGBA(surface->format, palette.sdl_rgb[0].r, palette.sdl_rgb[0].g, palette.sdl_rgb[0].b, SDL_ALPHA_OPAQUE);
 			}
 			else
-				surfacePix[x + (y * TILEXS)] = SDL_MapRGBA(surface->format, palette.sdl_rgb[pix].r, palette.sdl_rgb[pix].g, palette.sdl_rgb[pix].b, 255);
+            {
+                surfacePix[x + (y * TILEXS)] = SDL_MapRGBA(surface->format, palette.sdl_rgb[pix].r, palette.sdl_rgb[pix].g, palette.sdl_rgb[pix].b, SDL_ALPHA_OPAQUE);
+            }
 		}
 	}
 
 	SDL_UnlockSurface(surface);
-	
+
 	//Use first colour of palette as colour key.
 	SDL_SetColorKey(surface, 1, SDL_MapRGBA(surface->format, palette.sdl_rgb[0].r, palette.sdl_rgb[0].g, palette.sdl_rgb[0].b, 255));
 

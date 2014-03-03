@@ -32,13 +32,13 @@
 
 #include <stdlib.h>
 
-#include "error.hpp"
-#include "memory.hpp"
-#include "sound.hpp"
+#include "ERROR.HPP"
+#include "MEMORY.HPP"
+#include "SOUND.HPP"
 #include "SDL_BASE.HPP"
 #include "SOUND.HPP"
 #include "SOUND_SDL.HPP"
-#include "ravage.hpp"
+#include "RAVAGE.HPP"
 
 
 //---------------------------------------------------------

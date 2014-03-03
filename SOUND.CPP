@@ -15,10 +15,10 @@
 #include <SDL.h>
 
 
-#include "error.hpp"
-#include "memory.hpp"
-#include "diskio.hpp"
-#include "sound.hpp"
+#include "ERROR.HPP"
+#include "MEMORY.HPP"
+#include "DISKIO.HPP"
+#include "SOUND.HPP"
 #include "RAVAGE.HPP"
 
 #include "SOUND_SDL.HPP"
@@ -136,10 +136,10 @@ void s_loadmod(char *f)
 #ifndef NO_SOUND
    myFile   myfile;
 	SDL_RWops *mod = NULL;
-	
+
    if (mf) s_unloadmod();
    if (!myfile.open(f)) error("(s_loadmod): not found: ", f);
-	
+
 	mod = SDL_RWFromMem(myfile.getMemory(), myfile.getsize());
 
 	if(mod == NULL)
@@ -289,8 +289,9 @@ void initsound()
 
 	if(!Mix_Init(MIX_INIT_MOD))
 	{
-		error("Unable to support MOD files: ", (char *)Mix_GetError());
+		printf("Unable to support MOD files: %s\n", (char *)Mix_GetError());
 	}
+
 #ifndef NO_SOUND
    if (initialized) return;
 
@@ -317,7 +318,7 @@ void shutsound(void)
 #ifndef NO_SOUND
 	s_stopmod();
 	sound_Clean();
-	
+
 #endif
 	Mix_Quit();
    initialized = 0;

@@ -12,10 +12,10 @@
 #include <string.h>
 #include <iostream>
 
-#include "windows.hpp"
-#include "error.hpp"
-#include "memory.hpp"
-#include "diskio.hpp"
+#include "WINDOWS.HPP"
+#include "ERROR.HPP"
+#include "MEMORY.HPP"
+#include "DISKIO.HPP"
 
 using namespace std;
 
@@ -29,7 +29,7 @@ static struct {
 
 static char curDIR[255];
 
-	
+
 
 /*---------------------------------------------------------
  Function: class myFile
@@ -221,7 +221,11 @@ void initfilesystem(void)
 {
    int   i;
 
+   #ifdef WINDOWS
    GetCurrentDirectory(254, curDIR);
+   #else
+   getcwd(curDIR, 254);
+   #endif // WINDOWS
 
    cout << "Current directory: " << curDIR << endl;
 
