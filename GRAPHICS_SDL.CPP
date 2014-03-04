@@ -8,6 +8,8 @@ SDLRenderer render;
 
 SDLSpritePool sPool;
 
+int debug = 0;
+
 /*---------------------------------------------------------
 SDLSpriteSpool class methods
 ---------------------------------------------------------*/

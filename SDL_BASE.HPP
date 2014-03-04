@@ -19,6 +19,8 @@ extern class SDLRenderer render;
 
 extern class SDLSpritePool sPool;
 
+extern int debug;
+
 //Game window class
 class SDLWindow {
 	SDL_Window *window;
@@ -70,7 +72,7 @@ class SDLTexture {
 public:
 	SDLTexture() { tex = NULL; }
 	~SDLTexture() {
-        destroy();
+        //destroy();
 	}
 
     int create(int width, int height, Uint32 pixelFormat);
@@ -99,6 +101,7 @@ public:
 	void destroy(void) {
 		if(freeTexture && tex) SDL_DestroyTexture(tex);
 		tex = NULL;
+		debug--;
 	}
 };
 
@@ -281,11 +284,13 @@ public:
 	{
 		SDLTile *tile = NULL;
 		int x = 0;
+
 		for(x = 0; x < numTiles; x++)
 		{
 			tile = (tiles+x);
 			tile->destroy();
 		}
+
 		if(tiles)
 		{
 			delete[] tiles;
