@@ -25,98 +25,11 @@
 #include "DISKIO.HPP"
 
 // Global variables. World Access.
-#define HWLINEBYTES 80
 
 static int     ingraphics = 0;            // Already in Graphics mode ?
 
-unsigned char   *_vscreen;  // Pointer to raw allocated virtual screen.
-unsigned char   *vscreen;   // Pointer to ready to use virtual screen.
-
 Palette  palette;       // All palette handling done through this class.
-signed char    _palette[PALETTESIZE];   // Palette for which _shadow is valid.
-unsigned char   _shadow[SCREENCOLORS];   // Shadow look-up table.
 
-// Keepers of the PALETTE.
-#define MAXCYCLES       2           // Number of cyclers allowed.
-#pragma pack(4)
-static struct {
-   int      active;                 // Is cycle active ?
-   int      c1, c2;                 // Cycle between those two colors.
-   int      pos;                    // Current color.
-   int      speed;                  // Cycling speed.
-   int      count_down;             // Speed countdown.
-} _cycle[MAXCYCLES];                // Allocate cycle structures.
-static struct {
-   int      active;                 // Palette fading enabled ?
-   int      mode;                   // Fading mode.
-   int      r, g, b;                // Fade to these RGB values.
-   signed char    pal[SCREENCOLORS*3];    // FADE TO palette.
-   int      speed;                  // Fading speed.
-   int      steps;                  // Number of fade steps already done.
-} _fade;                            // Allocate one FADE structure.
-static signed char   pcxpal[PALETTESIZE]; // Palette of last loaded PCX file.
-
-static unsigned int    currentpage;
-
-
-/*---------------------------------------------------------
- Function:
-
- Description:
- Calculate the INTEGER SQUARE ROOT.
- Actually I don't know what this function
- does. I copied it from some magazine.
----------------------------------------------------------*/
-static unsigned int sqrt(unsigned long v)
-{
-   int      i;
-   unsigned long    vold;
-   unsigned int     ve;
-   unsigned int     v1, v2;
-
-   v1 = v2 = ve = 0;
-   for (i = 0; i < 16; i++) {
-      v1 <<= 1;
-      v2 = (v1 << 1) + 1;
-      ve <<= 1; vold = v; v <<= 1;
-      if (vold > v) ve++;
-      ve <<= 1; vold = v; v <<= 1;
-      if (vold > v) ve++;
-      if (v2 <= ve) { ve -= v2; v1++; }
-   }
-   return v1;
-}
-
-/*---------------------------------------------------------
- Function: Group of functions.
-
- Description:
- Following is a group of functions for handling the palette.
----------------------------------------------------------*/
-static inline void setcolor(int c, int r, int g, int b)
-{
-#ifndef NOGRAPHICS
-#endif
-}
-
-/*---------------------------------------------------------
- Function:
-
- Description:
- Set new palette given by pointer *p.
----------------------------------------------------------*/
-static void setpalette(void *p)
-{
-   signed char *pal = (signed char *)p;
-   int   i;
-
-   for (i = 0; i < SCREENCOLORS; i++) {
-      setcolor(i, pal[0], pal[1], pal[2]);
-
-      pal += 3;   // Advance to next color.
-   }
-
-}
 
 /*---------------------------------------------------------
  Function:
@@ -149,227 +62,6 @@ void Palette::set(int r, int g, int b)
 }
 
 /*---------------------------------------------------------
- Function: calcshadows
-
- Description:
- Calculate the shadow look-up table used to paint the
- shadow of an object.
- v = shadow value in percent.
- v = 0  : all dark.
- v = 100: no shadow.
----------------------------------------------------------*/
-void Palette::calcshadows(void *p, int v)
-{
-   signed char *pal = (signed char *)p;
-   int   c0, c1;           // Do for all colors.
-   int   r0, g0, b0;       // Current colour we are looking for a shadow for.
-   int   r1, g1, b1;       // Some temporaries.
-   int   rd, gd, bd;       // Even more temporaries.
-   unsigned int   rlen;             // Requested length.
-   int   len;              // Length of vector;
-   int   best, min;        // Best found.
-
-// Verwende die Methode der kleinsten Quadrate.
-   for (c0 = 0; c0 < SCREENCOLORS; c0++) {
-      r0 = (pal[c0*3+0] * v) / 100;
-      g0 = (pal[c0*3+1] * v) / 100;
-      b0 = (pal[c0*3+2] * v) / 100;
-      rlen = sqrt((long unsigned int)(r0*r0 + g0*g0 + b0*b0));
-// Now try to find a colour that matches ours. (but with half the intensity).
-      min = 100000;
-      for (c1 = 0; c1 < SCREENCOLORS; c1++) {
-         r1 = pal[c1*3+0]; rd = r1 - r0;
-         g1 = pal[c1*3+1]; gd = g1 - g0;
-         b1 = pal[c1*3+2]; bd = b1 - b0;
-         if (rlen >= sqrt((long unsigned int)(r1*r1 + g1*g1 + b1*b1))) {
-            len = sqrt((long unsigned int)(rd*rd + gd*gd + bd*bd));
-            if ((len < min)) {
-               min = len; best = c1;
-            }
-         }
-      }
-      shadow[c0] = best;
-   }
-}
-
-
-void Palette::lock(void)
-{
-   memcpy(_palette, rgb, sizeof(rgb));
-   memcpy(_shadow, shadow, sizeof(shadow));
-   setpalette(rgb);
-}
-
-
-void Palette::unlock(void)
-{
-   stopeffects();
-}
-
-// Allocate a new cycle.
-int Palette::cycle(int c1, int c2, int speed)
-{
-   int   i;
-
-   for (i = 0; i < MAXCYCLES; i++) {
-      if (!_cycle[i].active) break;
-   }
-   if (i >= MAXCYCLES) return -1;     // Can't allocate cycle structure.
-   _cycle[i].c1 = _cycle[i].pos = c1;
-   _cycle[i].c2 = c2;
-   _cycle[i].speed = _cycle[i].count_down = speed;
-   _cycle[i].active = 1;
-   return i;
-}
-
-void Palette::stopcycle(int handle)
-{
-   _cycle[handle].active = 0;
-}
-
-void Palette::fade(int r, int g, int b, int speed)
-{
-// Fade palette to given RGB vanilla screen.
-   _fade.r = r;
-   _fade.g = g;
-   _fade.b = b;
-   _fade.active = 1;      // Enable fading.
-   _fade.mode = 0;
-   _fade.speed = speed;
-   _fade.steps = 0;
-}
-
-void Palette::fade(void *p, int speed)
-{
-// Fade palette to GIVEN palette.
-   memcpy(_fade.pal, p, sizeof(_fade.pal));
-   _fade.active = 1;
-   _fade.mode = 1;
-   _fade.speed = speed;
-   _fade.steps = 0;
-}
-
-void Palette::stopfade(void)
-{
-   _fade.active = 0;
-}
-
-int Palette::isfading(void)
-{
-   return _fade.active;
-}
-
-void Palette::stopeffects(void)
-{
-   int   i;
-
-   for (i = 0; i < MAXCYCLES; i++) stopcycle(i);
-   stopfade();
-}
-
-//---------------
-
-int Palette::cyclepalette(int c1, int c2, int pos)
-{
-   int   i;
-   int   n;
-   signed char *p;
-
-   if ((n = ++pos) > c2) pos = c1;
-   p = &rgb[n*3];
-   for (i = c1; i <= c2; i++) {
-      if (n > c2) { n = c1; p = &rgb[n*3]; }
-      setcolor(i, p[0], p[1], p[2]);
-      n++; p += 3;
-   }
-   return pos;
-}
-
-void Palette::fadergb(void)
-{
-   int   c;
-   signed char *p = rgb;
-
-   for (c = 0; c < SCREENCOLORS; c++) {
-// Calculating next RED value.
-      if (*p < _fade.r) {
-         *p += _fade.speed;
-         if (*p > _fade.r) *p = _fade.r;
-      } else {
-         *p -= _fade.speed;
-         if (*p < _fade.r) *p = _fade.r;
-      }
-      p++;
-// Next GREEN.
-      if (*p < _fade.g) {
-         *p += _fade.speed;
-         if (*p > _fade.g) *p = _fade.g;
-      } else {
-         *p -= _fade.speed;
-         if (*p < _fade.g) *p = _fade.g;
-      }
-      p++;
-// Next BLUE.
-      if (*p < _fade.b) {
-         *p += _fade.speed;
-         if (*p > _fade.b) *p = _fade.b;
-      } else {
-         *p -= _fade.speed;
-         if (*p < _fade.b) *p = _fade.b;
-      }
-      p++;
-      setcolor(c, p[-3], p[-2], p[-1]);
-   }
-   if ((_fade.steps+=_fade.speed) >= 64) _fade.active = 0;
-}
-
-
-void Palette::fadepalette(void)
-{
-   signed char *alt = rgb;
-   signed char *neu = _fade.pal;
-   int   i, c;
-
-   for (c = 0; c < SCREENCOLORS; c++) {
-// For every component (this is RGB).
-      for (i = 0; i < 3; i++) {
-         if (*alt < *neu) {
-            *alt += _fade.speed;
-            if (*alt > *neu) *alt = *neu;
-         } else {
-            *alt -= _fade.speed;
-            if (*alt < *neu) *alt = *neu;
-         }
-         alt++; neu++;
-      }
-      setcolor(c, alt[-3], alt[-2], alt[-1]);
-   }
-   if ((_fade.steps+=_fade.speed) >= 64) _fade.active = 0;
-}
-
-void doeffects(void)
-{
-   int   i;
-
-// Do palette cycling if neccessary.
-   for (i = 0; i < MAXCYCLES; i++) {
-      if (_cycle[i].active) {
-         if (--_cycle[i].count_down == 0) {
-            _cycle[i].count_down = _cycle[i].speed;
-            _cycle[i].pos = palette.cyclepalette(_cycle[i].c1,
-                                                 _cycle[i].c2,
-                                                 _cycle[i].pos);
-         }
-      }
-   }
-// Do palette fading if enabled.
-   if (_fade.active) {
-      if (_fade.mode) palette.fadepalette(); else palette.fadergb();
-   }
-}
-
-
-/*---------------------------------------------------------
  Function: showpcx
 
  Description:
@@ -388,15 +80,10 @@ void showpcx(void *pic, int line, int size)
 	return;
 }
 
-void *getpcxpal(void)
-{
-   return NULL;
-}
-
 //-------------------------------------------------------------------
 // Font class
 //-------------------------------------------------------------------
-Font::Font(char *file)
+Font::Font(const char *file)
 {
    anchor = (long *)loadfile(file, NULL);
    xs = &anchor[FD_XSDATA];
@@ -495,20 +182,6 @@ void Back::save(int dx, int dy)
 
 	render.setTarget(NULL);
 
-	/*printf("SCREEN TEST %d %d (%d, %d) vs (%d, %d):\n", x, y, xs, ys, background.getWidth(), background.getHeight());
-	puts("Draw screen");
-	render.clear();
-	render.drawTexture(&screen, 10, 10);
-	render.update();
-	SDL_Delay(5000);
-	puts("Draw background");
-	render.clear();
-	render.drawTexture(&background, 10, 10);
-	render.update();
-	SDL_Delay(5000);
-	render.drawTexture(&screen, 0, 0);
-	*/
-
 	screen.destroy();
 	valid = 1;
 
@@ -544,6 +217,7 @@ void SpritePool::load(char *file)
 // Adjust index pointers.
    for (i = 0; i < size; i++) {
       anchor[SP_STARTOFINDEX+i] += ptr;
+      sPool.add(*(sprite + i), false);
    }
 
 }
@@ -562,8 +236,6 @@ void SpritePool::unload(void)
 ---------------------------------------------------------*/
 void initgraphics(void)
 {
-   int   i;		// Loop counter.
-
 	//IMG_Init();
 
 	window.create("Ravage SDL", XSCALE, YSCALE);
@@ -573,7 +245,7 @@ void initgraphics(void)
    if (ingraphics) return;
 
 // Clear palette.
-   palette.set(0, 0, 0); palette.lock();
+   palette.set(0, 0, 0);
 
 // Graphic system successfully installed.
    ingraphics = 1;

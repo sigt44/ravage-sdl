@@ -34,8 +34,8 @@ struct Map {
 };
 
 
-static Map        map;
-SDLMap				sMap[2];
+static Map        rMap;
+SDLMapLayer				sMap[2];
 static Object     *obj[OBJ_MAXPRIORITY];
 static int        _shadows;         // Shadows ENABLE level.
 
@@ -56,7 +56,7 @@ void initobjects(void)
    for (i = 0; i < OBJ_MAXPRIORITY; i++) {
       obj[i] = NULL;
    }
-   map.anchor = 0;
+   rMap.anchor = 0;
    shadow_level(SH_ALL);
 }
 
@@ -93,14 +93,14 @@ void process_objects(void)
 
 // Move Map.
    for (i = 0; i < MAP_MAXLAYERS; i++)
-      map.y[i] += map.dy[i];
+      rMap.y[i] += rMap.dy[i];
 
 // Move objects on map.
    for (i = OBJ_MAXPRIORITY-1; i >= 0; i--) {
       ptr = obj[i];
       while (ptr != NULL) {
 // Move object accoding to map movement.
-         if (ptr->layer != -1) ptr->y += map.dy[ptr->layer];
+         if (ptr->layer != -1) ptr->y += rMap.dy[ptr->layer];
          ptr = ptr->next;
       }
    }
@@ -120,14 +120,14 @@ void drawscreen(void)
    Object  *ptr;
 
 // At the bottom, there's map layer 0
-   if (map.layer[0] != NULL) {
-		render.drawMap(&sMap[0], map.y[0]);
+   if (rMap.layer[0] != NULL) {
+		render.drawMap(&sMap[0], rMap.y[0]);
 		//render.drawMap(&sMap[0], sMap[0].getLength() - 2);
    }
 
 // Next we draw layer 1.
-   if (map.layer[1] != NULL) {
-		render.drawMap(&sMap[1], map.y[1]);
+   if (rMap.layer[1] != NULL) {
+		render.drawMap(&sMap[1], rMap.y[1]);
 		//render.drawMap(&sMap[1], sMap[1].getLength() - 2);
    }
 
@@ -180,10 +180,21 @@ void postprocess_objects(void)
 //---------------------------------------------------------
 Object::Object(Sprite *spr, int x, int y, int flags)
 {
+   usePool = ((flags & O_POOL) > 0) ? true : false;
+   //usePool = true;
    sprite = spr;
-	sSprite.load(spr, false);
+
+   if(usePool == true)
+   {
+       sSprite = sPool.add(spr, false);
+   }
+   else
+   {
+       sSprite = sPool.addUnique(spr, false);
+   }
 
    shadow = NULL;
+   sShadow = NULL;
 
 // Initialize new Object.
    priority = flags & O_PRIORITY;
@@ -209,8 +220,21 @@ Object::Object(Sprite *spr, int x, int y, int flags)
 // Destructor.
 Object::~Object()
 {
-	sSprite.destroy();
-	sShadow.destroy();
+
+    if(sSprite != NULL && sSprite->shouldDestoy())
+    {
+        sSprite->destroy();
+        delete sSprite;
+        sSprite = NULL;
+    }
+
+    if(sShadow != NULL && sShadow->shouldDestoy())
+    {
+        sShadow->destroy();
+        delete sShadow;
+        sShadow = NULL;
+    }
+
    if (prev != NULL) prev->next = next; else obj[priority] = next;
    if (next != NULL) next->prev = prev;
 }
@@ -237,13 +261,20 @@ void Object::changeshadow(Sprite *spr)
       shadow = spr;
    }
 
-	sShadow.destroy();
+    if(sShadow != NULL && sShadow->shouldDestoy())
+    {
+       sShadow->destroy();
+       delete sShadow;
+       sShadow = NULL;
+    }
 
 	if(spr)
 	{
-		sShadow.load(shadow, false);
-		sShadow.getTexture()->setAlpha(64);
-		SDL_SetTextureColorMod(sShadow.getTexture()->getBase(), 1, 1, 1);
+	    sShadow = sPool.addUnique(shadow, false);
+
+        sShadow->getTexture()->setAlpha(64);
+
+		SDL_SetTextureColorMod(sShadow->getTexture()->getBase(), 1, 1, 1);
 	}
 }
 
@@ -254,8 +285,22 @@ void Object::changesprite(Sprite *spr, int dx, int dy)
    y += dy;
 
    sprite = spr;
-	sSprite.destroy();
-	sSprite.load(spr, false);
+
+   if(sSprite != NULL && sSprite->shouldDestoy())
+   {
+       sSprite->destroy();
+       delete sSprite;
+       sSprite = NULL;
+   }
+
+   if(usePool)
+   {
+       sSprite = sPool.add(spr, false);
+   }
+   else
+   {
+        sSprite = sPool.addUnique(spr, false);
+   }
 
    f_low = 0; f_high = sprite->frames - 1;
    if (frame > f_high) frame = f_high; else if (frame < f_low) frame = f_low;
@@ -264,15 +309,15 @@ void Object::changesprite(Sprite *spr, int dx, int dy)
 
 void Object::drawshadow(void)
 {
-   if (shadow) render.x_drawsprite(&sShadow, x+shadowx, y+shadowy, frame);
+   if (shadow) render.x_drawsprite(sShadow, x+shadowx, y+shadowy, frame);
 }
 
 void Object::draw(void)
 {
-	render.x_drawsprite(&sSprite, x, y, frame);
+	render.x_drawsprite(sSprite, x, y, frame);
 
    if (flags & O_FLASH) {
-		SDL_SetTextureColorMod(sSprite.getTexture()->getBase(), 255, 255, 255);
+		SDL_SetTextureColorMod(sSprite->getTexture()->getBase(), 255, 255, 255);
       flags &= ~O_FLASH;
 	}
 
@@ -328,33 +373,32 @@ void loadmap(char *file)
    int    size, lSize;
    ulong  ptr;
    long   *anchor;
-   int    i, x , y;
-	SDLTexture *tile = NULL;
+   int    i;
 
 // Set some pointers.
-   anchor = map.anchor = (long *)loadfile(file, NULL);
+   anchor = rMap.anchor = (long *)loadfile(file, NULL);
    ptr = (ulong)anchor; //Get the base pointer address. anchor[MP_BOTTOM/MP_TOP] will refer to an offset from here.
 
 // Layer 0 must always be present.
-   map.layer[0] = (void *)(anchor[MP_BOTTOM] + ptr);
+   rMap.layer[0] = (void *)(anchor[MP_BOTTOM] + ptr);
    lSize = size = anchor[MP_BOTTOMSIZE];
-   map.len[0] = (size/XTILES)*TILEYS - YMAX;
+   rMap.len[0] = (size/XTILES)*TILEYS - YMAX;
 
 	//printf("Init map of size: %d, length %d\n", size, map.len[0]);
-	sMap[0].init(size, map.len[0], _shadows == SH_ALL ? true : false);
+	sMap[0].init(size, rMap.len[0], _shadows == SH_ALL ? true : false);
 
 // Layer 1 might not be present.
    if (anchor[MP_TOP] != 0) {
       size += anchor[MP_TOPSIZE];
-      map.layer[1] = (void *)(anchor[MP_TOP] + ptr);
-      map.len[1] = map.len[0]*2;
+      rMap.layer[1] = (void *)(anchor[MP_TOP] + ptr);
+      rMap.len[1] = rMap.len[0]*2;
    }
 
-	sMap[1].init(size - lSize, map.len[1], _shadows == SH_ALL ? true : false);
+	sMap[1].init(size - lSize, rMap.len[1], _shadows == SH_ALL ? true : false);
 
 // Adjust tile pointers but let NULL pointers stay NULL pointers.
    for (i = 0; i < size; i++) {
-      if (anchor[MP_DATA+i] != NULL)
+      if (anchor[MP_DATA+i] != 0)
 		{
 			anchor[MP_DATA+i] += ptr; //ANCHOR[MP_DATA + i] now refers to the actual location of the tile data instead of being an offset from ptr
 		}
@@ -362,14 +406,14 @@ void loadmap(char *file)
 	}
 
 	for (i = 0; i < lSize; i++) {
-      if (anchor[MP_DATA+i] != NULL)
+      if (anchor[MP_DATA+i] != 0)
 		{
 			sMap[0].convert(lSize - 1 - i, (long *)anchor[MP_DATA+i]);
 		}
 	}
 
 	for (i = i; i < size; i++) {
-      if (anchor[MP_DATA+i] != NULL)
+      if (anchor[MP_DATA+i] != 0)
 		{
 			sMap[1].convert((size - lSize) - 1 - (i - lSize), (long *)anchor[MP_DATA+i]);
 		}
@@ -381,28 +425,28 @@ void unloadmap(void)
 {
 	sMap[0].destroy();
 	sMap[1].destroy();
-   unloadfile(map.anchor);
-   map.anchor = 0;
+   unloadfile(rMap.anchor);
+   rMap.anchor = 0;
 }
 
 void setlayer(int layer, int y)
 {
-   map.y[layer] = y;
+   rMap.y[layer] = y;
 }
 
 int getlayer(int layer)
 {
-   return map.y[layer];
+   return rMap.y[layer];
 }
 
 void movelayer(int layer, int dy)
 {
-   map.dy[layer] = dy;
+   rMap.dy[layer] = dy;
 }
 
 int layerlength(int layer)
 {
-   return map.len[layer];
+   return rMap.len[layer];
 }
 
 

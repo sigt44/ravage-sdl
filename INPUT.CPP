@@ -161,7 +161,6 @@ static int measure(int &x, int &y, int &fire)
 ---------------------------------------------------------*/
 void joypad_wait(void)
 {
-   int   i;
    int   x, y, fire;
 
    do {

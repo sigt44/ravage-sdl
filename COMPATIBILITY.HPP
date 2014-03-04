@@ -1,5 +1,5 @@
-#ifndef AH_WINDOWS
-#define AH_WINDOWS
+#ifndef AH_COMPATIBILITY
+#define AH_COMPATIBILITY
 
 #ifdef WINDOWS
 #include <Windows.h>

@@ -40,7 +40,7 @@
 #define AH_MAINMODULE
 #include "ERROR.HPP"
 #include "MEMORY.HPP"
-#include "WINDOWS.HPP"
+#include "COMPATIBILITY.HPP"
 #include "SDL_BASE.HPP"
 
 #include "INPUT.HPP"
@@ -66,25 +66,6 @@ const char copyright[] = "RAVAGE registered 1.1 [c]copyright 1996 by AlphaHelix.
 #endif
 
 using namespace std;
-
-
-
-/*---------------------------------------------------------
- Function: timer
-
- Description:
- This is the all important timer function.
- This function will be called 60 times a second and
- updates the "timer_ticks" variable.
- "timer_ticks" is then used in the rest of the program
- to synchronize game speed and screen output to 30
- frames per second.
----------------------------------------------------------*/
-volatile int  timer_ticks;
-void timer(void)
-{
-   timer_ticks++;
-}
 
 /*---------------------------------------------------------
  Function: cmdline
@@ -207,14 +188,13 @@ static void powerdown(void)
 #ifdef DEBUG
    memory_usage();
 #endif
-   #ifdef RAVAGE_PORT
+
    cout << "Object peak usage: " << object_usage() << " of "
         << OBJ_MAXOBJECTS << " used." << endl;
    cout << "Weapon peak usage: " << weapon_usage() << " of "
         << G_MAXWEAPONS << " used." << endl;
    cout << "Enemy peak usage: " << enemy_usage() << " of "
         << G_MAXENEMIES << " used." << endl;
-#endif
 
    SDL_Quit();
 
@@ -237,6 +217,8 @@ static void powerdown(void)
 ---------------------------------------------------------*/
 static void powerup(void)
 {
+    SDL_version sVersion;
+
 	// Init SDL
 
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK) != 0)
@@ -244,6 +226,11 @@ static void powerup(void)
 		fprintf(stderr, "\nUnable to initialize SDL:  %s\n", SDL_GetError());
 		return;
 	}
+
+	SDL_GetVersion(&sVersion);
+
+	printf("SDL linked %d.%d.%d\n", sVersion.major, sVersion.minor, sVersion.patch);
+
 
 	atexit(powerdown);
 
@@ -288,7 +275,6 @@ static void powerup(void)
    initsound(); reg_exit(shutsound);
    s_setmodvol(settings.mod_vol);
    s_setwavvol(settings.wav_vol);
-   cout << "Sound driver: " << s_drivername() << endl;
 
 	// Enter graphics.
    initgraphics(); reg_exit(shutgraphics);
@@ -310,6 +296,7 @@ static void powerup(void)
    if (incmd("/vv")) cheatlevel |= CHEAT_MONEY;   // vertammi vertori.
 // Level jumping.
    start_stage = cmdnumber("/l", 1);
+
    if (start_stage > MAXLEVELS) error("/l parameter out of range.");
 
 #ifdef DEBUG
@@ -321,158 +308,6 @@ static void powerup(void)
    if (incmd("/rec")) recorder = 1;
 #endif
 
-}
-
- int sdl_drawsprite(Sprite *sprite, int x, int y, int n)
- {
- }
-
- int sdl_reportsprite(Sprite *sprite)
- {
-	printf("Sprite(%p):\n", sprite);
-	printf("header: %d\n", sprite->header);
-	printf("xs_data: %ld\n", sprite->xs_data);
-	printf("ys_data: %ld\n", sprite->ys_data);
-	printf("fsize: %ld\n", sprite->fsize);
-	printf("xs: %ld\n", sprite->xs);
-	printf("ys: %ld\n", sprite->ys);
-	printf("frames: %ld\n", sprite->frames);
-	printf("speed: %ld\n", sprite->speed);
-	printf("x_core: %ld\n", sprite->x_core);
-	printf("y_core: %ld\n", sprite->y_core);
-	printf("xs_core: %ld\n", sprite->xs_core);
-	printf("ys_core: %ld\n", sprite->ys_data);
-
-	SDLSprite spriteTest;
-
-	render.clear();
-
-	spriteTest.load(sprite, false);
-	printf("Texture width: %d\n", spriteTest.getTexture()->getWidth());
-
-	render.x_drawsprite(&spriteTest, 0, 0, -1);
-
-	render.update();
-
-	input_fire();
-	SDL_Delay(5000);
-	spriteTest.destroy();
-	return 0;
-}
-
-int sdl_drawpcx(char *name)
-{
-	myFile myFile;
-	SDLTexture pcxTexture;
-
-	if(!myFile.open(name)) error("Unable to open file.", name);
-
-	SDL_RenderClear(render.getBase());
-	pcxTexture.loadMemory(myFile.getMemory(), myFile.getsize());
-
-	render.drawTexture(&pcxTexture, 0, 0, 50, 0, 100, 120);
-
-	render.update();
-
-	myFile.close();
-
-	int startTicks = SDL_GetTicks();
-	while(SDL_GetTicks() - startTicks < 2000)
-		{
-			input_update();
-	}
-
-	pcxTexture.destroy();
-
-	return 0;
-}
-
-int sdl_ask_abort(void)
-{
-   Font     *tiny;
-   Sprite   *escbox;
-   SDLSprite escSprite;
-	int      x, y, fire0 = 0, fire1 = 0;
-
-   tiny = new Font("fonts\\tiny.fnt");
-   escbox = (Sprite *) loadfile("pic\\escbox.spr", NULL);
-	escSprite.load(escbox, false);
-
-   y = (YMAX-escbox->ys)/2;
-
-	render.x_drawsprite(&escSprite, (XMAX-escbox->xs)/2, y, 0);
-   y += 15;
-
-   tiny->vanilla_c(XMAX/2, y, "Press ESC again to abort the game.", 12);
-   y += 15;
-   tiny->vanilla_c(XMAX/2, y, "Fire to continue.", 15);
-
-	render.update();
-
-   unloadfile(escbox);
-   delete tiny;
-	escSprite.destroy();
-
-	input_fire();
-
-	return 0;
-}
-
-void sdl_showorder(void)
-{
-   void  *f;
-   Font  *tiny, *blue;
-   char  *text;
-   int   x, y;
-	int size = 0;
-
-// Load MOD.
-   s_loadmod("mods\\menu.uni");
-// Start music and fade in screen.
-   s_startmod();
-
-   tiny = new Font("fonts\\tiny.fnt");
-   blue = new Font("fonts\\blue.fnt");
-
-   f = loadfile("pic\\order.pcx", &size);
-
-   text = (char *)loadfile("stuff\\order1.txt", NULL);
-
-   render.clear(0, 0, 0);
-
-   showpcx(f, 20, size);
-   blue->print_c(XMAX/2, 0, "ORDER RAVAGE NOW");
-   x = 0; y = 30;
-   beauty(tiny, x, y, text);
-   unloadfile(text);
-
-   render.update();
-   fadein(getpcxpal());
-
-   input_fire();
-   fadeout(FADE_PALETTE);
-
-   text = (char *)loadfile("stuff\\order2.txt", NULL);
-
-   render.clear(0, 0, 0);
-   showpcx(f, 20, size);
-   blue->print_c(XMAX/2, 0, "HOW TO ORDER");
-   x = 0; y = 30;
-   beauty(tiny, x, y, text);
-   unloadfile(text);
-
-   render.update();
-   fadein(getpcxpal());
-
-   unloadfile(f);
-
-   input_fire();
-   fadeout(FADE_ALL);
-
-   delete blue;
-   delete tiny;
-
-   s_unloadmod();
 }
 
 int main(int argc, char *argv[])
@@ -489,8 +324,6 @@ int main(int argc, char *argv[])
 
 // Display some message.
    cout << endl << copyright << endl << endl;
-   cout << "RAVAGE SDL" << endl;
-   cout << endl;
 
 // Prepare to access the command line.
    cmdline(argc, argv);
@@ -504,61 +337,10 @@ int main(int argc, char *argv[])
    filepool[2].open("RAV2.DAT");
    filepool[3].open("RAV3.DAT");
 
-	// Test music
-	// Load MOD.
-
-   //s_loadmod("level1\\LEVEL1.UNI");
-	// Start music
-   //s_startmod();
-	//s_setmodvol(64);
-
 	//Load palette
 	void *p = (void *)loadfile("demo1\\DEMO1.CPA", NULL);
 	palette.set(p);
 	delete p;
-
-	//Test sprites
-	Sprite   *label;        // Player score LABELS.
-
-	/*label = (Sprite *)loadfile("pic\\ready.spr");
-	sdl_reportsprite(label);
-	label = (Sprite *)loadfile("pic\\ravage.spr");
-	sdl_reportsprite(label);
-		label = (Sprite *)loadfile("pic\\pointer.spr");
-	sdl_reportsprite(label);
-	label = (Sprite *)loadfile("pic\\save.spr");
-	sdl_reportsprite(label);
-		label = (Sprite *)loadfile("pic\\stuff.spr");
-	sdl_reportsprite(label);
-		label = (Sprite *)loadfile("pic\\main.spr");
-	sdl_reportsprite(label);
-		label = (Sprite *)loadfile("pic\\players.spr");
-	sdl_reportsprite(label);
-
-	sdl_drawpcx("pic\\STORY.PCX");
-	sdl_drawpcx("pic\\TITLE.PCX");
-	sdl_drawpcx("pic\\ORDER.PCX");
-	*/
-	/*sdl_ask_abort();
-
-	cout << "Press fire to exit." << endl;
-	input_wait();
-   input_fire();
-	fadeout(FADE_ALL);
-	sdl_showorder();*/
-
-	/*WavePool weapWaves;
-	weapWaves.load("level6\\LEVEL6.CWV");
-	cout << "Wave samples: " << weapWaves.nsamples << endl;
-	for(int x = 0; x < weapWaves.nsamples; x++)
-	{
-		SDL_Delay(500);
-		weapWaves.play(x % weapWaves.nsamples);
-		cout << "Sample: " << x % weapWaves.nsamples << endl;
-		sound_Report();
-		s_update();
-	}*/
-
 
 // Show TITLE screen.
    title();
@@ -589,14 +371,16 @@ int main(int argc, char *argv[])
       }
    } while (request != M_QUIT);
 
+    sPool.destroy();
+
 // Close FilePool.
    filepool[3].close();
    filepool[2].close();
    filepool[1].close();
    filepool[0].close();
 
-    end_ravage();
-    return 0;
+   end_ravage();
+   return 0;
 }
 
 int end_ravage(void)

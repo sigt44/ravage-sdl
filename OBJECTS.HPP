@@ -19,6 +19,7 @@
 #define O_ONECYCLE      0x0200      // Just cycle once and destroy object afterwards.
 #define O_SHADOW        0x0400      // Draw objects shadow.
 #define O_CRISPY        0x0800      // Do the crispy cha-cha-cha.
+#define O_POOL          0x2000      // Object SDL sprite is in pool.
 //---
 #define O_NOLAYER       -1          // Identifies Airborne object.
 #define O_MAXCRISPY     (CRISPYSTEPS-1)
@@ -27,9 +28,10 @@
 class Object {
 public:  // Yeah. It's strange. Everything is public here ?? Poor C++ programmer.
    Sprite   *sprite;       // Main sprite.
-	SDLSprite sSprite;
+   SDLSprite *sSprite;
+   bool usePool;           //Should the SDLSprite be taken from the pool
    Sprite   *shadow;       // Object's shadow.
-	SDLSprite sShadow;
+   SDLSprite *sShadow;
    int      priority;      // Object's priority level.
    int      layer;         // Layer to which object is attached.
    int      frame;         // Current frame.
@@ -70,7 +72,7 @@ public:  // functions.
    void     setlayer(int layer) { Object::layer = layer; }
    void     flash(void) {
 		flags |= O_FLASH;
-		if(sprite) SDL_SetTextureColorMod(sSprite.getTexture()->getBase(), 128, 128, 128);
+		if(sprite) SDL_SetTextureColorMod(sSprite->getTexture()->getBase(), 96, 96, 96);
 	}
    void     animation(int dir) { f_direction = dir; }
    void     setbounds(int low, int high)

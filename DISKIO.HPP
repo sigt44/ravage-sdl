@@ -16,7 +16,7 @@ class myFile {
 public:
 	myFile();
    ~myFile() { close(); }
-   int   open(char *f);
+   int   open(const char *f);
    int   creat(char *f);
    void  close(void);
    void  read(void *ptr, int size);
@@ -42,7 +42,7 @@ class FilePool {
    long  n;                      // Number of files in database.
    File  *file;                  // File headers.
 
-   File  *findfile(char *f);
+   File  *findfile(const char *f);
    friend class myFile;
 
 public:
@@ -52,7 +52,7 @@ public:
    void close(void);
 };
 
-void *loadfile(char *f, int *size);
+void *loadfile(const char *f, int *size);
 void unloadfile(void *);
 
 void initfilesystem(void);

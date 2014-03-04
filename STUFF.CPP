@@ -68,8 +68,6 @@ void fadein(void *p)
 	int   i;
 	const int alphaStep = 4;
 
-	SDL_Surface *fadeSurface = NULL;
-
 	SDLTexture originalTexture;
 
 	originalTexture.loadPointer(render.createScreenTexture(), true);

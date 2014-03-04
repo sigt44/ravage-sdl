@@ -6,6 +6,9 @@
 #include <SDL_image.h>
 #include "XLIB.HPP"
 #include "ERROR.HPP"
+#include <map>
+
+using namespace std;
 
 //Window size constants
 #define XSCALE 640
@@ -14,14 +17,16 @@
 extern class SDLWindow window;
 extern class SDLRenderer render;
 
+extern class SDLSpritePool sPool;
+
 //Game window class
 class SDLWindow {
 	SDL_Window *window;
-	bool mouseFocus; 
-	bool inputFocus; 
+	bool mouseFocus;
+	bool inputFocus;
 
 public:
-	SDLWindow() { 
+	SDLWindow() {
 		window = NULL;
 		mouseFocus = false;
 		inputFocus = false;
@@ -64,17 +69,16 @@ class SDLTexture {
 
 public:
 	SDLTexture() { tex = NULL; }
-	~SDLTexture() { 
-		if(tex)
-		{
-			error("Error texture not released properly."); 
-		}
+	~SDLTexture() {
+        destroy();
 	}
+
+    int create(int width, int height, Uint32 pixelFormat);
 
 	int loadFile(char *fileName);
 	int loadMemory(void *memory, int memSize);
 
-	int loadPointer(SDL_Texture *texture, bool reqFree) { 
+	int loadPointer(SDL_Texture *texture, bool reqFree) {
 		tex = texture;
 		setup(reqFree);
 
@@ -92,9 +96,9 @@ public:
 		return SDL_SetTextureAlphaMod(tex, a);
 	}
 
-	void destroy(void) { 
-		if(freeTexture && tex) SDL_DestroyTexture(tex); 
-		tex = NULL; 
+	void destroy(void) {
+		if(freeTexture && tex) SDL_DestroyTexture(tex);
+		tex = NULL;
 	}
 };
 
@@ -107,8 +111,12 @@ class SDLSprite {
 	int numFrames;
 
 public:
-	SDLSprite() { sprite = NULL; converted = false; owner = false; }
-	
+    bool inPool; //Refered to by the SDL sprite pool
+
+	SDLSprite() { sprite = NULL; converted = false; owner = false; inPool = false; }
+
+	void copy(SDLSprite *cSprite);
+
 	void load(Sprite *sp, bool isOwner);
 	void convert(void);
 
@@ -119,8 +127,11 @@ public:
 
 	int getNumFrames(void) { return numFrames; }
 
-	void destroy(void) { 
-		texture.destroy(); 
+	bool shouldDestoy(void) { return !inPool; }
+	bool shouldDraw(void) { return converted; }
+
+	void destroy(void) {
+		texture.destroy();
 
 		if(owner)
 			free(sprite);
@@ -128,6 +139,41 @@ public:
 		sprite = NULL;
 	}
 };
+
+class SDLSpritePool
+{
+    int numSprites;
+    std::map<Sprite *, SDLSprite *> sprites;
+
+public:
+    SDLSpritePool() { numSprites = 0; }
+    ~SDLSpritePool() { if(numSprites > 0) error("SDL Sprite Pool not destroyed properly");}
+
+    void destroy()
+    {
+        std::map<Sprite *, SDLSprite *>::iterator it;
+        for (it = sprites.begin(); it != sprites.end(); ++it)
+        {
+            it->second->destroy();
+            numSprites --;
+        }
+        return;
+    }
+
+    bool inPool(Sprite *spriteAddress)
+    {
+        return sprites.count(spriteAddress) > 0 ? true : false;
+    }
+
+    SDLSprite *get(Sprite *spriteAddress)
+    {
+        return sprites[spriteAddress];
+    }
+
+    SDLSprite *add(Sprite *sp, bool isOwner); //Return pointer if in pool
+    SDLSprite *addUnique(Sprite *sp, bool isOwner);//Return copy of sprite if in pool
+};
+
 
 class SDLTile {
 	SDLTexture tex;
@@ -151,7 +197,7 @@ public:
 	{
 		id = addressID;
 		tex.loadPointer(tileTexture, owner);
-		
+
 		if(tileTexture != NULL) assigned = true;
 
 		return;
@@ -172,7 +218,7 @@ public:
 
 };
 
-class SDLMap {
+class SDLMapLayer {
 
 		int numTiles;
 		int length;
@@ -180,9 +226,9 @@ class SDLMap {
 		bool shadows;
 		SDLTile *tiles;
 
-public: 
+public:
 
-	SDLMap() {
+	SDLMapLayer() {
 		numTiles = 0;
 		tiles = NULL;
 	}
@@ -200,8 +246,8 @@ public:
 		tiles = new SDLTile[numTiles];
 	}
 
-	~SDLMap() { 
-		if(tiles) error("Map not released correctly"); 
+	~SDLMapLayer() {
+		destroy();
 	}
 
 	void convert(int arrayIndex, long *tileData);
@@ -265,16 +311,16 @@ public:
 		renderer = NULL;
 	}
 
-	~SDLRenderer() { 
-		if(renderer) error("Renderer not released correctly"); 
+	~SDLRenderer() {
+		if(renderer) error("Renderer not released correctly");
 	}
-	
+
 	void init(SDLWindow *window, int logicalWidth, int logicalHeight);
 
 	SDL_Texture *createScreenTexture() {
 		SDL_Texture *copy = SDL_CreateTexture(renderer, 0, SDL_TEXTUREACCESS_TARGET, HWXMAX, HWYMAX);
 		SDL_SetRenderTarget(renderer, copy);
-		
+
 		drawTexture(&renderTexture, 0, 0);
 		SDL_RenderPresent(renderer);
 
@@ -286,7 +332,7 @@ public:
 	void x_drawsprite(SDLSprite *sprite, int x, int y, int n); // n refers to the frame of the sprite
 	void drawTile(SDLTile *tile, int x, int y);
 	void drawTile(SDLTile *tile, int x, int y, const SDL_Rect *clip);
-	void drawMap(SDLMap *map, int yOffset);
+	void drawMap(SDLMapLayer *map, int yOffset);
 
 	void drawRect(SDL_Rect *rect, int r, int g, int b);
 
@@ -307,19 +353,19 @@ public:
 		return;
 	}
 
-	void clear(void) { 	
-		SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE); 
-		SDL_RenderClear(renderer); 
+	void clear(void) {
+		SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
+		SDL_RenderClear(renderer);
 	}
 
 	void clear(Uint8 r, Uint8 g, Uint8 b) {
-		SDL_SetRenderDrawColor(renderer, r, g, b, SDL_ALPHA_OPAQUE); 
-		SDL_RenderClear(renderer); 
+		SDL_SetRenderDrawColor(renderer, r, g, b, SDL_ALPHA_OPAQUE);
+		SDL_RenderClear(renderer);
 	}
 
 	void destroy(void)
 	{
-		if(renderer) 
+		if(renderer)
 		{
 			renderTexture.destroy();
 			fadeTexture.destroy();
@@ -337,7 +383,7 @@ class Font {
 public:
 	Sprite   *sprite;          // Pointer to font sprite array.
 	SDLSprite fontSprite;		// SDL version of the sprite
-   Font(char *file);
+   Font(const char *file);
    ~Font();
    void     print(int x, int y, char *text);
    void     print_c(int x, int y, char *text);
@@ -346,7 +392,7 @@ public:
    void     vanilla_char(int x, int y, char ch, int c);
    int      textlen(char *text);
    int      charlen(char ch)
-   { 
+   {
       return xs[ch - anchor[FD_BASE]] + anchor[FD_PITCH];
    }
    int      width(void) { return sprite->xs; }
@@ -363,7 +409,7 @@ class Back {
    int      valid;
    int      x, y;             // Coordinates of saved background area to update.
    int      xs, ys;           // Size of background area.
-   SDLTexture background;		
+   SDLTexture background;
 
 public:
    Back(int dxs, int dys);

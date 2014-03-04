@@ -12,7 +12,7 @@
 #include <string.h>
 #include <iostream>
 
-#include "WINDOWS.HPP"
+#include "COMPATIBILITY.HPP"
 #include "ERROR.HPP"
 #include "MEMORY.HPP"
 #include "DISKIO.HPP"
@@ -43,7 +43,7 @@ myFile::myFile()
 	memory = NULL;
 }
 
-int myFile::open(char *f)
+int myFile::open(const char *f)
 {
    FILE  *s;
    File  *file = 0;
@@ -52,7 +52,7 @@ int myFile::open(char *f)
 // First have closer look at the active FilePools.
    for (i = 0; i < MAXPOOLS; i++) {
       if (now[i].active) {
-         if (file = now[i].pool->findfile(f)) break;
+         if ((file = now[i].pool->findfile(f))) break;
       }
    }
    if (file) {
@@ -132,7 +132,7 @@ void *myFile::getMemory(void)
 
 
 
-void *loadfile(char *f, int *size)
+void *loadfile(const char *f, int *size)
 {
    myFile   myfile;
    void     *ptr;
@@ -202,7 +202,7 @@ void FilePool::close(void)
    stream = 0;
 }
 
-File *FilePool::findfile(char *f)
+File *FilePool::findfile(const char *f)
 {
    int   i;
 

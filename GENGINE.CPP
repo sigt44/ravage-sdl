@@ -143,7 +143,7 @@ Weapon *release_weapon(int player, int n, int x, int y)
       w->x = x; w->y = y;
    } else {
 // Add object & shadow.
-      obj = w->object = new Object(weapons.sprite[raw->sprite], x, y, raw->priority);
+      obj = w->object = new Object(weapons.sprite[raw->sprite], x, y, raw->priority | O_POOL);
       if (w->flags & WF_SHADOW) {
          obj->changeshadow(weapons.sprite[raw->shadow], raw->shadowx, raw->shadowy);
       }
@@ -254,7 +254,7 @@ static int step_path(Weapon *w, int x, int y)
 
             case C_RELEASEOBJ:   // Release Object
                                  // (sprite, delta_x, delta_y, flags)
-               new Object(weapons.sprite[cmd[1]], x+cmd[2], y+cmd[3], cmd[4]);
+               new Object(weapons.sprite[cmd[1]], x+cmd[2], y+cmd[3], cmd[4] | O_POOL);
                cmd += 5;
                break;
 
@@ -373,7 +373,7 @@ static int step_death(Weapon *w)
          #ifdef DEBUG
          if (!obj) error("Tried to execute weapon DEATH with object==0.");
          #endif
-         new Object(weapons.sprite[cmd[1]], obj->x+cmd[2], obj->y+cmd[3], cmd[4]);
+         new Object(weapons.sprite[cmd[1]], obj->x+cmd[2], obj->y+cmd[3], cmd[4] | O_POOL);
          cmd += 5;
          break;
 
@@ -1112,14 +1112,12 @@ void newwave(void)
 // Set map position.
          setlayer(0, gstate.mark.layerpos[0]);
          setlayer(1, gstate.mark.layerpos[1]);
-// Clear any palette Special.
-         palette.stopeffects();
+
 // Loop playback if in PLAYBACK mode.
          playback_loop();
          break;
 
       case C_CYCLEPAL:
-         palette.cycle(a->x, a->y, a->level);
          break;
 
       case C_MAPSPEED:     // Set background map speed.

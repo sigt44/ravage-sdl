@@ -11,7 +11,7 @@
 #include "SOUND.HPP"
 #include "SOUND_SDL.HPP"
 #include "RAVAGE.HPP"
-#include "WINDOWS.HPP"
+#include "COMPATIBILITY.HPP"
 
 #ifdef DEBUG
 extern void debugint(void);
@@ -341,7 +341,7 @@ void weapon_releaseall(int p, int x0, int y0)
    Weapon   *w;
    Sprite   *spr;
 
-   xl = xr = x0; y = y0;
+   xl = xr = x0; y = y0; ys = 0;
    for (i = 0; i < WEAPONSLOTS; i++) {
       if (player[p].slot[i] == -1) continue;
       switch (i) {
@@ -771,7 +771,7 @@ static void showhappyend(void)
 // Some delay before we fadein the picture.
 	SDL_Delay(10000);
 
-   fadein(getpcxpal());
+   fadein(NULL);
    input_wait(); input_fire(); input_wait();
    fadeout(FADE_ALL);
    s_unloadmod();

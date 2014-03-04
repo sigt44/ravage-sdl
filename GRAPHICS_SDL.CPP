@@ -6,6 +6,58 @@
 SDLWindow window;
 SDLRenderer render;
 
+SDLSpritePool sPool;
+
+/*---------------------------------------------------------
+SDLSpriteSpool class methods
+---------------------------------------------------------*/
+SDLSprite *SDLSpritePool::add(Sprite *sp, bool isOwner)
+{
+    SDLSprite *sSprite = NULL;
+
+    if(inPool(sp) == false)
+    {
+        sSprite = new SDLSprite;
+        sSprite->load(sp, isOwner);
+
+        if(sp != NULL)
+        {
+            sSprite->inPool = true;
+            sprites[sp] = sSprite;
+        }
+    }
+    else
+    {
+        sSprite = sPool.get(sp);
+    }
+
+    return sSprite;
+}
+
+//Instead of returning a pointer, this will return a new sprite which is a copy.
+SDLSprite *SDLSpritePool::addUnique(Sprite *sp, bool isOwner)
+{
+    SDLSprite *sSprite = new SDLSprite;
+
+    if(inPool(sp) == false)
+    {
+        sSprite->load(sp, isOwner);
+
+        if(sp != NULL)
+        {
+            sSprite->inPool = true;
+            sprites[sp] = sSprite;
+        }
+    }
+    else
+    {
+        sSprite->copy(sPool.get(sp));
+        sSprite->inPool = false;
+    }
+
+    return sSprite;
+}
+
 /*---------------------------------------------------------
 SDLSprite class methods
 ---------------------------------------------------------*/
@@ -22,6 +74,32 @@ void SDLSprite::load(Sprite *sp, bool isOwner)
 	convert();
 }
 
+void SDLSprite::copy(SDLSprite *cSprite)
+{
+    SDLTexture *cTex = cSprite->getTexture();
+
+    if(cSprite->sprite != NULL)
+    {
+        texture.create(cTex->getWidth(), cTex->getHeight(), SDL_PIXELFORMAT_RGB888);
+        SDL_SetTextureBlendMode(texture.getBase(), SDL_BLENDMODE_BLEND);
+
+        render.setTarget(&texture);
+        //SDL_SetRenderDrawColor(render.getBase(), 0, 0, 0, SDL_ALPHA_OPAQUE/2);
+        SDL_SetTextureBlendMode(cTex->getBase(), SDL_BLENDMODE_NONE);
+        render.drawTexture(cTex, 0, 0);
+        SDL_SetTextureBlendMode(cTex->getBase(), SDL_BLENDMODE_BLEND);
+        render.setTarget(NULL);
+    }
+
+
+    sprite = cSprite->sprite;
+    converted = cSprite->converted;
+    owner = false;
+    numFrames = cSprite->numFrames;
+    inPool = false;
+    return;
+}
+
 void SDLSprite::convert(void)
 {
 	int x, y, mod;
@@ -35,6 +113,8 @@ void SDLSprite::convert(void)
 		converted = false;
 		return;
 	}
+
+    //printf("Sprite(%p) %d %d\n", sprite, sprite->xs, sprite->ys);
 
 	//Create a blank surface
 	surface = SDL_CreateRGBSurface(0, sprite->xs, sprite->ys_data * sprite->frames, 32, 0, 0, 0, 0);
@@ -66,6 +146,7 @@ void SDLSprite::convert(void)
 
 	//Convert the surface into a texture and load it into the class
 	texture.loadPointer(SDL_CreateTextureFromSurface(render.getBase(), surface), true);
+    SDL_SetTextureBlendMode(texture.getBase(), SDL_BLENDMODE_BLEND);
 
 	//Clean up
 	SDL_FreeSurface(surface);
@@ -103,6 +184,14 @@ void SDLTexture::setup(bool reqFree)
 	freeTexture = reqFree;
 
 	return;
+}
+
+int SDLTexture::create(int width, int height, Uint32 pixelFormat)
+{
+    tex = SDL_CreateTexture(render.getBase(), pixelFormat, SDL_TEXTUREACCESS_TARGET, width, height);
+    setup(true);
+
+    return 0;
 }
 
 int SDLTexture::loadFile(char *filePath)
@@ -224,6 +313,8 @@ void SDLRenderer::x_drawsprite(SDLSprite *sprite, int x, int y, int n)
 {
 	SDL_Rect clip;
 
+    if(sprite->shouldDraw() == false) return;
+
 	x += BORDER; //Ajust for screen border
 
 	if(sprite->getNumFrames() == 0 || n == -1)
@@ -270,7 +361,7 @@ void SDLRenderer::drawTile(SDLTile *tile, int x, int y, const SDL_Rect *clip)
 	return;
 }
 
-void SDLRenderer::drawMap(SDLMap *map, int yOffset)
+void SDLRenderer::drawMap(SDLMapLayer *map, int yOffset)
 {
 	const int MIN_TILE_DRAW = 72; //7x9 tiles each 32x32 pixels
 	const int MAX_TILE_DRAW = 81; //For when an extra row needs to be drawn because the first row is only a partially shown
@@ -281,7 +372,6 @@ void SDLRenderer::drawMap(SDLMap *map, int yOffset)
 	yOffset +=16; //Fix the offset
 
 	int i = 0;
-	int j = 0;
 	int y = 0;
 	int rowStart = (int)floor((float)yOffset/(float)TILEYS);
 	int yMod = yOffset % TILEYS;
@@ -372,7 +462,7 @@ void SDLRenderer::drawTexture(SDLTexture *texture, int x, int y)
 	return;
 }
 
-void SDLMap::convert(int arrayIndex, long *tileData)
+void SDLMapLayer::convert(int arrayIndex, long *tileData)
 {
 	int x, y, mod;
 	char *bytePix = NULL;

@@ -19,7 +19,7 @@
 #include "INPUT.HPP"
 #include "SOUND.HPP"
 #include "RAVAGE.HPP"
-#include "WINDOWS.HPP"
+#include "COMPATIBILITY.HPP"
 
 #ifdef DEBUG
 extern void debugint(void);
@@ -59,7 +59,7 @@ void title(void)
    beauty(tiny, x, y, text);
 
 // Fade in
-   fadein(getpcxpal());
+   fadein(NULL);
 
    input_wait(); input_fire(); input_wait();
    fadeout(FADE_PALETTE);
@@ -282,7 +282,6 @@ static PlayerState   psave;      // State save for active player.
 static PlayerState   psave2;     // State save for player not active in DEMO.
 static int     cheatsave;        // Back up variable for cheatvalue.
 
-static void    *scr;             // Another virtual screen.
 static Back    *menuback;        // Saved menu screen back ground.
 static SDLTexture demoTexture;	// The texture the game demo is rendered to.
 static Sprite  *head;            // Part of Title.
@@ -345,7 +344,6 @@ Button::Button(int dx, int dy, Sprite *sprite, int dn, int idx)
 
 void destroybuttons(void)
 {
-   Button   *b = anchor;
    Button   *keep;
 
    while (anchor) {
@@ -375,7 +373,7 @@ Button *checkbuttons(int x0, int y0, int &index, int &subindex)
             return b;
          }
       }
-   } while (b = b->next);
+   } while ((b = b->next));
    index = -1;
    return 0;
 }
@@ -695,7 +693,7 @@ static void shutmenu(void)
 
 // Housekeeping.
    weapon_removeall(nowplayer);
-   palette.unlock();
+
    shutlevel();
    shutgame();
    playback_stop();
@@ -749,13 +747,11 @@ int menu(int mode, int p)
 {
    int      dx, dy, db;    // Accumulated cursor coordinates.
    int      joy_x, joy_y, joy_fire; // Joystick values.
-   int      joy_last;      // Last fire value for a little MURKS.
    int      x, y, b;       // Mouse coordinates.
    int      tmp;           // Used for stuff.
    static   int key_allowed;
-	void *f = NULL;
-	int size = 0;
-	Uint32 startTime = 0;
+
+   Uint32 startTime = 0;
 
 // Initialize menu system.
    nowplayer = p;
@@ -770,7 +766,6 @@ int menu(int mode, int p)
 
 // Initialize some variables.
    joy_x = joy_y = joy_fire = 0;
-   joy_last = 0;
 
 // Initialize "checkmenu".
    checkmenu(-1, 0, 0);
@@ -807,7 +802,7 @@ int menu(int mode, int p)
          if (joy_enabled && button_released != -1) {
             if (nowmenu[0].action) nowmenu[0].action(M_JOYPAD, button_released);
          }
-         joy_last = joy_fire;
+
 // Send mouse messages.
          if (pointer_enabled) {
             if (tmp = checkmenu(b, x, y)) break;
@@ -855,7 +850,6 @@ int menu(int mode, int p)
 // Custom stuff.
 
 //#pragma off (unreferenced)
-static char *ftext[3] = { "15", "30" };
 static char *stext[3] = { "None", "Some", "All" };
 static char *mtext[3] = { "Low", "Medium", "High" };
 static int  sfreq_now;
@@ -877,7 +871,7 @@ static void showpicture(char *file)
    showpcx(f, 0, size);
    unloadfile(f);
    render.update();
-   fadein(getpcxpal());
+   fadein(NULL);
    input_wait(); input_fire(); input_wait();
    fadeout(FADE_PALETTE);
 
@@ -912,7 +906,7 @@ static void order(void)
    unloadfile(text);
 
    render.update();
-   fadein(getpcxpal());
+   fadein(NULL);
 
    input_wait(); input_fire(); input_wait();
    fadeout(FADE_PALETTE);
@@ -927,7 +921,7 @@ static void order(void)
    unloadfile(text);
 
    render.update();
-   fadein(getpcxpal());
+   fadein(NULL);
 
    unloadfile(f);
 
@@ -1076,8 +1070,6 @@ static void b_control(int n)
 
 static int a_control(int index, int subindex)
 {
-   int    t;
-
    if (index == M_INIT) {
       b_control(1);
       b_control(2);
@@ -1654,7 +1646,6 @@ static void shop_error(char *text)
 ---------------------------------------------------------*/
 static void buy(int n)
 {
-   int   i, p;
    int   slot;
 
 // Um welche waffe handelt es sich denn nun ?
@@ -1719,7 +1710,6 @@ static void buy(int n)
 
 static void sell(int n)
 {
-   int   i, p;
    int   slot;
 
 // Um welche waffe handelt es sich denn nun ?

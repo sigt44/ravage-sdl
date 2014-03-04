@@ -31,14 +31,9 @@ static int     mod_vol;          // Volume of MOD voices.
 
 // Wave variables.
 static int     wav_voices;       // Number of active WAVE voices.
-static int     wav_base;         // First available WAVE voice.
 static int     wav_vol;          // WAVE volume.
 
-// Used to store the priority level of every SFX voice.
-static int     wav_priority[MAXVOICES];
-
 // All other variables.
-static int     halt = 1;         // Some kind of semaphore variable ?
 static int     initialized = 0;
 
 
@@ -50,12 +45,6 @@ void WavePool::load(char *f)
    myFile   myfile;
    int      i;
 	SDL_RWops *memSample = NULL;
-	SDL_RWops *memSample2 = NULL;
-	char fileName[255];
-	char fileNameNumber[255];
-	FILE *wFile = NULL;
-	long sampleSize = 0;
-	void *sampleMem = NULL;
 
 // read in header
    if (!myfile.open(f)) error("WavPool not found: ", f);
@@ -104,8 +93,6 @@ void WavePool::unload(void)
 
 void WavePool::play(int n)
 {
-   int      i;
-   int      busy, pri;
    Mix_Chunk *s = sample[n].sample;
 
 	//printf("Sound vol %d wave_vol %d\n", sample[n].volume*wav_vol, wav_vol);
@@ -305,7 +292,7 @@ void initsound()
 
 
    if (sound_Init(128, 8, 100, 1)) {
-      error("Sound Driver Error: ", Mix_GetError());
+      error("Sound Error: ", Mix_GetError());
    } else {
       initialized = 1;
    }

@@ -132,8 +132,6 @@ int sound_Init(int maxSounds, int maxChannels, int volume, int enabled)
 */
 void sound_Clean(void)
 {
-    int x = 0;
-
     if(soundManager.insertSounds != NULL)
     {
         free(soundManager.insertSounds);
@@ -314,7 +312,6 @@ int sound_SetVolume(int volumePercent)
 
 int sound_SetMusicVolume(int volumePercent)
 {
-	float real_Volume = 0.0f;
     if(volumePercent > 100)
     {
         volumePercent = 100;

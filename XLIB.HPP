@@ -71,26 +71,10 @@ class Palette {
    signed char    rgb[PALETTESIZE]; // RGB values of the whole palette.
    unsigned char    shadow[SCREENCOLORS];   // Shadow look up table.
 
-	void     fadergb(void);
-   void     fadepalette(void);
-   int      cyclepalette(int, int, int);
-   friend   void doeffects(void);
 public:
 	SDL_Color sdl_rgb[SCREENCOLORS];
-   void lock(void);
-   void unlock(void);
    void set(void *p);
    void set(int r, int g, int b);
-   void calcshadows(void *, int);
-   void calcshadows(int v) { calcshadows(rgb, v); }
-   int cycle(int c1, int c2, int speed);
-   void stopcycle(int handle);
-   void fade(int speed);
-   void fade(int r, int g, int b, int speed);
-   void fade(void *p, int speed);
-   int  isfading(void);
-   void stopfade(void);
-   void stopeffects(void);
 };
 
 // Font Definition.
@@ -104,19 +88,12 @@ public:
 
 
 // Global variables.
-// Don't use name-mangling because of Turbo Assembler.
-extern "C" {
-   extern unsigned char   *_vscreen;  // Pointer to raw allocated virtual screen.
-   extern unsigned char   *vscreen;   // Pointer to ready to use virtual screen.
-   extern unsigned char   _shadow[SCREENCOLORS];     // Shadow look-up table.
-}
 extern Palette    palette;    // Allmaechtige ATOMPALETTE.
 
 
 // ----- Prototypes.
 void initgraphics(void);
 void shutgraphics(void);
-void setvideomode(int mode);
 
 // Misc.
 void showpcx(void *pic, int line, int size);
