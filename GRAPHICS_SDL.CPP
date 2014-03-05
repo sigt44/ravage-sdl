@@ -24,7 +24,6 @@ SDLSprite *SDLSpritePool::add(Sprite *sp, bool isOwner)
 
         if(sp != NULL)
         {
-            sSprite->inPool = true;
             sprites[sp] = sSprite;
         }
     }
@@ -37,24 +36,18 @@ SDLSprite *SDLSpritePool::add(Sprite *sp, bool isOwner)
 }
 
 //Instead of returning a pointer, this will return a new sprite which is a copy.
-SDLSprite *SDLSpritePool::addUnique(Sprite *sp, bool isOwner)
+SDLSprite *SDLSpritePool::getCopy(Sprite *spriteAddress)
 {
-    SDLSprite *sSprite = new SDLSprite;
+    SDLSprite *sSprite = NULL;
 
-    if(inPool(sp) == false)
+    if(inPool(spriteAddress) == false)
     {
-        sSprite->load(sp, isOwner);
-
-        if(sp != NULL)
-        {
-            sSprite->inPool = true;
-            sprites[sp] = sSprite;
-        }
+        return NULL;
     }
     else
     {
-        sSprite->copy(sPool.get(sp));
-        sSprite->inPool = false;
+        sSprite = new SDLSprite;
+        sSprite->copy(sPool.get(spriteAddress));
     }
 
     return sSprite;
@@ -98,7 +91,7 @@ void SDLSprite::copy(SDLSprite *cSprite)
     converted = cSprite->converted;
     owner = false;
     numFrames = cSprite->numFrames;
-    inPool = false;
+
     return;
 }
 

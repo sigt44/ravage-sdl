@@ -18,6 +18,7 @@ extern class SDLWindow window;
 extern class SDLRenderer render;
 
 extern class SDLSpritePool sPool;
+extern class SDLTilePool tPool;
 
 extern int debug;
 
@@ -114,9 +115,7 @@ class SDLSprite {
 	int numFrames;
 
 public:
-    bool inPool; //Refered to by the SDL sprite pool
-
-	SDLSprite() { sprite = NULL; converted = false; owner = false; inPool = false; }
+	SDLSprite() { sprite = NULL; converted = false; owner = false;}
 
 	void copy(SDLSprite *cSprite);
 
@@ -130,7 +129,6 @@ public:
 
 	int getNumFrames(void) { return numFrames; }
 
-	bool shouldDestoy(void) { return !inPool; }
 	bool shouldDraw(void) { return converted; }
 
 	void destroy(void) {
@@ -168,26 +166,34 @@ public:
         return sprites.count(spriteAddress) > 0 ? true : false;
     }
 
-    SDLSprite *get(Sprite *spriteAddress)
+    bool inPool(SDLSprite *check)
     {
-        return sprites[spriteAddress];
+        return (sprites.count(check->getBase()) == 1) && (sprites[check->getBase()] == check) ? true : false;
     }
 
-    SDLSprite *add(Sprite *sp, bool isOwner); //Return pointer if in pool
-    SDLSprite *addUnique(Sprite *sp, bool isOwner);//Return copy of sprite if in pool
+    //Return pointer if in pool
+    SDLSprite *get(Sprite *spriteAddress)
+    {
+        return sprites.count(spriteAddress) > 0 ? sprites[spriteAddress] : NULL;
+    }
+
+    //Return copy of sprite if in pool
+    SDLSprite *getCopy(Sprite *spriteAddress);
+
+    SDLSprite *add(Sprite *sp, bool isOwner);
 };
 
 
 class SDLTile {
 	SDLTexture tex;
-	unsigned long id;
+	long *id;
 	bool assigned;
 
 public:
 
 	SDLTile() {
 		assigned = false;
-		id = 0;
+		id = NULL;
 	}
 
 	~SDLTile() {
@@ -196,7 +202,7 @@ public:
 
 	SDLTexture *getBase() { return &tex; }
 
-	void load(SDL_Texture *tileTexture, bool owner, unsigned long addressID)
+	void load(SDL_Texture *tileTexture, bool owner, long *addressID)
 	{
 		id = addressID;
 		tex.loadPointer(tileTexture, owner);
@@ -205,6 +211,8 @@ public:
 
 		return;
 	}
+
+	long *getID() { return id; }
 
 	bool drawable()
 	{
@@ -219,6 +227,48 @@ public:
 		return;
 	}
 
+};
+
+class SDLTilePool
+{
+    int numTiles;
+    std::map<long *, SDLTile *> tiles;
+
+public:
+    SDLTilePool() { numTiles = 0; }
+    ~SDLTilePool() { if(numTiles > 0) error("SDL Tile Pool not destroyed properly");}
+
+    void destroy()
+    {
+        std::map<Tile *, SDLTile *>::iterator it;
+        for (it = tiles.begin(); it != tiles.end(); ++it)
+        {
+            it->second->destroy();
+            numTiles --;
+        }
+        return;
+    }
+
+    bool inPool(Tile *TileAddress)
+    {
+        return Tiles.count(TileAddress) > 0 ? true : false;
+    }
+
+    bool inPool(SDLTile *check)
+    {
+        return (Tiles.count(check->getID()) == 1) && (Tiles[check->getBase()] == check) ? true : false;
+    }
+
+    //Return pointer if in pool
+    SDLTile *get(long *TileAddress)
+    {
+        return Tiles.count(TileAddress) > 0 ? Tiles[TileAddress] : NULL;
+    }
+
+    //Return copy of Tile if in pool
+    SDLTile *getCopy(long *TileAddress);
+
+    SDLTile *add(long *tileAddress, bool isOwner);
 };
 
 class SDLMapLayer {
@@ -246,7 +296,7 @@ public:
 		pixLength = pLength;
 		shadows = shadowEnabled;
 
-		tiles = new SDLTile[numTiles];
+		tiles = new *SDLTile[numTiles];
 	}
 
 	~SDLMapLayer() {
@@ -288,7 +338,12 @@ public:
 		for(x = 0; x < numTiles; x++)
 		{
 			tile = (tiles+x);
-			tile->destroy();
+
+			if(!tPool.inPool(tile))
+            {
+                tile->destroy();
+                delete tile;
+            }
 		}
 
 		if(tiles)

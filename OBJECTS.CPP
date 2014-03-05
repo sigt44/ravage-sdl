@@ -186,11 +186,11 @@ Object::Object(Sprite *spr, int x, int y, int flags)
 
    if(usePool == true)
    {
-       sSprite = sPool.add(spr, false);
+       sSprite = sPool.get(spr);
    }
    else
    {
-       sSprite = sPool.addUnique(spr, false);
+       sSprite = sPool.getCopy(spr);
    }
 
    shadow = NULL;
@@ -221,14 +221,14 @@ Object::Object(Sprite *spr, int x, int y, int flags)
 Object::~Object()
 {
 
-    if(sSprite != NULL && sSprite->shouldDestoy())
+    if(sSprite != NULL && !sPool.inPool(sSprite))
     {
         sSprite->destroy();
         delete sSprite;
         sSprite = NULL;
     }
 
-    if(sShadow != NULL && sShadow->shouldDestoy())
+    if(sShadow != NULL && !sPool.inPool(sShadow))
     {
         sShadow->destroy();
         delete sShadow;
@@ -261,16 +261,16 @@ void Object::changeshadow(Sprite *spr)
       shadow = spr;
    }
 
-    if(sShadow != NULL && sShadow->shouldDestoy())
+    if(sShadow != NULL && !sPool.inPool(sShadow))
     {
        sShadow->destroy();
        delete sShadow;
        sShadow = NULL;
     }
 
-	if(spr)
+	if(shadow)
 	{
-	    sShadow = sPool.addUnique(shadow, false);
+	    sShadow = sPool.getCopy(shadow);
 
         sShadow->getTexture()->setAlpha(64);
 
@@ -286,7 +286,7 @@ void Object::changesprite(Sprite *spr, int dx, int dy)
 
    sprite = spr;
 
-   if(sSprite != NULL && sSprite->shouldDestoy())
+   if(sSprite != NULL && !sPool.inPool(sSprite))
    {
        sSprite->destroy();
        delete sSprite;
@@ -295,11 +295,11 @@ void Object::changesprite(Sprite *spr, int dx, int dy)
 
    if(usePool)
    {
-       sSprite = sPool.add(spr, false);
+       sSprite = sPool.get(spr);
    }
    else
    {
-        sSprite = sPool.addUnique(spr, false);
+        sSprite = sPool.getCopy(spr);
    }
 
    f_low = 0; f_high = sprite->frames - 1;
