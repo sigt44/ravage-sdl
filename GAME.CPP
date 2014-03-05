@@ -927,6 +927,7 @@ void play(int load)
    char  name[20];          // Name of current level.
 
 	sPool.destroy();
+	tPool.destroy();
 /*
    The meaning of feedback:
    == -1: Abort request through ESC.
@@ -1016,6 +1017,7 @@ void play(int load)
    shutgame();
    pinfo.shut();
 	sPool.destroy();
+	tPool.destroy();
 
 // Rescued your BELOVED ?
    if (feedback == 2) {

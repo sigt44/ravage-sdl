@@ -405,18 +405,13 @@ void loadmap(char *file)
 
 	}
 
+	//Include null tiles
 	for (i = 0; i < lSize; i++) {
-      if (anchor[MP_DATA+i] != 0)
-		{
-			sMap[0].convert(lSize - 1 - i, (long *)anchor[MP_DATA+i]);
-		}
+			sMap[0].createTile(lSize - 1 - i, (long *)anchor[MP_DATA+i]);
 	}
 
 	for (i = i; i < size; i++) {
-      if (anchor[MP_DATA+i] != 0)
-		{
-			sMap[1].convert((size - lSize) - 1 - (i - lSize), (long *)anchor[MP_DATA+i]);
-		}
+			sMap[1].createTile((size - lSize) - 1 - (i - lSize), (long *)anchor[MP_DATA+i]);
 	}
 
 }

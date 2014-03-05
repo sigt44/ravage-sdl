@@ -7,32 +7,22 @@ SDLWindow window;
 SDLRenderer render;
 
 SDLSpritePool sPool;
-
-int debug = 0;
+SDLTilePool tPool;
 
 /*---------------------------------------------------------
 SDLSpriteSpool class methods
 ---------------------------------------------------------*/
-SDLSprite *SDLSpritePool::add(Sprite *sp, bool isOwner)
+int SDLSpritePool::add(SDLSprite *sSprite, Sprite *spriteAddress)
 {
-    SDLSprite *sSprite = NULL;
-
-    if(inPool(sp) == false)
+    if(spriteAddress != NULL && inPool(spriteAddress) == false)
     {
-        sSprite = new SDLSprite;
-        sSprite->load(sp, isOwner);
+       sprites[spriteAddress] = sSprite;
+		 numSprites ++;
 
-        if(sp != NULL)
-        {
-            sprites[sp] = sSprite;
-        }
-    }
-    else
-    {
-        sSprite = sPool.get(sp);
+		 return 1;
     }
 
-    return sSprite;
+    return 0;
 }
 
 //Instead of returning a pointer, this will return a new sprite which is a copy.
@@ -108,8 +98,6 @@ void SDLSprite::convert(void)
 		converted = false;
 		return;
 	}
-
-    //printf("Sprite(%p) %d %d\n", sprite, sprite->xs, sprite->ys);
 
 	//Create a blank surface
 	surface = SDL_CreateRGBSurface(0, sprite->xs, sprite->ys_data * sprite->frames, 32, 0, 0, 0, 0);
@@ -457,7 +445,50 @@ void SDLRenderer::drawTexture(SDLTexture *texture, int x, int y)
 	return;
 }
 
-void SDLMapLayer::convert(int arrayIndex, long *tileData)
+/*---------------------------------------------------------
+SDLTilePool class methods
+---------------------------------------------------------*/
+int SDLTilePool::add(SDLTile *tile, long *tileAddress)
+{
+    if(inPool(tileAddress) == false)
+    {
+       tiles[tileAddress] = tile;
+		 numTiles ++;
+
+		 return 1;
+    }
+
+    return 0;
+}
+
+/*---------------------------------------------------------
+SDLMapLayer class methods
+---------------------------------------------------------*/
+
+SDLTile *SDLMapLayer::createTile(int arrayIndex, long *tileData)
+{
+	SDLTile *cTile = NULL;
+
+	if(!tPool.inPool(tileData))
+	{
+		cTile = new SDLTile;
+
+		if(tileData != NULL)
+			convert(cTile, tileData);
+
+		tPool.add(cTile, tileData);
+	}
+	else
+	{
+		cTile = tPool.get(tileData);
+	}
+
+	*(tiles + arrayIndex) = cTile;
+
+	return cTile;
+}
+
+void SDLMapLayer::convert(SDLTile *tile, long *tileData)
 {
 	int x, y, mod;
 	char *bytePix = NULL;
@@ -465,7 +496,6 @@ void SDLMapLayer::convert(int arrayIndex, long *tileData)
 	unsigned char pix;
 	SDL_Surface *surface = NULL;
 	SDL_Surface *temp = NULL;
-	SDLTile *tile = NULL;
 
 	//Create a blank surface
 	temp = SDL_CreateRGBSurface(0, TILEXS, TILEYS, 32, 0, 0, 0, 0);
@@ -516,8 +546,7 @@ void SDLMapLayer::convert(int arrayIndex, long *tileData)
 	SDL_SetColorKey(surface, 1, SDL_MapRGBA(surface->format, palette.sdl_rgb[0].r, palette.sdl_rgb[0].g, palette.sdl_rgb[0].b, 255));
 
 	//Convert the surface into a texture and load it into the class
-	tile = tiles + arrayIndex;
-	tile->load(SDL_CreateTextureFromSurface(render.getBase(), surface), true, (unsigned long)tileData);
+	tile->load(SDL_CreateTextureFromSurface(render.getBase(), surface), true, tileData);
 	SDL_SetTextureBlendMode(tile->getBase()->getBase(), SDL_BLENDMODE_BLEND);
 
 	//Clean up

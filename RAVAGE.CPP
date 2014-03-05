@@ -372,6 +372,7 @@ int main(int argc, char *argv[])
    } while (request != M_QUIT);
 
     sPool.destroy();
+	 tPool.destroy();
 
 // Close FilePool.
    filepool[3].close();

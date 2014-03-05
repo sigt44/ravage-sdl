@@ -20,8 +20,6 @@ extern class SDLRenderer render;
 extern class SDLSpritePool sPool;
 extern class SDLTilePool tPool;
 
-extern int debug;
-
 //Game window class
 class SDLWindow {
 	SDL_Window *window;
@@ -73,7 +71,7 @@ class SDLTexture {
 public:
 	SDLTexture() { tex = NULL; }
 	~SDLTexture() {
-        //destroy();
+        destroy();
 	}
 
     int create(int width, int height, Uint32 pixelFormat);
@@ -102,7 +100,6 @@ public:
 	void destroy(void) {
 		if(freeTexture && tex) SDL_DestroyTexture(tex);
 		tex = NULL;
-		debug--;
 	}
 };
 
@@ -156,8 +153,12 @@ public:
         for (it = sprites.begin(); it != sprites.end(); ++it)
         {
             it->second->destroy();
+				delete it->second;
+
             numSprites --;
         }
+
+		  sprites.clear();
         return;
     }
 
@@ -180,7 +181,7 @@ public:
     //Return copy of sprite if in pool
     SDLSprite *getCopy(Sprite *spriteAddress);
 
-    SDLSprite *add(Sprite *sp, bool isOwner);
+    int add(SDLSprite *sSprite, Sprite *spriteAddress);
 };
 
 
@@ -221,7 +222,7 @@ public:
 
 	void destroy()
 	{
-		id = 0;
+		id = NULL;
 		tex.destroy();
 		assigned = false;
 		return;
@@ -240,35 +241,38 @@ public:
 
     void destroy()
     {
-        std::map<Tile *, SDLTile *>::iterator it;
+        std::map<long *, SDLTile *>::iterator it;
         for (it = tiles.begin(); it != tiles.end(); ++it)
         {
             it->second->destroy();
+				delete it->second;
+
             numTiles --;
-        }
+		  }
+
+		  tiles.clear();
+
         return;
     }
 
-    bool inPool(Tile *TileAddress)
+    bool inPool(long *TileAddress)
     {
-        return Tiles.count(TileAddress) > 0 ? true : false;
+        return tiles.count(TileAddress) > 0 ? true : false;
     }
 
     bool inPool(SDLTile *check)
     {
-        return (Tiles.count(check->getID()) == 1) && (Tiles[check->getBase()] == check) ? true : false;
+        return (tiles.count(check->getID()) == 1) && (tiles[check->getID()] == check) ? true : false;
     }
 
     //Return pointer if in pool
     SDLTile *get(long *TileAddress)
     {
-        return Tiles.count(TileAddress) > 0 ? Tiles[TileAddress] : NULL;
+        return tiles.count(TileAddress) > 0 ? tiles[TileAddress] : NULL;
     }
 
-    //Return copy of Tile if in pool
-    SDLTile *getCopy(long *TileAddress);
 
-    SDLTile *add(long *tileAddress, bool isOwner);
+    int add(SDLTile *tile, long *tileAddress);
 };
 
 class SDLMapLayer {
@@ -277,7 +281,7 @@ class SDLMapLayer {
 		int length;
 		int pixLength;
 		bool shadows;
-		SDLTile *tiles;
+		SDLTile **tiles;
 
 public:
 
@@ -296,23 +300,25 @@ public:
 		pixLength = pLength;
 		shadows = shadowEnabled;
 
-		tiles = new *SDLTile[numTiles];
+		tiles = new SDLTile * [numTiles];
 	}
 
 	~SDLMapLayer() {
 		destroy();
 	}
 
-	void convert(int arrayIndex, long *tileData);
+	SDLTile *createTile(int arrayIndex, long *tileData);
+
+	void convert(SDLTile *tile, long *tileData); //convert the pixels from tileData to a texture in tile.
 
 	SDLTile *getTile(int x, int y)
 	{
-		return tiles + x + (XTILES * y);
+		return *(tiles + x + (XTILES * y));
 	}
 
 	SDLTile *getTile(int i)
 	{
-		return tiles + i;
+		return *(tiles + i);
 	}
 
 	int getSize()
@@ -337,7 +343,7 @@ public:
 
 		for(x = 0; x < numTiles; x++)
 		{
-			tile = (tiles+x);
+			tile = *(tiles+x);
 
 			if(!tPool.inPool(tile))
             {

@@ -203,6 +203,7 @@ void SpritePool::load(char *file)
    int    size;
    int    i;
    unsigned long  ptr;
+	SDLSprite *sSprite = NULL;
 
 // Set some pointers to easy access data.
    anchor = (unsigned long *) loadfile(file, NULL);
@@ -217,7 +218,9 @@ void SpritePool::load(char *file)
 // Adjust index pointers.
    for (i = 0; i < size; i++) {
       anchor[SP_STARTOFINDEX+i] += ptr;
-      sPool.add(*(sprite + i), false);
+		sSprite = new SDLSprite;
+		sSprite->load(*(sprite + i), false);
+      sPool.add(sSprite, *(sprite + i));
    }
 
 }
