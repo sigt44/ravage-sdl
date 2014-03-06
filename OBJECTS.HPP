@@ -29,7 +29,7 @@ class Object {
 public:  // Yeah. It's strange. Everything is public here ?? Poor C++ programmer.
    Sprite   *sprite;       // Main sprite.
    SDLSprite *sSprite;
-   bool usePool;           //Should the SDLSprite be taken from the pool
+	SDLSprite *sSpriteFlash;
    Sprite   *shadow;       // Object's shadow.
    SDLSprite *sShadow;
    int      priority;      // Object's priority level.
@@ -72,7 +72,6 @@ public:  // functions.
    void     setlayer(int layer) { Object::layer = layer; }
    void     flash(void) {
 		flags |= O_FLASH;
-		if(sprite) SDL_SetTextureColorMod(sSprite->getTexture()->getBase(), 96, 96, 96);
 	}
    void     animation(int dir) { f_direction = dir; }
    void     setbounds(int low, int high)

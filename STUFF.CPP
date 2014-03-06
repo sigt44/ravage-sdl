@@ -31,9 +31,9 @@ void fadeout(int mode)
    int   mod_vol;
 	const int alphaStep = 4;
 
-	SDLTexture originalTexture;
+	SDLTexture *originalTexture;
 
-	originalTexture.loadPointer(render.createScreenTexture(), true);
+	originalTexture = render.createScreenTexture();
 
 // Setup palette fading if required.
    if(mode & FADE_PALETTE) {
@@ -45,7 +45,7 @@ void fadeout(int mode)
 // Do fading.
    for (i = 64; i >= 0; i-=FADESPEED) {
 
-		render.fade(&originalTexture, (64-i) * alphaStep);
+		render.fade(originalTexture, (64-i) * alphaStep);
 
 		render.update();
 
@@ -60,7 +60,8 @@ void fadeout(int mode)
       s_setmodvol(mod_vol + 1);
    }
 
-	originalTexture.destroy();
+	originalTexture->destroy();
+	delete originalTexture;
 }
 
 void fadein(void *p)
@@ -68,21 +69,22 @@ void fadein(void *p)
 	int   i;
 	const int alphaStep = 4;
 
-	SDLTexture originalTexture;
+	SDLTexture *originalTexture = NULL;
 
-	originalTexture.loadPointer(render.createScreenTexture(), true);
+	originalTexture = render.createScreenTexture();
 
 // Do fading.
    for (i = 64; i >= 0; i-=FADESPEED) {
 
-		render.fade(&originalTexture, i * alphaStep);
+		render.fade(originalTexture, i * alphaStep);
 
 		render.update();
 
 		SDL_Delay(FADETIME/64);
    }
 
-	originalTexture.destroy();
+	originalTexture->destroy();
+	delete originalTexture;
 
 	if(p) palette.set(p);
 }

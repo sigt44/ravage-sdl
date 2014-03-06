@@ -383,15 +383,22 @@ public:
 
 	void init(SDLWindow *window, int logicalWidth, int logicalHeight);
 
-	SDL_Texture *createScreenTexture() {
+	SDLTexture *createScreenTexture() {
+		SDLTexture *screen = new SDLTexture;
 		SDL_Texture *copy = SDL_CreateTexture(renderer, 0, SDL_TEXTUREACCESS_TARGET, HWXMAX, HWYMAX);
 		SDL_SetRenderTarget(renderer, copy);
 
 		drawTexture(&renderTexture, 0, 0);
 		SDL_RenderPresent(renderer);
 
+		screen->loadPointer(copy, true);
 		SDL_SetRenderTarget(renderer, renderTexture.getBase());
-		return copy;
+		return screen;
+	}
+
+	SDLTexture *getScreenTexture()
+	{
+		return &renderTexture;
 	}
 
 

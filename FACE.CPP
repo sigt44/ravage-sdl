@@ -861,9 +861,9 @@ static void showpicture(char *file)
 {
    void  *f;
 	int size = 0;
-	SDLTexture restore;
+	SDLTexture *restore;
 
-	restore.loadPointer(render.createScreenTexture(), true);
+	restore = render.createScreenTexture();
 
    f = loadfile(file, &size);
    fadeout(FADE_PALETTE);
@@ -875,12 +875,13 @@ static void showpicture(char *file)
    input_wait(); input_fire(); input_wait();
    fadeout(FADE_PALETTE);
 
-	render.drawTexture(&restore, 0, 0);
+	render.drawTexture(restore, 0, 0);
 	render.update();
 
    fadein(level.palette);
 
-	restore.destroy();
+	restore->destroy();
+	delete restore;
 }
 
 static void order(void)
@@ -889,9 +890,9 @@ static void order(void)
    char  *text;
    int   x, y;
 	int size = 0;
-	SDLTexture restore;
+	SDLTexture *restore = NULL;
 
-	restore.loadPointer(render.createScreenTexture(), true);
+	restore = render.createScreenTexture();
 
    f = loadfile("pic\\order.pcx", &size);
 
@@ -928,11 +929,12 @@ static void order(void)
    input_wait(); input_fire(); input_wait();
    fadeout(FADE_PALETTE);
 
-	render.drawTexture(&restore, 0, 0);
+	render.drawTexture(restore, 0, 0);
 	render.update();
    fadein(level.palette);
 
-	restore.destroy();
+	restore->destroy();
+	delete restore;
 }
 
 static int a_main(int index, int subindex)

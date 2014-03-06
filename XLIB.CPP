@@ -168,21 +168,20 @@ void Back::save(int dx, int dy)
 {
 
 	x = dx + BORDER; y = dy;
-	SDLTexture screen;
+	SDLTexture *screen;
 
 	//Update screen texture
 	SDL_RenderPresent(render.getBase());
 	//Grab screen
-	screen.loadPointer(render.createScreenTexture(), true);
+	screen = render.getScreenTexture();
 
 	//Draw specific part of screen to background texture
 	render.setTarget(&background);
-	render.drawTexture(&screen, 0, 0, x, y, xs, ys);
+	render.drawTexture(screen, 0, 0, x, y, xs, ys);
 	SDL_RenderPresent(render.getBase());
 
 	render.setTarget(NULL);
 
-	screen.destroy();
 	valid = 1;
 
 }

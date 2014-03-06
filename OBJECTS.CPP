@@ -180,18 +180,10 @@ void postprocess_objects(void)
 //---------------------------------------------------------
 Object::Object(Sprite *spr, int x, int y, int flags)
 {
-   usePool = ((flags & O_POOL) > 0) ? true : false;
-   //usePool = true;
    sprite = spr;
 
-   if(usePool == true)
-   {
-       sSprite = sPool.get(spr);
-   }
-   else
-   {
-       sSprite = sPool.getCopy(spr);
-   }
+   sSprite = sPool.get(spr);
+	sSpriteFlash = NULL;
 
    shadow = NULL;
    sShadow = NULL;
@@ -270,12 +262,21 @@ void Object::changeshadow(Sprite *spr)
 
 	if(shadow)
 	{
-	    sShadow = sPool.getCopy(shadow);
-
-        sShadow->getTexture()->setAlpha(64);
+		if(shadow == sSprite->getBase()) //Special case of when the shadow is the sprite itself.
+		{
+			sShadow = sPool.getCopy(shadow);
+		}
+		else
+		{
+			sShadow = sPool.get(shadow);
+		}
+	    
+		sShadow->getTexture()->setAlpha(64);
 
 		SDL_SetTextureColorMod(sShadow->getTexture()->getBase(), 1, 1, 1);
 	}
+
+	return;
 }
 
 // Change objects sprite. Keep it centered at old sprites position.
@@ -293,14 +294,7 @@ void Object::changesprite(Sprite *spr, int dx, int dy)
        sSprite = NULL;
    }
 
-   if(usePool)
-   {
-       sSprite = sPool.get(spr);
-   }
-   else
-   {
-        sSprite = sPool.getCopy(spr);
-   }
+   sSprite = sPool.get(spr);
 
    f_low = 0; f_high = sprite->frames - 1;
    if (frame > f_high) frame = f_high; else if (frame < f_low) frame = f_low;
@@ -309,15 +303,22 @@ void Object::changesprite(Sprite *spr, int dx, int dy)
 
 void Object::drawshadow(void)
 {
-   if (shadow) render.x_drawsprite(sShadow, x+shadowx, y+shadowy, frame);
+   if (sShadow != NULL) render.x_drawsprite(sShadow, x+shadowx, y+shadowy, frame);
 }
 
 void Object::draw(void)
 {
-	render.x_drawsprite(sSprite, x, y, frame);
+   if (!(flags & O_FLASH) && sSprite != NULL)
+	{
+		render.x_drawsprite(sSprite, x, y, frame);
+	}
+	else 
+	{
+		if(sSpriteFlash != NULL)
+		{
+			render.x_drawsprite(sSprite, x, y, frame);
+		}
 
-   if (flags & O_FLASH) {
-		SDL_SetTextureColorMod(sSprite->getTexture()->getBase(), 255, 255, 255);
       flags &= ~O_FLASH;
 	}
 
