@@ -239,7 +239,11 @@ SDLRenderer class methods
 
 void SDLRenderer::init(SDLWindow *window, int logicalWidth, int logicalHeight)
 {
-	renderer = SDL_CreateRenderer(window->getWindow(), -1, SDL_RENDERER_TARGETTEXTURE);
+    #ifdef PANDORA
+    SDL_SetHint(SDL_HINT_RENDER_DRIVER, "opengles");
+    #endif
+
+	renderer = SDL_CreateRenderer(window->getWindow(), -1, SDL_RENDERER_TARGETTEXTURE | SDL_RENDERER_ACCELERATED);
 
 	if(!renderer) error("Unable to create renderer: ", (char *)SDL_GetError());
 
