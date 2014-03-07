@@ -12,6 +12,7 @@
 #define INPUT_KEYBOARD     0x01
 #define INPUT_JOYPAD       0x02
 #define INPUT_MOUSE        0x04
+extern int quit_requested;
 
 // Global accessable variables.
 _extrn int     keyboard;      // 1 if keyboard is detected.
@@ -49,6 +50,7 @@ void mouse_wait(void);
 void setmousesens(int);
 int getmousesens();
 void getmouse(int &x, int &y, int &fire);
+void getmousemotion(int &dx, int &dy);
 
 // General stuff.
 void input_update(void);

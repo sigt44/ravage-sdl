@@ -61,7 +61,8 @@ void title(void)
 // Fade in
    fadein(NULL);
 
-   input_wait(); input_fire(); input_wait();
+   //input_wait(); input_fire(); input_wait();
+   SDL_Delay(1500);
    fadeout(FADE_PALETTE);
 
    //render.clear(0, 0, 0);
@@ -100,7 +101,7 @@ enum Control { END, HEAD, TEXT, STEXT, ADD, ADDSUB, YES, YESNO, UPDOWN, CUSTOM, 
 
 struct Menu {
    Control  type;                // Control Type.
-   char     *sname;              // File name of sprites.
+   const char     *sname;              // File name of sprites.
    Sprite   *spr;                // Set to 0.
    int      x, y;                // Position.
    int      ys;                  // ?
@@ -299,7 +300,6 @@ static Menu    *nowmenu;         // Which menu is active now.
 
 // Backoff menu. This menu will be built, if user presses ESC.
 static Menu    *backoff;
-static int     fast;             // RO: 1 if next frame will be displayed.
 static int     pointer_enabled;  // RW: 1 if menu cursor is disabled.
 static int     keys_enabled;     // RW: 1 if key events are welcome.
 static int     joy_enabled;      // RW: 1 if joypad event are enabled.
@@ -387,7 +387,7 @@ Button *checkbuttons(int x0, int y0, int &index, int &subindex)
  Build the MENU screen.
  Play game demo & ask player: What's next ?
 ---------------------------------------------------------*/
-static void addtext1(Menu &menu, char *text1, char *text2)
+static void addtext1(Menu &menu, const char *text1, const char *text2)
 {
    int   x, y;
 
@@ -399,7 +399,7 @@ static void addtext1(Menu &menu, char *text1, char *text2)
    tiny->vanilla(x, y, text2, 12);
 }
 
-static void addtext2(Menu &menu, char *text1, char *text2)
+static void addtext2(Menu &menu, const char *text1, const char *text2)
 {
    int   x, y;
 
@@ -411,7 +411,7 @@ static void addtext2(Menu &menu, char *text1, char *text2)
    tiny->vanilla(x, y, text2, 12);
 }
 
-static void addtext1dn(int x, Menu &menu, char *text1, int color)
+static void addtext1dn(int x, Menu &menu, const char *text1, int color)
 {
    int   y;
 
@@ -612,7 +612,7 @@ void demo(void)
 	render.setTarget(&demoTexture);
 
    process_objects();
-   if (fast) drawscreen();
+   drawscreen();
    postprocess_objects();
 
 	render.setTarget(NULL);
@@ -638,8 +638,8 @@ static void initmenu(void)
 	sPointer.load(pointer, false);
 
 // Set mouse area.
-   setmouselimits(MENUX, MENUY, MENUX+MENUXS-pointer->xs, MENUY+MENUYS-pointer->ys);
-
+   //setmouselimits(MENUX, MENUY, MENUX+MENUXS-pointer->xs, MENUY+MENUYS-pointer->ys);
+    setmouselimits(-BORDER, 0, 320, 240);
 // Initialize POINTER animation buffer.
    back = new Back(pointer->xs, pointer->ys);
 // Set events to initial values.
@@ -748,7 +748,7 @@ int menu(int mode, int p)
    int      dx, dy, db;    // Accumulated cursor coordinates.
    int      joy_x, joy_y, joy_fire; // Joystick values.
    int      x, y, b;       // Mouse coordinates.
-   int      tmp;           // Used for stuff.
+   int      request;
    static   int key_allowed;
 
    Uint32 startTime = 0;
@@ -777,19 +777,25 @@ int menu(int mode, int p)
       demo();
 
 // Restore mouse pointer background.
-      back->restore();
+      dx = dy = b = 0;
+      input_update();
 
-      b = 0;
-		input_update();
-      if (mouse) getmousexy(b, x, y);
       if (joypad) {
          getjoypad(joy_x, joy_y, joy_fire);
          x += joy_x*4; y += joy_y*4; b += joy_fire;
       }
       getkeyboard(dx, dy, db); x += dx*4; y += dy*4; b += db;
-      testlimits(x, y);
-      if (mouse) setmousexy(x, y);
-      if (fast) {
+
+      if (mouse && !(dx || dy)) {
+            getmouse(dx, dy, b);
+
+            if((dx || dy))
+                getmousexy(b, x, y);
+      }
+
+      //testlimits(x, y);
+      //if (mouse) setmousexy(x, y);
+        back->restore();
 // Process events.
          if (!keys) key_allowed = 1;
          if (!keys_enabled) key_released = 0;
@@ -805,7 +811,7 @@ int menu(int mode, int p)
 
 // Send mouse messages.
          if (pointer_enabled) {
-            if (tmp = checkmenu(b, x, y)) break;
+            if (request = checkmenu(b, x, y)) break;
          }
 // Build backoff menu if ESC has been pressed.
          if (key_allowed && key[KEY_ESC] && backoff) {
@@ -813,32 +819,30 @@ int menu(int mode, int p)
             key_allowed = 0;
 				escape_wait();
          }
+
+
          back->save(x, y);
-         if (pointer_enabled) render.x_drawsprite(&sPointer, x, y, 0);
 
 // Copy demo display to restricted area of screen
-			render.drawTexture(&demoTexture, BORDER, 0, 16, 0, 4*32 + 16, YMAX);
+        render.drawTexture(&demoTexture, BORDER, 0, 16, 0, 4*32 + 16, YMAX);
 // Restore title logo.
-			render.x_drawsprite(&sHead, 100, 12, 0);
-      }
-// Test frame rate and adjust if needed.
-      //tmp = (settings.frate==1) || ((settings.frate==0) && (gstate.frame&1));
+        render.x_drawsprite(&sHead, 100, 12, 0);
 
-// Flip (aber ned z'knapp).
-      if (fast) render.update();
-      fast = 1;
+        if (pointer_enabled) render.x_drawsprite(&sPointer, x, y, 0);
+
+      render.update();
 
         while(SDL_GetTicks() - startTime < 32)
         {
             SDL_Delay(1);
         }
 
-   } while (1);
+   } while (!quit_requested);
 
    destroymenu();
 // Shut down menu system.
    shutmenu();
-   return tmp;
+   return quit_requested ? M_QUIT : request;
 }
 
 
@@ -850,8 +854,8 @@ int menu(int mode, int p)
 // Custom stuff.
 
 //#pragma off (unreferenced)
-static char *stext[3] = { "None", "Some", "All" };
-static char *mtext[3] = { "Low", "Medium", "High" };
+static const char *stext[3] = { "None", "Some", "All" };
+static const char *mtext[3] = { "Low", "Medium", "High" };
 static int  sfreq_now;
 static int  sfreq[4] = { 11025, 22050, 44100, 99999 };
 static int  nplayers;

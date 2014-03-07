@@ -324,6 +324,10 @@ void shutlevel(void)
 
 // Unload level data.
    level.unload();
+
+   sPool.destroy();
+   sfPool.destroy();
+   tPool.destroy();
 }
 
 /*---------------------------------------------------------
@@ -642,40 +646,31 @@ static int playlevel(void)
 
 // Start building new screen.
 // Process objects.
-      process_objects();
+  process_objects();
 // Draw Background and Sprites on virtual screen.
-        drawscreen();
+    drawscreen();
 
-      postprocess_objects();
-      if (fast) {
+  postprocess_objects();
+
 // Write Player information on top of the whole mess.
-         if (player[0].active) pinfo.display(0);
-         if (player[1].active) pinfo.display(1);
+     if (player[0].active) pinfo.display(0);
+     if (player[1].active) pinfo.display(1);
 
-         #ifdef STATS
-// Display DEBUG statistics if in DEBUG mode.
-            pinfo.debug();
-         #endif
-      }
+    // Start fading if we are just in time.
+    if (delay > 0 && delay <= 32) {
+        // Fade to white if BOSS has been killed.
+        if (master == 2)
+            {
+                SDL_SetRenderDrawColor(render.getBase(), 255, 255, 255, (32 - delay)*SDL_ALPHA_OPAQUE/32);
+                SDL_RenderFillRect(render.getBase(), NULL);
+        }
+    }
+    //Draw borders
+    render.drawRect(&borderLeft, 0, 0, 0);
+    render.drawRect(&borderRight, 0, 0, 0);
 
-// Flip pages for smooth animation.
-      if (fast) {
+     render.update();
 
-			// Start fading if we are just in time.
-			if (delay > 0 && delay <= 32) {
-				// Fade to white if BOSS has been killed.
-				if (master == 2)
-					{
-						SDL_SetRenderDrawColor(render.getBase(), 255, 255, 255, (32 - delay)*SDL_ALPHA_OPAQUE/32);
-						SDL_RenderFillRect(render.getBase(), NULL);
-				}
-			}
-			//Draw borders
-			render.drawRect(&borderLeft, 0, 0, 0);
-			render.drawRect(&borderRight, 0, 0, 0);
-
-         render.update();
-      }
 
       if (delay) --delay;
 
@@ -691,8 +686,8 @@ static int playlevel(void)
 		//input_wait();
 		//input_fire();
 
-   } while (1);
-
+   } while (!quit_requested);
+    return 1;
 }
 
 
@@ -927,6 +922,7 @@ void play(int load)
    char  name[20];          // Name of current level.
 
 	sPool.destroy();
+	sfPool.destroy();
 	tPool.destroy();
 /*
    The meaning of feedback:
@@ -1016,8 +1012,6 @@ void play(int load)
 
    shutgame();
    pinfo.shut();
-	sPool.destroy();
-	tPool.destroy();
 
 // Rescued your BELOVED ?
    if (feedback == 2) {

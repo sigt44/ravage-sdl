@@ -195,6 +195,7 @@ SaveGame *get_savegame(void);
 void put_savegame(SaveGame &);
 
 //Shut down program
+extern SDLMapLayer sMap[2];
 int end_ravage(void);
 
 #endif

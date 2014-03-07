@@ -138,7 +138,7 @@ void Weapons::load(char *file)
 
 // We are going to load the WEAPONS now.
    strcpy(text, file); strcat(text, ".csp");
-   SpritePool::load(text);       // Sprites.
+   SpritePool::load(text, false);       // Sprites.
    strcpy(text, file); strcat(text, ".cwa");
    WeaponPool::load(text);       // Weapon Pathes.
    strcpy(text, file); strcat(text, ".cwv");
@@ -267,7 +267,7 @@ void Level::load(char *file)
    strcpy(text, file); strcat(text, ".cma");
    loadmap(text);               // Map.
    strcpy(text, file); strcat(text, ".csp");
-   SpritePool::load(text);      // Sprites.
+   SpritePool::load(text, true);      // Sprites.
    strcpy(text, file); strcat(text, ".cwa");
    EnemyPool::load(text);       // Enemy Pathes.
    strcpy(text, file); strcat(text, ".cat");

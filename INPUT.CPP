@@ -22,6 +22,7 @@
 
 #define MAXINPUTS          4     // Number of input devices supported.
 
+int quit_requested = 0; //Try to quit game if true.
 
 // Next struct is a REGISTER structure for all input devices available.
 // A device must be registered in this structure to get active.
@@ -253,6 +254,9 @@ void getmousexy(int &b, int &x, int &y)
    b = buttonState & SDL_BUTTON(1); //Check if left mouse button is pressed.
 
 	//printf("%d %d ---> %d\n", x, y, b);
+   //Fix pointer to screen ratio
+   x = (int)(x * (float)XRATIO) - BORDER; //Also adjust for BORDER
+   y = (int)(y * (float)XRATIO);
 
    //Constrain mouse position
    if(x < m_limx0) x = m_limx0;
@@ -355,6 +359,7 @@ void initmouse(void)
 	mouse = 1;
 	setmousesens(M_MEDIUM);
 	SDL_ShowCursor(0);
+	//SDL_SetRelativeMouseMode(SDL_TRUE);
 }
 
 void shutmouse(void)
@@ -384,7 +389,7 @@ void input_update(void)
 		switch(event.type)
 		{
             case SDL_QUIT:
-                end_ravage();
+                quit_requested = 1;
             break;
 
 			case SDL_JOYBUTTONDOWN:

@@ -2,10 +2,14 @@
 #ifndef AH_XLIB
 #define AH_XLIB
 #include "SDL.h"
+#include "COMPATIBILITY.HPP"
 
 // -- Hardware screen definition.
 #define HWXMAX          320
 #define HWYMAX          240
+
+#define XRATIO          HWXMAX/XSCALE
+#define YRATIO          HWYMAX/YSCALE
 
 // -- Virtual Screen dimensions.
 #define XMAX            288         // Size of screen in x-direction.
@@ -60,7 +64,7 @@ class SpritePool {
    unsigned long    *anchor;
 public:
    Sprite   **sprite;         // Pointer array to sprites.
-   void     load(char *file);
+   void     load(char *file, bool createFlash);
    void     unload(void);
 };
 

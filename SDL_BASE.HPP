@@ -10,14 +10,11 @@
 
 using namespace std;
 
-//Window size constants
-#define XSCALE 640
-#define YSCALE 480
-
 extern class SDLWindow window;
 extern class SDLRenderer render;
 
 extern class SDLSpritePool sPool;
+extern class SDLSpritePool sfPool;
 extern class SDLTilePool tPool;
 
 //Game window class
@@ -35,7 +32,7 @@ public:
 
 	~SDLWindow() { if(window) error("Window not released correctly"); }
 
-	int create(char *title, int width, int height);
+	int create(const char *title, int width, int height);
 
 	int destroy(void)
 	{
@@ -117,7 +114,9 @@ public:
 	void copy(SDLSprite *cSprite);
 
 	void load(Sprite *sp, bool isOwner);
+	void loadFlash(Sprite *sp, bool isOwner);
 	void convert(void);
+	void convertFlash(void);
 
 	Sprite *getBase() { return sprite; }
 	SDLTexture *getTexture(void) { return &texture; }
@@ -150,15 +149,16 @@ public:
     void destroy()
     {
         std::map<Sprite *, SDLSprite *>::iterator it;
+
         for (it = sprites.begin(); it != sprites.end(); ++it)
         {
             it->second->destroy();
-				delete it->second;
+            delete it->second;
 
             numSprites --;
         }
 
-		  sprites.clear();
+        sprites.clear();
         return;
     }
 
@@ -458,12 +458,12 @@ public:
 	SDLSprite fontSprite;		// SDL version of the sprite
    Font(const char *file);
    ~Font();
-   void     print(int x, int y, char *text);
-   void     print_c(int x, int y, char *text);
-   void     vanilla(int x, int y, char *text, int c);
-   void     vanilla_c(int x, int y, char *text, int c);
+   void     print(int x, int y, const char *text);
+   void     print_c(int x, int y, const char *text);
+   void     vanilla(int x, int y, const char *text, int c);
+   void     vanilla_c(int x, int y, const char *text, int c);
    void     vanilla_char(int x, int y, char ch, int c);
-   int      textlen(char *text);
+   int      textlen(const char *text);
    int      charlen(char ch)
    {
       return xs[ch - anchor[FD_BASE]] + anchor[FD_PITCH];
@@ -482,6 +482,7 @@ class Back {
    int      valid;
    int      x, y;             // Coordinates of saved background area to update.
    int      xs, ys;           // Size of background area.
+   SDL_Rect clip;
    SDLTexture background;
 
 public:

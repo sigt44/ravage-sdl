@@ -18,6 +18,7 @@
 
 #include <SDL_image.h>
 
+#include "COMPATIBILITY.HPP"
 #include "SDL_BASE.HPP"
 #include "XLIB.HPP"
 #include "ERROR.HPP"
@@ -98,7 +99,7 @@ Font::~Font()
    unloadfile(anchor);
 }
 
-void Font::print(int x, int y, char *text)
+void Font::print(int x, int y, const char *text)
 {
    while (*text != 0) {
       render.x_drawsprite(&fontSprite, x, y, (int)(*text - anchor[FD_BASE]));
@@ -107,20 +108,20 @@ void Font::print(int x, int y, char *text)
    }
 }
 
-void Font::print_c(int x, int y, char *text)
+void Font::print_c(int x, int y, const char *text)
 {
    x -= textlen(text) / 2;
 	print(x, y, text);
 }
 
-void Font::vanilla(int x, int y, char *text, int c)
+void Font::vanilla(int x, int y, const char *text, int c)
 {
 	SDL_SetTextureColorMod(fontSprite.getTexture()->getBase(), palette.sdl_rgb[c].r, palette.sdl_rgb[c].g, palette.sdl_rgb[c].b);
 	print(x, y, text);
 	SDL_SetTextureColorMod(fontSprite.getTexture()->getBase(), 255, 255, 255);
 }
 
-void Font::vanilla_c(int x, int y, char *text, int c)
+void Font::vanilla_c(int x, int y, const char *text, int c)
 {
    x -= textlen(text) / 2;
 	vanilla(x, y, text, c);
@@ -132,7 +133,7 @@ void Font::vanilla_char(int x, int y, char ch, int c) {
 	SDL_SetTextureColorMod(fontSprite.getTexture()->getBase(), 255, 255, 255);
 }
 
-int Font::textlen(char *text)
+int Font::textlen(const char *text)
 {
    int   len = 0;
 
@@ -153,7 +154,13 @@ Back::Back(int dxs, int dys)
 {
    xs = dxs;
    ys = dys;
-	background.loadPointer(SDL_CreateTexture(render.getBase(), SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, xs, ys), true);
+
+   clip.x = 0;
+   clip.y = 0;
+   clip.w = xs;
+   clip.h = ys;
+
+   background.loadPointer(SDL_CreateTexture(render.getBase(), SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, xs, ys), true);
 
    valid = 0;
 }
@@ -166,18 +173,23 @@ Back::~Back()
 // Store background at (x, y).
 void Back::save(int dx, int dy)
 {
+    int txs = clip.w = xs;
+    int tys = clip.h = ys;
+
+    //SDL_RenderPresent(render.getBase());
 
 	x = dx + BORDER; y = dy;
 	SDLTexture *screen;
 
-	//Update screen texture
-	SDL_RenderPresent(render.getBase());
 	//Grab screen
 	screen = render.getScreenTexture();
 
+	if((txs = HWXMAX - (x + xs)) < 0) clip.w = xs + txs;
+	if((tys = HWYMAX - (y + ys)) < 0) clip.h = ys + tys;
+
 	//Draw specific part of screen to background texture
 	render.setTarget(&background);
-	render.drawTexture(screen, 0, 0, x, y, xs, ys);
+	render.drawTexture(screen, 0, 0, x, y, clip.w, clip.h);
 	SDL_RenderPresent(render.getBase());
 
 	render.setTarget(NULL);
@@ -191,18 +203,21 @@ void Back::restore(void)
 {
 	if (!valid) return;
 
-	render.drawTexture(&background, x, y);
+	render.drawTexture(&background, x, y, &clip);
 }
 
 // ------------------------------------------------------------------
 //  SpritePool members.
 // ------------------------------------------------------------------
-void SpritePool::load(char *file)
+void SpritePool::load(char *file, bool createFlash)
 {
    int    size;
    int    i;
    unsigned long  ptr;
-	SDLSprite *sSprite = NULL;
+   SDLSprite *sSprite = NULL;
+   SDLSprite *sfSprite = NULL; //Flash sprite
+   SDLTexture *sfTex = NULL;
+   SDL_Texture *tex = NULL;
 
 // Set some pointers to easy access data.
    anchor = (unsigned long *) loadfile(file, NULL);
@@ -217,9 +232,18 @@ void SpritePool::load(char *file)
 // Adjust index pointers.
    for (i = 0; i < size; i++) {
       anchor[SP_STARTOFINDEX+i] += ptr;
-		sSprite = new SDLSprite;
-		sSprite->load(*(sprite + i), false);
+
+      sSprite = new SDLSprite;
+      sSprite->load(*(sprite + i), false);
       sPool.add(sSprite, *(sprite + i));
+
+      if(createFlash)
+      {
+          sfSprite = new SDLSprite;
+          sfSprite->loadFlash(*(sprite + i), false);
+          sfPool.add(sfSprite, *(sprite + i));
+      }
+
    }
 
 }

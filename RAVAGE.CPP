@@ -371,9 +371,6 @@ int main(int argc, char *argv[])
       }
    } while (request != M_QUIT);
 
-    sPool.destroy();
-	 tPool.destroy();
-
 // Close FilePool.
    filepool[3].close();
    filepool[2].close();
@@ -386,6 +383,11 @@ int main(int argc, char *argv[])
 
 int end_ravage(void)
 {
+   sMap[0].destroy();
+   sMap[1].destroy();
+   sPool.destroy();
+   sfPool.destroy();
+   tPool.destroy();
     // Done for the game. Back to OS.
    reg_down();                // Execute registered shutdown functions.
    savesettings(CONFIGFILE);  // Save current game settings.

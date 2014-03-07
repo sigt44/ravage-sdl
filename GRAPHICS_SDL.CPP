@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <math.h>
+#include "COMPATIBILITY.HPP"
 #include "SDL_BASE.HPP"
 #include "ERROR.HPP"
 
@@ -7,6 +8,8 @@ SDLWindow window;
 SDLRenderer render;
 
 SDLSpritePool sPool;
+SDLSpritePool sfPool; //corresponding sprites when flash
+
 SDLTilePool tPool;
 
 /*---------------------------------------------------------
@@ -57,6 +60,18 @@ void SDLSprite::load(Sprite *sp, bool isOwner)
 	numFrames = sprite->frames;
 
 	convert();
+}
+
+void SDLSprite::loadFlash(Sprite *sp, bool isOwner)
+{
+	if(sprite) destroy();
+
+	sprite = sp;
+	owner = isOwner;
+
+	numFrames = sprite->frames;
+
+	convertFlash();
 }
 
 void SDLSprite::copy(SDLSprite *cSprite)
@@ -119,6 +134,78 @@ void SDLSprite::convert(void)
 			pix = *(bytePix + (y*(sprite->xs_data) + ((sprite->xs_data*mod)/4) + (x/4))); //Get the pixel index colour from the correct address
 
 			surfacePix[x + (y * sprite->xs)] = SDL_MapRGB(surface->format, palette.sdl_rgb[pix].r, palette.sdl_rgb[pix].g, palette.sdl_rgb[pix].b);
+		}
+	}
+
+	SDL_UnlockSurface(surface);
+
+	//Use first colour of palette as colour key.
+	SDL_SetColorKey(surface, 1, SDL_MapRGB(surface->format, palette.sdl_rgb[0].r, palette.sdl_rgb[0].g, palette.sdl_rgb[0].b));
+
+	//Convert the surface into a texture and load it into the class
+	texture.loadPointer(SDL_CreateTextureFromSurface(render.getBase(), surface), true);
+    SDL_SetTextureBlendMode(texture.getBase(), SDL_BLENDMODE_BLEND);
+
+	//Clean up
+	SDL_FreeSurface(surface);
+
+	converted = true;
+
+	return;
+}
+
+void SDLSprite::convertFlash(void)
+{
+	int x, y, mod;
+	char *bytePix = NULL;
+	Uint32 *surfacePix = NULL;
+	unsigned char pix;
+	SDL_Surface *surface = NULL;
+	SDL_Color colour;
+	const Uint8 flashAmount = 80;
+
+	if(!sprite)
+	{
+		converted = false;
+		return;
+	}
+
+	//Create a blank surface
+	surface = SDL_CreateRGBSurface(0, sprite->xs, sprite->ys_data * sprite->frames, 32, 0, 0, 0, 0);
+	SDL_FillRect(surface, NULL, SDL_MapRGB(surface->format, 0, 0, 0));
+
+
+	//Prepare for direct pixel access
+	SDL_LockSurface(surface);
+
+	bytePix = (char *)sprite->data;
+	surfacePix = (Uint32 *)surface->pixels;
+
+	for(y = 0; y < sprite->ys_data * sprite->frames; y++) //For each row of the sprite map
+	{
+		for(x = 0; x < sprite->xs; x++) //For each column up to the width of the sprite
+		{
+			mod = x % 4; //Find the plane the requested pixel (x,y) is in
+
+			pix = *(bytePix + (y*(sprite->xs_data) + ((sprite->xs_data*mod)/4) + (x/4))); //Get the pixel index colour from the correct address
+
+            colour.r = palette.sdl_rgb[pix].r;
+            colour.g = palette.sdl_rgb[pix].g;
+            colour.b = palette.sdl_rgb[pix].b;
+
+            if(pix != 0)
+            {
+                if(255 - colour.r < flashAmount) colour.r = 255;
+                else colour.r += flashAmount;
+
+                if(255 - colour.g < flashAmount) colour.g = 255;
+                else colour.g += flashAmount;
+
+                if(255 - colour.b < flashAmount) colour.b = 255;
+                else colour.b += flashAmount;
+            }
+
+            surfacePix[x + (y * sprite->xs)] = SDL_MapRGB(surface->format, colour.r, colour.g, colour.b);
 		}
 	}
 
@@ -217,13 +304,13 @@ int SDLTexture::loadMemory(void *memory, int memSize)
 /*---------------------------------------------------------
 SDLWindow class methods
 ---------------------------------------------------------*/
-int SDLWindow::create(char *title, int width, int height)
+int SDLWindow::create(const char *title, int width, int height)
 {
 	window = SDL_CreateWindow(title,
 									SDL_WINDOWPOS_UNDEFINED,
 									SDL_WINDOWPOS_UNDEFINED,
 									width, height,
-									SDL_WINDOW_OPENGL);
+									WINDOW_FLAGS);
 
 	if(!window) error("Unable to create window: ", (char *)SDL_GetError());
 
@@ -247,7 +334,7 @@ void SDLRenderer::init(SDLWindow *window, int logicalWidth, int logicalHeight)
 
 	if(!renderer) error("Unable to create renderer: ", (char *)SDL_GetError());
 
-	//SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear"); //Don't ruin the fonts!
+	//SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
 
 	SDL_RenderSetLogicalSize(renderer, logicalWidth, logicalHeight);
 

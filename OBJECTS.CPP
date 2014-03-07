@@ -183,7 +183,7 @@ Object::Object(Sprite *spr, int x, int y, int flags)
    sprite = spr;
 
    sSprite = sPool.get(spr);
-	sSpriteFlash = NULL;
+   sfSprite = sfPool.get(spr);
 
    shadow = NULL;
    sShadow = NULL;
@@ -212,12 +212,18 @@ Object::Object(Sprite *spr, int x, int y, int flags)
 // Destructor.
 Object::~Object()
 {
-
     if(sSprite != NULL && !sPool.inPool(sSprite))
     {
         sSprite->destroy();
         delete sSprite;
         sSprite = NULL;
+    }
+
+    if(sfSprite != NULL && !sfPool.inPool(sfSprite))
+    {
+        sfSprite->destroy();
+        delete sfSprite;
+        sfSprite = NULL;
     }
 
     if(sShadow != NULL && !sPool.inPool(sShadow))
@@ -270,7 +276,7 @@ void Object::changeshadow(Sprite *spr)
 		{
 			sShadow = sPool.get(shadow);
 		}
-	    
+
 		sShadow->getTexture()->setAlpha(64);
 
 		SDL_SetTextureColorMod(sShadow->getTexture()->getBase(), 1, 1, 1);
@@ -294,7 +300,15 @@ void Object::changesprite(Sprite *spr, int dx, int dy)
        sSprite = NULL;
    }
 
+   if(sfSprite != NULL && !sfPool.inPool(sfSprite))
+   {
+       sfSprite->destroy();
+       delete sfSprite;
+       sfSprite = NULL;
+   }
+
    sSprite = sPool.get(spr);
+   sfSprite = sfPool.get(spr);
 
    f_low = 0; f_high = sprite->frames - 1;
    if (frame > f_high) frame = f_high; else if (frame < f_low) frame = f_low;
@@ -312,11 +326,11 @@ void Object::draw(void)
 	{
 		render.x_drawsprite(sSprite, x, y, frame);
 	}
-	else 
+	else
 	{
-		if(sSpriteFlash != NULL)
+		if(sfSprite != NULL)
 		{
-			render.x_drawsprite(sSprite, x, y, frame);
+			render.x_drawsprite(sfSprite, x, y, frame);
 		}
 
       flags &= ~O_FLASH;

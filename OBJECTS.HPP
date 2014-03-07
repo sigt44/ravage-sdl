@@ -29,7 +29,7 @@ class Object {
 public:  // Yeah. It's strange. Everything is public here ?? Poor C++ programmer.
    Sprite   *sprite;       // Main sprite.
    SDLSprite *sSprite;
-	SDLSprite *sSpriteFlash;
+   SDLSprite *sfSprite;
    Sprite   *shadow;       // Object's shadow.
    SDLSprite *sShadow;
    int      priority;      // Object's priority level.
