@@ -652,10 +652,10 @@ static void initmenu(void)
    tiny = new Font("fonts\\tiny.fnt");
 
    addsub = (Sprite *)loadfile("pic\\addsub.spr", NULL);
-	sAddSub.load(addsub, false);
+   sAddSub.load(addsub, false);
 
    yesno = (Sprite *)loadfile("pic\\yesno.spr", NULL);
-	sYesNo.load(yesno, false);
+   sYesNo.load(yesno, false);
 
 // Write version information.
 #ifdef SHAREWARE

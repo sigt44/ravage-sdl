@@ -268,7 +268,7 @@ void Object::changeshadow(Sprite *spr)
 
 	if(shadow)
 	{
-		if(shadow == sSprite->getBase()) //Special case of when the shadow is the sprite itself.
+		if(sSprite != NULL && shadow == sSprite->getBase()) //Special case of when the shadow is the sprite itself.
 		{
 			sShadow = sPool.getCopy(shadow);
 		}
@@ -277,9 +277,12 @@ void Object::changeshadow(Sprite *spr)
 			sShadow = sPool.get(shadow);
 		}
 
-		sShadow->getTexture()->setAlpha(64);
+		if(sShadow != NULL)
+        {
+            sShadow->getTexture()->setAlpha(64);
 
-		SDL_SetTextureColorMod(sShadow->getTexture()->getBase(), 1, 1, 1);
+            SDL_SetTextureColorMod(sShadow->getTexture()->getBase(), 1, 1, 1);
+        }
 	}
 
 	return;

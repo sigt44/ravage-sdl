@@ -24,6 +24,10 @@
 
 int quit_requested = 0; //Try to quit game if true.
 
+#ifdef PANDORA
+static SDL_Curser *fakeCurser = NULL;
+#endif // PANDORA
+
 // Next struct is a REGISTER structure for all input devices available.
 // A device must be registered in this structure to get active.
 // I know the idea is good but it's not implemented strict enough to earn
@@ -358,7 +362,16 @@ void initmouse(void)
 {
 	mouse = 1;
 	setmousesens(M_MEDIUM);
-	SDL_ShowCursor(0);
+
+    #ifdef PANDORA
+    Uint8_t noData = 0;
+	fakeCurser = SDL_CreateCursor(&noData, &noData, 8, 1, 0, 0);
+    SDL_ShowCursor(SDL_ENABLE);
+    SDL_SetCursor(hiddenCursor);
+	#else
+	SDL_ShowCursor(SDL_DISABLE);
+	#endif
+
 	//SDL_SetRelativeMouseMode(SDL_TRUE);
 }
 
@@ -366,6 +379,10 @@ void shutmouse(void)
 {
    if (mouse) {
       mouse = 0;
+
+      #ifdef PANDORA
+      SDL_FreeCursor(fakeCurser);
+      #endif // PANDORA
    }
 }
 

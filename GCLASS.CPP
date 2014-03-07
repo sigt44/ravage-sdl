@@ -138,7 +138,7 @@ void Weapons::load(char *file)
 
 // We are going to load the WEAPONS now.
    strcpy(text, file); strcat(text, ".csp");
-   SpritePool::load(text, false);       // Sprites.
+   SpritePool::load(text, true);       // Sprites.
    strcpy(text, file); strcat(text, ".cwa");
    WeaponPool::load(text);       // Weapon Pathes.
    strcpy(text, file); strcat(text, ".cwv");

@@ -44,7 +44,7 @@ void WavePool::load(char *f)
 {
    myFile   myfile;
    int      i;
-	SDL_RWops *memSample = NULL;
+   SDL_RWops *memSample = NULL;
 
 // read in header
    if (!myfile.open(f)) error("WavPool not found: ", f);
@@ -60,21 +60,20 @@ void WavePool::load(char *f)
    sample = new Sample[nsamples];
    myfile.read(sample, nsamples * sizeof(Sample));
 
-	fseek(myfile.getFILE(), myfile.getbase(), SEEK_SET);
-	memSample = SDL_RWFromMem(myfile.getMemory(), myfile.getsize());
+   fseek(myfile.getFILE(), myfile.getbase(), SEEK_SET);
+   memSample = SDL_RWFromMem(myfile.getMemory(), myfile.getsize());
 
 // Load WAVES.
    for (i = 0; i < nsamples; i++) {
 #ifndef NO_SOUND
-		memSample->seek(memSample, (long)sample[i].sample, RW_SEEK_SET);
+      memSample->seek(memSample, (long)sample[i].sample, RW_SEEK_SET);
 
-		if((sample[i].sample = Mix_LoadWAV_RW(memSample, SDL_FALSE)) == NULL) error("Error loading sample. ", (char *)Mix_GetError());
+      if((sample[i].sample = Mix_LoadWAV_RW(memSample, SDL_FALSE)) == NULL) error("Error loading sample. ", (char *)Mix_GetError());
 #endif
    }
 
-	SDL_RWclose(memSample);
+   SDL_RWclose(memSample);
    myfile.close();
-
 }
 
 void WavePool::unload(void)
@@ -85,7 +84,7 @@ void WavePool::unload(void)
 
    for (i = 0; i < nsamples; i++) {
 #ifndef NO_SOUND
-		Mix_FreeChunk(sample[i].sample);
+      Mix_FreeChunk(sample[i].sample);
 #endif
    }
    delete []sample;
@@ -95,11 +94,11 @@ void WavePool::play(int n)
 {
    Mix_Chunk *s = sample[n].sample;
 
-	//printf("Sound vol %d wave_vol %d\n", sample[n].volume*wav_vol, wav_vol);
+   //printf("Sound vol %d wave_vol %d\n", sample[n].volume*wav_vol, wav_vol);
    if (!wav_vol) return;
 
 #ifndef NO_SOUND
-	if(!sound_Call(s, n, SND_DUPLICATE, sample[n].volume, 0)) printf("Sound not added\n");
+   if(!sound_Call(s, n, SND_DUPLICATE, sample[n].volume, 0)) printf("Sound not added\n");
 #endif
 
 }
@@ -122,23 +121,26 @@ void s_loadmod(char *f)
 {
 #ifndef NO_SOUND
    myFile   myfile;
-	SDL_RWops *mod = NULL;
+   SDL_RWops *mod = NULL;
 
    if (mf) s_unloadmod();
    if (!myfile.open(f)) error("(s_loadmod): not found: ", f);
 
-	mod = SDL_RWFromMem(myfile.getMemory(), myfile.getsize());
+   mod = SDL_RWFromMem(myfile.getMemory(), myfile.getsize());
 
-	if(mod == NULL)
-		error("SDL_RWFromMem: ", SDL_GetError());
+   if(mod == NULL) error("SDL_RWFromMem: ", SDL_GetError());
 
-	mf = Mix_LoadMUS_RW(mod, SDL_TRUE);
+   #ifdef PANDORA
+   mf = Mix_LoadMUS_RW(mod); SDL_FreeRW(mod);
+   #else
+   mf = Mix_LoadMUS_RW(mod, SDL_TRUE);
+   #endif
 
-	if(!mf) {
-		printf("Mix_LoadMUS_RW: %s\n", Mix_GetError());
-	}
+   if(!mf) {
+      printf("Mix_LoadMUS_RW: %s\n", Mix_GetError());
+   }
 
-	myfile.close();
+   myfile.close();
 #endif
 }
 
@@ -166,17 +168,17 @@ void s_unloadmod(void)
 ---------------------------------------------------------*/
 void s_startmod(void)
 {
-	#ifndef NO_SOUND
+   #ifndef NO_SOUND
    if (mf) mod_play = 1;
-	if(Mix_PlayMusic(mf, settings.loop_music ? -1 : 1) == -1) printf("Mix_PlayMusic(): %s\n", Mix_GetError());
-#endif
+   if(Mix_PlayMusic(mf, settings.loop_music ? -1 : 1) == -1) printf("Mix_PlayMusic(): %s\n", Mix_GetError());
+   #endif
 }
 
 void s_stopmod(void)
 {
 #ifndef NO_SOUND
-	Mix_HaltMusic();
-	mod_play = 0;
+   Mix_HaltMusic();
+   mod_play = 0;
 #endif
 }
 
@@ -199,10 +201,10 @@ char *s_modname(void)
 ---------------------------------------------------------*/
 void s_setmodvol(int volume)
 {
-	int percentage = (volume * 100)/64;
+   int percentage = (volume * 100)/64;
 
 #ifndef NO_SOUND
-	sound_SetMusicVolume(percentage);
+   sound_SetMusicVolume(percentage);
    mod_vol = volume;
 #endif
 }
@@ -223,10 +225,10 @@ int s_getmodvol(void)
 ---------------------------------------------------------*/
 void s_setwavvol(int volume)
 {
-	int percentage = (volume * 100)/64;
-	wav_vol = volume;
+   int percentage = (volume * 100)/64;
+   wav_vol = volume;
 #ifndef NO_SOUND
-	sound_SetVolume(percentage);
+   sound_SetVolume(percentage);
 #endif
 }
 
@@ -269,15 +271,15 @@ void s_update(void)
 void initsound()
 {
 
-	if(Mix_OpenAudio(8000, AUDIO_S16SYS, 2, 512) == -1)
+   if(Mix_OpenAudio(8000, AUDIO_S16SYS, 2, 512) == -1)
 	{
-			error("Unable to open audio device: ", Mix_GetError());
-	}
+      error("Unable to open audio device: ", Mix_GetError());
+   }
 
-	if(!Mix_Init(MIX_INIT_MOD))
+   if(!Mix_Init(MIX_INIT_MOD))
 	{
-		printf("Unable to support MOD files: %s\n", Mix_GetError());
-	}
+      printf("Unable to support MOD files: %s\n", Mix_GetError());
+   }
 
 #ifndef NO_SOUND
    if (initialized) return;
@@ -303,11 +305,11 @@ void shutsound(void)
 {
    if (!initialized) return;
 #ifndef NO_SOUND
-	s_stopmod();
-	sound_Clean();
+   s_stopmod();
+   sound_Clean();
 
 #endif
-	Mix_Quit();
+   Mix_Quit();
    initialized = 0;
 }
 

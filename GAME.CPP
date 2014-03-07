@@ -324,10 +324,6 @@ void shutlevel(void)
 
 // Unload level data.
    level.unload();
-
-   sPool.destroy();
-   sfPool.destroy();
-   tPool.destroy();
 }
 
 /*---------------------------------------------------------
@@ -480,9 +476,9 @@ static int playlevel(void)
    int      master = 0;       // Cause of game abort.
    int      fast = 1;             // Used in determining frame speed.
    int      tmp;              // Some really unimportant temporary values.
-	Uint32	startTime = 0;
-	SDL_Rect borderLeft = {0, 0, BORDER, YMAX};
-	SDL_Rect borderRight = {HWXMAX - BORDER, 0, BORDER, YMAX};
+   Uint32	startTime = 0;
+   SDL_Rect borderLeft = {0, 0, BORDER, YMAX};
+   SDL_Rect borderRight = {HWXMAX - BORDER, 0, BORDER, YMAX};
 
 #ifdef DEBUG
    int   singlestep = 0;
@@ -502,8 +498,8 @@ static int playlevel(void)
 // Start a nearly endless loop.
    do {
 
-		fast = 1;
-		startTime = SDL_GetTicks();
+   fast = 1;
+   startTime = SDL_GetTicks();
 // Check Debug keys.
       #ifdef DEBUG
          if (key[0x20]) debugint();
@@ -532,15 +528,15 @@ static int playlevel(void)
          while (key[0x34]);
       #endif
 
-		render.clear(0, 0, 0);
+   render.clear(0, 0, 0);
 
 // Release new enemies.
-      newwave();
+   newwave();
 // Calculate enemy's next step.
-      enemystep();
+   enemystep();
 
-		input_update();
-		s_update();
+   input_update();
+   s_update();
 
 // Spend some CPU time to handle the brave fighters.
       if (player[0].active) {
@@ -646,11 +642,11 @@ static int playlevel(void)
 
 // Start building new screen.
 // Process objects.
-  process_objects();
+   process_objects();
 // Draw Background and Sprites on virtual screen.
-    drawscreen();
+   drawscreen();
 
-  postprocess_objects();
+   postprocess_objects();
 
 // Write Player information on top of the whole mess.
      if (player[0].active) pinfo.display(0);
@@ -669,7 +665,7 @@ static int playlevel(void)
     render.drawRect(&borderLeft, 0, 0, 0);
     render.drawRect(&borderRight, 0, 0, 0);
 
-     render.update();
+   render.update();
 
 
       if (delay) --delay;
@@ -717,7 +713,7 @@ static void showstartlogo(void)
 // Fade in palette.
    fadein(level.palette);
 
-	sReady.destroy();
+   sReady.destroy();
 
 // Wait for fire button being released & pressed again.
    input_wait(); input_fire(); input_wait();
@@ -757,14 +753,11 @@ static void showhappyend(void)
 // Show HAPPY picture
    f = loadfile("pic\\happy.pcx", &size);
    render.clear(0, 0, 0);
-	render.update();
-
    showpcx(f, 0, size);
    unloadfile(f);
-   render.update();
 
 // Some delay before we fadein the picture.
-	SDL_Delay(10000);
+   SDL_Delay(8000);
 
    fadein(NULL);
    input_wait(); input_fire(); input_wait();
@@ -842,12 +835,12 @@ static int ask_abort(void)
 {
    Font     *tiny;
    Sprite   *escbox;
-	SDLSprite sEscbox;
+   SDLSprite sEscbox;
    int      x, y, fire0 = 0, fire1 = 0;
 
    tiny = new Font("fonts\\tiny.fnt");
    escbox = (Sprite *) loadfile("pic\\escbox.spr", NULL);
-	sEscbox.load(escbox, false);
+   sEscbox.load(escbox, false);
 
    y = (YMAX-escbox->ys)/2;
    render.x_drawsprite(&sEscbox, (XMAX-escbox->xs)/2, y, 0);
@@ -859,9 +852,10 @@ static int ask_abort(void)
 
    unloadfile(escbox);
    delete tiny;
-	sEscbox.destroy();
+   sEscbox.destroy();
 
    input_wait();
+
    do {
 		input_update();
       if (player[0].active) player[0].control(x, y, fire0);
@@ -921,9 +915,6 @@ void play(int load)
    int   i;
    char  name[20];          // Name of current level.
 
-	sPool.destroy();
-	sfPool.destroy();
-	tPool.destroy();
 /*
    The meaning of feedback:
    == -1: Abort request through ESC.
@@ -953,6 +944,12 @@ void play(int load)
 
 // Start actual game.
    do {
+      weapons.unload();
+      sPool.destroy();
+      sfPool.destroy();
+      tPool.destroy();
+      weapons.load("weapons\\weapons");
+
       getlevelname(gstate.level, name);
       newlevel(name);
 #ifdef RECORDER
@@ -975,6 +972,7 @@ void play(int load)
          if (feedback == -1) feedback = ask_abort();
       } while (feedback == 0);
 
+
 // Restore old shadow level.
       shadow_level(settings.shadows);
 // Remove all weapons.
@@ -989,15 +987,20 @@ void play(int load)
    if (feedback == 1) {
       showendlogo();
    }
+      if(feedback == 2)
+      {
+         // Add bonus money.
+         addbonus();
+      }
 // Do a beautiful FADEOUT.
       fadeout(FADE_ALL);
 // Store complete game state to structure savegame.
       storegame(savegame);
       shutlevel();
+
 // If this is a abort request: Quietly quit the game.
       if (feedback == -1) break;
-// Add bonus money.
-      addbonus();
+
 // Restore pallete
 		void *p = (void *)loadfile("demo1\\DEMO1.CPA", NULL);
 		palette.set(p);
@@ -1013,6 +1016,9 @@ void play(int load)
    shutgame();
    pinfo.shut();
 
+   sPool.destroy();
+   sfPool.destroy();
+   tPool.destroy();
 // Rescued your BELOVED ?
    if (feedback == 2) {
       #ifdef SHAREWARE
@@ -1021,6 +1027,7 @@ void play(int load)
          if (start_stage == 1) showhappyend();
       #endif
    }
+
 }
 
 
