@@ -683,6 +683,7 @@ static int playlevel(void)
 		//input_fire();
 
    } while (!quit_requested);
+
     return 1;
 }
 
@@ -944,6 +945,10 @@ void play(int load)
 
 // Start actual game.
    do {
+
+		//Don't let the mouse escape.
+		SDL_SetRelativeMouseMode(SDL_TRUE);
+
       weapons.unload();
       sPool.destroy();
       sfPool.destroy();
@@ -997,6 +1002,9 @@ void play(int load)
 // Store complete game state to structure savegame.
       storegame(savegame);
       shutlevel();
+
+// Let the mouse escape.
+		SDL_SetRelativeMouseMode(SDL_FALSE);
 
 // If this is a abort request: Quietly quit the game.
       if (feedback == -1) break;

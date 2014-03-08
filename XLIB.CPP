@@ -231,12 +231,12 @@ void SpritePool::load(char *file, bool createFlash)
    for (i = 0; i < size; i++) {
       anchor[SP_STARTOFINDEX+i] += ptr;
 
-		if((sSprite = sPool.get(*(sprite + i))) == NULL) //Make sure we are not inserting twice
+		if(!sPool.inPool(*(sprite + i))) //Make sure we are not inserting twice
 		{
 			sSprite = new SDLSprite;
 			sSprite->load(*(sprite + i), false);
 
-			if(sPool.add(sSprite, *(sprite + i)) == 0) 
+			if(sPool.add(sSprite, *(sprite + i)) == 0)
 			{
 				sSprite->destroy();
 				delete sSprite;
@@ -245,7 +245,7 @@ void SpritePool::load(char *file, bool createFlash)
 
       if(createFlash)
       {
-			if((sfSprite = sfPool.get(*(sprite + i))) == NULL)
+			if(!sfPool.inPool(*(sprite + i)))
 			{
 				 sfSprite = new SDLSprite;
 				 sfSprite->loadFlash(*(sprite + i), false);

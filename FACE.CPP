@@ -728,10 +728,10 @@ static void shutmenu(void)
 
 static void testlimits(int &x, int &y)
 {
-   if (x < MENUX) x = MENUX;
-   if (x > MENUX+MENUXS-pointer->xs) x = MENUX+MENUXS-pointer->xs;
-   if (y < MENUY) y = MENUY;
-   if (y > MENUY+MENUYS-pointer->ys) y = MENUY+MENUYS-pointer->ys;
+   if (x < -BORDER) x = -BORDER;
+   if (x > HWXMAX-pointer->xs) x = HWXMAX-pointer->xs;
+   if (y < 0) y = 0;
+   if (y > HWYMAX+BORDER-pointer->ys) y = HWYMAX+BORDER-pointer->ys;
 }
 
 
@@ -793,7 +793,7 @@ int menu(int mode, int p)
                 getmousexy(b, x, y);
       }
 
-      //testlimits(x, y);
+      testlimits(x, y);
       //if (mouse) setmousexy(x, y);
         back->restore();
 // Process events.

@@ -202,27 +202,86 @@ int calibrate_joypad(void)
    return yes;
 }
 
+int detect_joypad(void)
+{
+	SDL_Event event;
+	Uint32 startTime = SDL_GetTicks();
+	const int detectionTime = 4000;
+
+	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, 
+                         "Joystick detection",
+                         "Multiple joysticks detected. Please press a button from the joystick you wish to use. (4 second timout)",
+                         NULL);
+
+	while((SDL_GetTicks() - startTime) > detectionTime)
+	{
+		while(SDL_PollEvent(&event))
+		{
+			switch(event.type)
+			{
+				case SDL_JOYBUTTONDOWN:
+				case SDL_JOYBUTTONUP:
+
+				return event.jbutton.which;
+
+				break;
+
+				default:
+				break;
+			}
+		}
+	}
+
+	return 0;
+}
+
 
 void initjoypad(void)
 {
 	int num = 0;
+	int i = 0;
+	int chosen = 0;
+	//SDL_Joystick *checkJoystick = NULL;
+
 	printf("Joypads detected %d\n", SDL_NumJoysticks());
+
 	if ((num = SDL_NumJoysticks()) > 0) {
 
-		joystick = SDL_JoystickOpen(0);
-		SDL_JoystickEventState(SDL_ENABLE);
+		/*for(i = 0; i < num; i++)
+		{
+			checkJoystick = SDL_JoystickOpen(i);
+			SDL_JoystickEventState(SDL_ENABLE);
 
-		if (joystick) {
-			printf("Opened Joystick 0\n");
-			printf("Name: %s\n", SDL_JoystickNameForIndex(0));
-			printf("Number of Axes: %d\n", SDL_JoystickNumAxes(joystick));
-			printf("Number of Buttons: %d\n", SDL_JoystickNumButtons(joystick));
-			printf("Number of Balls: %d\n", SDL_JoystickNumBalls(joystick));
+			if (checkJoystick) {
+				printf("Opened Joystick %d\n", i);
+				printf("Name: %s\n", SDL_JoystickNameForIndex(i));
+				printf("Number of Axes: %d\n", SDL_JoystickNumAxes(checkJoystick));
+				printf("Number of Buttons: %d\n", SDL_JoystickNumButtons(checkJoystick));
+				printf("Number of Balls: %d\n", SDL_JoystickNumBalls(checkJoystick));
 
-			joypad = 1;
-		} else {
-			printf("Couldn't open Joystick %d\n", num);
+				SDL_JoystickClose(checkJoystick);
+
+			} else {
+				printf("Couldn't open Joystick %d\n", i);
+			}
+		}*/
+
+		if(num > 1) chosen = detect_joypad();
+
+		#ifdef PANDORA
+		if(!SDL_strcmp(SDL_JoystickNameForIndex(chosen), "nub0") || !SDL_strcmp(SDL_JoystickNameForIndex(chosen), "nub1"))
+		{
+			printf("%s not supported by this version of SDL\n", SDL_JoystickNameForIndex(chosen));
 		}
+		#endif
+		
+		joystick = SDL_JoystickOpen(chosen);
+		if(joystick) 
+		{
+			joypad = 1;
+			printf("Using joystick: %s\n", SDL_JoystickNameForIndex(chosen));
+		}
+		else printf("Couldn't open Joystick %d\n", chosen);
 	}
 
 }
@@ -364,16 +423,14 @@ void initmouse(void)
 	mouse = 1;
 	setmousesens(M_MEDIUM);
 
-    #ifdef PANDORA
-    Uint8_t noData = 0;
+	#ifdef PANDORA
+	Uint8_t noData = 0;
 	fakeCurser = SDL_CreateCursor(&noData, &noData, 8, 1, 0, 0);
-    SDL_ShowCursor(SDL_ENABLE);
-    SDL_SetCursor(hiddenCursor);
+	SDL_ShowCursor(SDL_ENABLE);
+	SDL_SetCursor(hiddenCursor);
 	#else
 	SDL_ShowCursor(SDL_DISABLE);
 	#endif
-
-	//SDL_SetRelativeMouseMode(SDL_TRUE);
 }
 
 void shutmouse(void)
