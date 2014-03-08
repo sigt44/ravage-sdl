@@ -95,7 +95,10 @@ public:
 	}
 
 	void destroy(void) {
-		if(freeTexture && tex) SDL_DestroyTexture(tex);
+		if(freeTexture == true && tex != NULL) 
+		{
+			SDL_DestroyTexture(tex);
+		}
 		tex = NULL;
 	}
 };
@@ -105,12 +108,12 @@ class SDLSprite {
 	Sprite *sprite;
 	bool converted;
 	bool owner; // The class looks after the Sprite structure's memory
-	class SDLTexture texture;
+	SDLTexture texture;
 	int numFrames;
 
 public:
 	SDLSprite() { sprite = NULL; converted = false; owner = false;}
-
+	~SDLSprite() { if(sprite) error("Sprite not released correctly"); }
 	void copy(SDLSprite *cSprite);
 
 	void load(Sprite *sp, bool isOwner);
@@ -146,21 +149,7 @@ public:
     SDLSpritePool() { numSprites = 0; }
     ~SDLSpritePool() { if(numSprites > 0) error("SDL Sprite Pool not destroyed properly");}
 
-    void destroy()
-    {
-        std::map<Sprite *, SDLSprite *>::iterator it;
-
-        for (it = sprites.begin(); it != sprites.end(); ++it)
-        {
-            it->second->destroy();
-            delete it->second;
-
-            numSprites --;
-        }
-
-        sprites.clear();
-        return;
-    }
+    void destroy();
 
     bool inPool(Sprite *spriteAddress)
     {
@@ -169,6 +158,7 @@ public:
 
     bool inPool(SDLSprite *check)
     {
+		  if(check == NULL) return false;
         return (sprites.count(check->getBase()) == 1) && (sprites[check->getBase()] == check) ? true : false;
     }
 
@@ -239,21 +229,7 @@ public:
     SDLTilePool() { numTiles = 0; }
     ~SDLTilePool() { if(numTiles > 0) error("SDL Tile Pool not destroyed properly");}
 
-    void destroy()
-    {
-        std::map<long *, SDLTile *>::iterator it;
-        for (it = tiles.begin(); it != tiles.end(); ++it)
-        {
-            it->second->destroy();
-				delete it->second;
-
-            numTiles --;
-		  }
-
-		  tiles.clear();
-
-        return;
-    }
+    void destroy();
 
     bool inPool(long *TileAddress)
     {
@@ -262,6 +238,7 @@ public:
 
     bool inPool(SDLTile *check)
     {
+		  if(check == NULL) return false;
         return (tiles.count(check->getID()) == 1) && (tiles[check->getID()] == check) ? true : false;
     }
 
@@ -345,7 +322,7 @@ public:
 		{
 			tile = *(tiles+x);
 
-			if(!tPool.inPool(tile))
+			if(tile != NULL && !tPool.inPool(tile))
             {
                 tile->destroy();
                 delete tile;

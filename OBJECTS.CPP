@@ -122,13 +122,11 @@ void drawscreen(void)
 // At the bottom, there's map layer 0
    if (rMap.layer[0] != NULL) {
 		render.drawMap(&sMap[0], rMap.y[0]);
-		//render.drawMap(&sMap[0], sMap[0].getLength() - 2);
    }
 
 // Next we draw layer 1.
    if (rMap.layer[1] != NULL) {
 		render.drawMap(&sMap[1], rMap.y[1]);
-		//render.drawMap(&sMap[1], sMap[1].getLength() - 2);
    }
 
 // Going straight to the objects.
@@ -438,6 +436,7 @@ void unloadmap(void)
 {
 	sMap[0].destroy();
 	sMap[1].destroy();
+
    unloadfile(rMap.anchor);
    rMap.anchor = 0;
 }

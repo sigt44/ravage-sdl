@@ -216,8 +216,6 @@ void SpritePool::load(char *file, bool createFlash)
    unsigned long  ptr;
    SDLSprite *sSprite = NULL;
    SDLSprite *sfSprite = NULL; //Flash sprite
-   SDLTexture *sfTex = NULL;
-   SDL_Texture *tex = NULL;
 
 // Set some pointers to easy access data.
    anchor = (unsigned long *) loadfile(file, NULL);
@@ -233,15 +231,31 @@ void SpritePool::load(char *file, bool createFlash)
    for (i = 0; i < size; i++) {
       anchor[SP_STARTOFINDEX+i] += ptr;
 
-      sSprite = new SDLSprite;
-      sSprite->load(*(sprite + i), false);
-      sPool.add(sSprite, *(sprite + i));
+		if((sSprite = sPool.get(*(sprite + i))) == NULL) //Make sure we are not inserting twice
+		{
+			sSprite = new SDLSprite;
+			sSprite->load(*(sprite + i), false);
+
+			if(sPool.add(sSprite, *(sprite + i)) == 0) 
+			{
+				sSprite->destroy();
+				delete sSprite;
+			}
+		}
 
       if(createFlash)
       {
-          sfSprite = new SDLSprite;
-          sfSprite->loadFlash(*(sprite + i), false);
-          sfPool.add(sfSprite, *(sprite + i));
+			if((sfSprite = sfPool.get(*(sprite + i))) == NULL)
+			{
+				 sfSprite = new SDLSprite;
+				 sfSprite->loadFlash(*(sprite + i), false);
+
+				 if(sfPool.add(sfSprite, *(sprite + i)) == 0)
+				 {
+					sfSprite->destroy();
+					delete sfSprite;
+				 }
+			}
       }
 
    }

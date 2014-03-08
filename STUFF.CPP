@@ -96,12 +96,12 @@ void fadein(void *p)
 
 void beauty(Font *font, int &x, int &y, char *text)
 {
-   static char     word[80];
+   static char     word[81];
    int    color;
    int    tmp;
 
    while (*text) {
-      sscanf(text, "%s", word);
+      sscanf(text, "%80s", word);
       if (font->textlen(word)+x > XMAX-10) {
          if (*text == ' ') text++;
          x = 0; y += font->height() + 1;

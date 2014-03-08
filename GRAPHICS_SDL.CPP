@@ -46,6 +46,22 @@ SDLSprite *SDLSpritePool::getCopy(Sprite *spriteAddress)
     return sSprite;
 }
 
+void SDLSpritePool::destroy()
+{
+   std::map<Sprite *, SDLSprite *>::iterator it;
+
+   for (it = sprites.begin(); it != sprites.end(); ++it)
+   {
+      it->second->destroy();
+      delete it->second;
+
+      numSprites --;
+   }
+
+   sprites.clear();
+   return;
+}
+
 /*---------------------------------------------------------
 SDLSprite class methods
 ---------------------------------------------------------*/
@@ -144,7 +160,7 @@ void SDLSprite::convert(void)
 
 	//Convert the surface into a texture and load it into the class
 	texture.loadPointer(SDL_CreateTextureFromSurface(render.getBase(), surface), true);
-    SDL_SetTextureBlendMode(texture.getBase(), SDL_BLENDMODE_BLEND);
+   SDL_SetTextureBlendMode(texture.getBase(), SDL_BLENDMODE_BLEND);
 
 	//Clean up
 	SDL_FreeSurface(surface);
@@ -216,7 +232,7 @@ void SDLSprite::convertFlash(void)
 
 	//Convert the surface into a texture and load it into the class
 	texture.loadPointer(SDL_CreateTextureFromSurface(render.getBase(), surface), true);
-    SDL_SetTextureBlendMode(texture.getBase(), SDL_BLENDMODE_BLEND);
+   SDL_SetTextureBlendMode(texture.getBase(), SDL_BLENDMODE_BLEND);
 
 	//Clean up
 	SDL_FreeSurface(surface);
@@ -427,7 +443,7 @@ void SDLRenderer::drawTile(SDLTile *tile, int x, int y, const SDL_Rect *clip)
 	SDL_Rect dest = {BORDER + x, y, clip->w, clip->h};
 	SDL_Rect src = {clip->x, clip->y, clip->w, clip->h};
 
-	if(tile->drawable())
+	if(tile != NULL && tile->drawable())
 	{
 		SDL_RenderCopy(renderer, texture->getBase(), &src, &dest);
 	}
@@ -550,6 +566,23 @@ int SDLTilePool::add(SDLTile *tile, long *tileAddress)
     }
 
     return 0;
+}
+
+void SDLTilePool::destroy()
+{
+   std::map<long *, SDLTile *>::iterator it;
+
+   for (it = tiles.begin(); it != tiles.end(); ++it)
+   {
+      it->second->destroy();
+		delete it->second;
+
+      numTiles --;
+	}
+
+	tiles.clear();
+
+   return;
 }
 
 /*---------------------------------------------------------

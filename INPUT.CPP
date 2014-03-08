@@ -205,8 +205,9 @@ int calibrate_joypad(void)
 
 void initjoypad(void)
 {
+	int num = 0;
 	printf("Joypads detected %d\n", SDL_NumJoysticks());
-	if (SDL_NumJoysticks() > 0) {
+	if ((num = SDL_NumJoysticks()) > 0) {
 
 		joystick = SDL_JoystickOpen(0);
 		SDL_JoystickEventState(SDL_ENABLE);
@@ -220,7 +221,7 @@ void initjoypad(void)
 
 			joypad = 1;
 		} else {
-			printf("Couldn't open Joystick 0\n");
+			printf("Couldn't open Joystick %d\n", num);
 		}
 	}
 

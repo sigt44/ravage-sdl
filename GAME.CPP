@@ -472,7 +472,7 @@ static volatile int cpu;
 static int playlevel(void)
 {
    int      dx, dy, fire;     // Player commands.
-   int      delay;            // Delay value.
+   int      delay = 0;            // Delay value.
    int      master = 0;       // Cause of game abort.
    int      fast = 1;             // Used in determining frame speed.
    int      tmp;              // Some really unimportant temporary values.

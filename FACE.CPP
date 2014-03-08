@@ -874,13 +874,11 @@ static void showpicture(char *file)
    render.clear(0, 0, 0);
    showpcx(f, 0, size);
    unloadfile(f);
-   render.update();
    fadein(NULL);
    input_wait(); input_fire(); input_wait();
    fadeout(FADE_PALETTE);
 
 	render.drawTexture(restore, 0, 0);
-	render.update();
 
    fadein(level.palette);
 
@@ -910,7 +908,6 @@ static void order(void)
    beauty(tiny, x, y, text);
    unloadfile(text);
 
-   render.update();
    fadein(NULL);
 
    input_wait(); input_fire(); input_wait();
@@ -925,7 +922,6 @@ static void order(void)
    beauty(tiny, x, y, text);
    unloadfile(text);
 
-   render.update();
    fadein(NULL);
 
    unloadfile(f);
@@ -934,7 +930,6 @@ static void order(void)
    fadeout(FADE_PALETTE);
 
 	render.drawTexture(restore, 0, 0);
-	render.update();
    fadein(level.palette);
 
 	restore->destroy();
