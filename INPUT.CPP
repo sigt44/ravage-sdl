@@ -202,18 +202,43 @@ int calibrate_joypad(void)
    return yes;
 }
 
-int detect_joypad(void)
+int detect_joypad(int numJoy)
 {
 	SDL_Event event;
 	Uint32 startTime = SDL_GetTicks();
 	const int detectionTime = 4000;
+	
+	SDL_Joystick **checkJoystick = NULL;
+	int i = 0;
+	int chosen = -1;
+
+	if(numJoy <= 0) return chosen;
+
+	checkJoystick = (SDL_Joystick **)malloc(sizeof(SDL_Joystick *) * numJoy);
+
+	for(i = 0; i < numJoy; i++)
+	{
+		*(checkJoystick + i) = SDL_JoystickOpen(i);
+		SDL_JoystickEventState(SDL_ENABLE);
+
+		if (checkJoystick) {
+			printf("Opened Joystick %d\n", i);
+			printf("Name: %s\n", SDL_JoystickNameForIndex(i));
+			printf("Number of Axes: %d\n", SDL_JoystickNumAxes(*(checkJoystick + i)));
+			printf("Number of Buttons: %d\n", SDL_JoystickNumButtons(*(checkJoystick + i)));
+			printf("Number of Balls: %d\n", SDL_JoystickNumBalls(*(checkJoystick + i)));
+
+		} else {
+			printf("Couldn't open Joystick %d\n", i);
+		}
+	}
 
 	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, 
                          "Joystick detection",
                          "Multiple joysticks detected. Please press a button from the joystick you wish to use. (4 second timout)",
                          NULL);
 
-	while((SDL_GetTicks() - startTime) > detectionTime)
+	while(((SDL_GetTicks() - startTime) < detectionTime) && chosen == -1)
 	{
 		while(SDL_PollEvent(&event))
 		{
@@ -222,7 +247,7 @@ int detect_joypad(void)
 				case SDL_JOYBUTTONDOWN:
 				case SDL_JOYBUTTONUP:
 
-				return event.jbutton.which;
+				chosen = event.jbutton.which;
 
 				break;
 
@@ -232,7 +257,12 @@ int detect_joypad(void)
 		}
 	}
 
-	return 0;
+	for(i = 0; i < numJoy; i++)
+	{
+		SDL_JoystickClose(*(checkJoystick + i));
+	}
+
+	return chosen;
 }
 
 
@@ -241,33 +271,13 @@ void initjoypad(void)
 	int num = 0;
 	int i = 0;
 	int chosen = 0;
-	//SDL_Joystick *checkJoystick = NULL;
 
 	printf("Joypads detected %d\n", SDL_NumJoysticks());
 
 	if ((num = SDL_NumJoysticks()) > 0) {
 
-		/*for(i = 0; i < num; i++)
-		{
-			checkJoystick = SDL_JoystickOpen(i);
-			SDL_JoystickEventState(SDL_ENABLE);
-
-			if (checkJoystick) {
-				printf("Opened Joystick %d\n", i);
-				printf("Name: %s\n", SDL_JoystickNameForIndex(i));
-				printf("Number of Axes: %d\n", SDL_JoystickNumAxes(checkJoystick));
-				printf("Number of Buttons: %d\n", SDL_JoystickNumButtons(checkJoystick));
-				printf("Number of Balls: %d\n", SDL_JoystickNumBalls(checkJoystick));
-
-				SDL_JoystickClose(checkJoystick);
-
-			} else {
-				printf("Couldn't open Joystick %d\n", i);
-			}
-		}*/
-
-		if(num > 1) chosen = detect_joypad();
-
+		if(num > 1) chosen = detect_joypad(num);
+		
 		#ifdef PANDORA
 		if(!SDL_strcmp(SDL_JoystickNameForIndex(chosen), "nub0") || !SDL_strcmp(SDL_JoystickNameForIndex(chosen), "nub1"))
 		{
