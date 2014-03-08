@@ -221,7 +221,7 @@ static void powerup(void)
 
 	// Init SDL
 
-	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK) != 0)
+	if (SDL_Init(SDL_INIT_FLAGS) != 0)
 	{
 		fprintf(stderr, "\nUnable to initialize SDL:  %s\n", SDL_GetError());
 		return;
@@ -249,7 +249,7 @@ static void powerup(void)
 	loadsettings(CONFIGFILE);
 
 // Initialize Inputs.
-   initinputs(INPUT_KEYBOARD | INPUT_MOUSE | INPUT_JOYPAD);
+   initinputs(INPUT_FLAGS);
 
    reg_exit(shutinputs);
    if (!lockdevice(settings.device[0])) {

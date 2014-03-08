@@ -746,6 +746,7 @@ static void testlimits(int &x, int &y)
 int menu(int mode, int p)
 {
    int      dx, dy, db;    // Accumulated cursor coordinates.
+	int		mb;
    int      joy_x, joy_y, joy_fire; // Joystick values.
    int      x, y, b;       // Mouse coordinates.
    int      request;
@@ -777,7 +778,7 @@ int menu(int mode, int p)
       demo();
 
 // Restore mouse pointer background.
-      dx = dy = b = 0;
+      dx = dy = mb = b = 0;
       input_update();
 
       if (joypad) {
@@ -787,10 +788,12 @@ int menu(int mode, int p)
       getkeyboard(dx, dy, db); x += dx*4; y += dy*4; b += db;
 
       if (mouse && !(dx || dy)) {
-            getmouse(dx, dy, b);
+            getmouse(dx, dy, mb);
 
             if((dx || dy))
-                getmousexy(b, x, y);
+                getmousexy(mb, x, y);
+				
+				b += mb;
       }
 
       testlimits(x, y);

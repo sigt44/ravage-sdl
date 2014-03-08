@@ -25,7 +25,7 @@
 int quit_requested = 0; //Try to quit game if true.
 
 #ifdef PANDORA
-static SDL_Curser *fakeCurser = NULL;
+static SDL_Cursor *fakeCursor = NULL;
 #endif // PANDORA
 
 // Next struct is a REGISTER structure for all input devices available.
@@ -278,13 +278,6 @@ void initjoypad(void)
 
 		if(num > 1) chosen = detect_joypad(num);
 		
-		#ifdef PANDORA
-		if(!SDL_strcmp(SDL_JoystickNameForIndex(chosen), "nub0") || !SDL_strcmp(SDL_JoystickNameForIndex(chosen), "nub1"))
-		{
-			printf("%s not supported by this version of SDL\n", SDL_JoystickNameForIndex(chosen));
-		}
-		#endif
-		
 		joystick = SDL_JoystickOpen(chosen);
 		if(joystick) 
 		{
@@ -434,10 +427,10 @@ void initmouse(void)
 	setmousesens(M_MEDIUM);
 
 	#ifdef PANDORA
-	Uint8_t noData = 0;
-	fakeCurser = SDL_CreateCursor(&noData, &noData, 8, 1, 0, 0);
+	Uint8 noData = 0;
+	fakeCursor = SDL_CreateCursor(&noData, &noData, 8, 1, 0, 0);
 	SDL_ShowCursor(SDL_ENABLE);
-	SDL_SetCursor(hiddenCursor);
+	SDL_SetCursor(fakeCursor);
 	#else
 	SDL_ShowCursor(SDL_DISABLE);
 	#endif
@@ -449,7 +442,7 @@ void shutmouse(void)
       mouse = 0;
 
       #ifdef PANDORA
-      SDL_FreeCursor(fakeCurser);
+      SDL_FreeCursor(fakeCursor);
       #endif // PANDORA
    }
 }
