@@ -205,7 +205,7 @@ int calibrate_joypad(void)
 int detect_joypad(int numJoy)
 {
 	SDL_Event event;
-	Uint32 startTime = SDL_GetTicks();
+	Uint32 startTime = 0;
 	const int detectionTime = 4000;
 	
 	SDL_Joystick **checkJoystick = NULL;
@@ -231,12 +231,19 @@ int detect_joypad(int numJoy)
 		} else {
 			printf("Couldn't open Joystick %d\n", i);
 		}
+
+		if(!SDL_strcmp(SDL_JoystickNameForIndex(i), settings.joystickName))
+		{
+			return i;
+		}
 	}
 
 	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, 
                          "Joystick detection",
-                         "Multiple joysticks detected. Please press a button from the joystick you wish to use. (4 second timout)",
+                         "Multiple joysticks detected. Please press a button from the joystick you wish to use. (within the next 4 seconds after pressing OK)",
                          NULL);
+
+	startTime = SDL_GetTicks();
 
 	while(((SDL_GetTicks() - startTime) < detectionTime) && chosen == -1)
 	{
@@ -293,6 +300,7 @@ void initjoypad(void)
 		{
 			joypad = 1;
 			printf("Using joystick: %s\n", SDL_JoystickNameForIndex(chosen));
+			strncpy(settings.joystickName, SDL_JoystickNameForIndex(chosen), 254);
 		}
 		else printf("Couldn't open Joystick %d\n", chosen);
 	}
@@ -330,9 +338,13 @@ void getmousexy(int &b, int &x, int &y)
 
    b = buttonState & SDL_BUTTON(1); //Check if left mouse button is pressed.
 
-	//printf("%d %d ---> %d\n", x, y, b);
    //Fix pointer to screen ratio
    x = (int)(x * (float)XRATIO) - BORDER; //Also adjust for BORDER
+
+#ifdef PANDORA
+	x -= 40; //Fix touchscreen offset
+#endif
+
    y = (int)(y * (float)XRATIO);
 
    //Constrain mouse position

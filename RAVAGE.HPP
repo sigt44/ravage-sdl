@@ -113,6 +113,8 @@ struct Settings {
    int      msens;               // Mouse sensitivity.
 // Keyboard settings.
    int      key[5];              // Defined keys. (lt, rt, up, dn, fire).
+// Joystick settings.
+	char		joystickName[255];   // Name of last chosen joystick
    int      joypadbutton[5];
 // Sound settings.
    int      loop_music;				// Ensure music is looped

@@ -8,25 +8,6 @@
 /*                                                       */
 /*-------------------------------------------------------*/
 
-/*
- Ultimate DEBUG MASTER switches.
- These switches must be set for EACH and EVERY module in the project.
-
- DEBUG   : Enables extended runtime checks.
-           - Memory check (out of memory, unfreed memory, messed up
-             memory structure, trying to free unallocated memory).
-           - Parameters in range check.
-           - In play DEBUG keys are enabled.
-             (a = bypass frame limiter)
-             (s = enter\leave single step mode)
-             (. = do single step)
-             (d = execute INT 3 exeption ----> ENTER DEBUGGER)
-             (i = toggle invincible on/off.)
-
- RECORDER: Enables access to the game recorder for DEMO recording.
- SHAREWARE:Build SHAREWARE VERSION of RAVAGE.
-*/
-
 #include <malloc.h>
 #include <setjmp.h>
 #include <stdlib.h>
@@ -148,6 +129,8 @@ static void loadsettings(char *file)
    settings.device[1] = 3;       // Player 2 input: Mouse.
 
 // joystick
+	strncpy(settings.joystickName, "No Joystick", 11);
+
    settings.joypadbutton[0] = -1;
    settings.joypadbutton[1] = -1;
    settings.joypadbutton[2] = -1;
@@ -248,6 +231,8 @@ static void powerup(void)
 // Load configuration.
 	loadsettings(CONFIGFILE);
 
+	if (incmd("/j")) strncpy(settings.joystickName, "No Joystick", 11); // Reset the default joystick
+
 // Initialize Inputs.
    initinputs(INPUT_FLAGS);
 
@@ -296,7 +281,7 @@ static void powerup(void)
    if (incmd("/vv")) cheatlevel |= CHEAT_MONEY;   // vertammi vertori.
 // Level jumping.
    start_stage = cmdnumber("/l", 1);
-
+	
    if (start_stage > MAXLEVELS) error("/l parameter out of range.");
 
 #ifdef DEBUG
