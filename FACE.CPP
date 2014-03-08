@@ -494,6 +494,7 @@ static void buildmenu(Menu *menu)
          blue->print_c(MENUX+(MENUXS+BORDER)/2, 180, menu->text);
          new Button(MENUX+20, 205, yesno, 0, index);
          new Button(XMAX-10-yesno->xs, 205, yesno, 1, index);
+			anchor->up();
          break;
       case YES:
          new Button(XMAX-yesno->xs, 215, yesno, 0, index);
@@ -518,6 +519,7 @@ static void buildmenu(Menu *menu)
          for (i = 0; i < n; i++) {
             new Button(x, y, menu->spr, i, index);
             y += menu->ys + menu->spr->ys;
+				anchor->up();
          }
          break;
       case END:

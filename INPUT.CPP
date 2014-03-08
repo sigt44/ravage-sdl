@@ -278,7 +278,17 @@ void initjoypad(void)
 
 		if(num > 1) chosen = detect_joypad(num);
 		
+#ifdef PANDORA
+		if(!SDL_strcmp(SDL_JoystickNameForIndex(chosen), "touchscreen"))
+		{
+			printf("Touchscreen is ignored as joystick.\n");
+			joypad = 0;
+			return;
+		}
+#endif
+
 		joystick = SDL_JoystickOpen(chosen);
+
 		if(joystick) 
 		{
 			joypad = 1;
