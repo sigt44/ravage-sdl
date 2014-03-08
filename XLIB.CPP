@@ -177,9 +177,10 @@ void Back::save(int dx, int dy)
     int tys = clip.h = ys;
 
     //SDL_RenderPresent(render.getBase());
+	 SDLTexture *screen;
 
 	x = dx + BORDER; y = dy;
-	SDLTexture *screen;
+	
 
 	//Grab screen
 	screen = render.getScreenTexture();

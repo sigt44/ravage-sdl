@@ -397,7 +397,7 @@ public:
 	void update(void);
 
 	void setTarget(SDLTexture *target) {
-		if(!target) SDL_SetRenderTarget(renderer, renderTexture.getBase());
+		if(target == NULL) SDL_SetRenderTarget(renderer, renderTexture.getBase());
 		else SDL_SetRenderTarget(renderer, target->getBase());
 
 		return;

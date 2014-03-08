@@ -334,9 +334,11 @@ Button::Button(int dx, int dy, Sprite *sprite, int dn, int idx)
    xs = spr->xs; ys = spr->ys;
    n = dn*2;
    index = idx;
+
+	up();
+
    if (anchor) next = anchor; else next = 0;
    anchor = this;
-   up();
 }
 
 
@@ -472,7 +474,7 @@ static void buildmenu(Menu *menu)
          break;
       case STEXT:
          y = tiny->height() + 1;
-         menu->back = new Back(MENUX1-23-MENUX, y);
+         menu->back = new Back(MENUX1-7-MENUX, y);
          menu->back->save(MENUX, MENUY+menu->y);
          break;
       case ADD:
@@ -480,6 +482,7 @@ static void buildmenu(Menu *menu)
          menu->back = new Back(MENUX1-23-MENUX, y);
          y = (addsub->ys - y) / 2;
          new Button(MENUX1-21, MENUY+menu->y, addsub, 0, index);
+			anchor->up();
          menu->back->save(MENUX, MENUY+menu->y+y-1);
          break;
       case ADDSUB:
