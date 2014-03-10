@@ -1103,7 +1103,10 @@ static int a_control(int index, int subindex)
       b_control(4);
       break;
 	case 5:     // Define joypad buttons.
-      buildmenu(joymenu);
+		if(joypad)
+		{
+			buildmenu(joymenu);
+		}
       break;
    }
    return 0;
@@ -1118,11 +1121,11 @@ static int a_key(int index, int subindex)
       k = 0;      // First key to enter now.
       pointer_enabled = 0;
       keys_enabled = 1;
-      backoff = 0;
+      backoff = controlmenu;
       return 0;
    }
 
-   if (k < 5) {
+   if (k < 5 && subindex != SDL_SCANCODE_ESCAPE) {
 		strncpy(text, SDL_GetScancodeName((SDL_Scancode)subindex), 15);
       tiny->vanilla(MENUX+80, MENUY+nowmenu[k+2].y, text, 12);
       settings.key[k] = subindex;
@@ -1149,7 +1152,7 @@ static int a_joy(int index, int subindex)
       k = 0;      // First button to enter now.
       pointer_enabled = 0;
       joy_enabled = 1;
-      backoff = 0;
+      backoff = controlmenu;
       return 0;
    }
 
