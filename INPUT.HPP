@@ -9,9 +9,9 @@
 #endif
 
 
-#define INPUT_KEYBOARD     0x01
-#define INPUT_JOYPAD       0x02
-#define INPUT_MOUSE        0x04
+#define R_INPUT_KEYBOARD     0x01
+#define R_INPUT_JOYPAD       0x02
+#define R_INPUT_MOUSE        0x04
 extern int quit_requested;
 
 // Global accessable variables.

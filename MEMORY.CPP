@@ -7,10 +7,7 @@
 /*                                                       */
 /*-------------------------------------------------------*/
 
-
-
-#ifdef DEBUG
-
+/*
 #include <malloc.h>
 #include <iostream.h>
 
@@ -82,8 +79,7 @@ void memory_usage(void)
       }
    }
 }
-
-#endif
+*/
 
 void _memory_dummy(void)
 {

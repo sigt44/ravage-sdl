@@ -3,14 +3,6 @@
 
 #include "ERROR.HPP"
 
-#ifdef DEBUG
-
-void *operator new(size_t size);
-void operator delete(void *ptr);
-void memory_usage(void);
-
-#endif
-
 
 // My own little fixed length memory management system. Hey: TEMPLATES. Wow.
 //#pragma pack(4)
@@ -85,9 +77,7 @@ T *Memory<T>::alloc(size_t s)
    } while (l->occ);
    if (--nfree < minfree) minfree--;
    l->occ = 1;
-   #ifdef DEBUG
-      if ((long)l->data & 3) error("(Memory::alloc): data block not dword aligned.");
-   #endif
+
    return (T *)l->data;
 }
 

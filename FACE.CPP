@@ -21,11 +21,6 @@
 #include "RAVAGE.HPP"
 #include "COMPATIBILITY.HPP"
 
-#ifdef DEBUG
-extern void debugint(void);
-#pragma aux debugint = "int 3";
-#endif
-
 /*---------------------------------------------------------
  Function:
 
@@ -44,11 +39,7 @@ void title(void)
    tiny = new Font("fonts\\tiny.fnt");
    f = loadfile("pic\\title.pcx", &size);
 
-#ifdef SHAREWARE
-   text = (char *) loadfile("stuff\\share.txt");
-#else
    text = (char *) loadfile("stuff\\reg.txt", NULL);
-#endif
 
 // Fade out and draw new screen.
    fadeout(FADE_PALETTE);

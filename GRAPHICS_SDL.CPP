@@ -8,7 +8,7 @@ SDLWindow window;
 SDLRenderer render;
 
 SDLSpritePool sPool;
-SDLSpritePool sfPool; //corresponding sprites when flash
+SDLSpritePool sfPool; //corresponding sprites when flashed
 
 SDLTilePool tPool;
 

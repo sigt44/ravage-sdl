@@ -120,7 +120,6 @@ void *myFile::getMemory(void)
 
 	if(memory == NULL)
 	{
-		//printf("Grabbing %d/%d of memory from file\n", getsize() - gettell(), getsize());
 		memory = malloc(sizeRemaining);
 		read(memory, sizeRemaining);
 	}

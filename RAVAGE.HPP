@@ -184,7 +184,7 @@ void shutgame(void);
 void weapon_releaseall(int p, int x0, int y0);
 void play(int);
 // Recorder
-#ifdef DEBUG
+#ifdef RECORDER
 void rec_enable(void);
 void rec_save(char *);
 #endif

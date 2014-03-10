@@ -31,20 +31,8 @@
 
 #include "XLIB.HPP"
 
-
-#ifdef RAVAGE_PORT
-#include "types.h"
-
-#include "objects.hpp"
-#endif
-
-
 // Some variables.
-#ifdef SHAREWARE
-const char copyright[] = "RAVAGE shareware 1.1 [c]copyright 1996 by AlphaHelix.";
-#else
 const char copyright[] = "RAVAGE registered 1.1 [c]copyright 1996 by AlphaHelix.";
-#endif
 
 using namespace std;
 
@@ -284,10 +272,6 @@ static void powerup(void)
 	
    if (start_stage > MAXLEVELS) error("/l parameter out of range.");
 
-#ifdef DEBUG
-   if (incmd("/motz")) start_stage = 99;
-#endif
-
 #ifdef RECORDER
    recorder = 0;
    if (incmd("/rec")) recorder = 1;
@@ -373,6 +357,7 @@ int end_ravage(void)
    sPool.destroy();
    sfPool.destroy();
    tPool.destroy();
+
     // Done for the game. Back to OS.
    reg_down();                // Execute registered shutdown functions.
    savesettings(CONFIGFILE);  // Save current game settings.

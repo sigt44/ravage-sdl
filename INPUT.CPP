@@ -6,10 +6,6 @@
 /*                                                       */
 /*-------------------------------------------------------*/
 
-//#include <i86.h>
-//#include <dos.h>
-//#include <conio.h>
-
 #include <stdio.h>
 
 #include "SDL_BASE.HPP"
@@ -692,7 +688,7 @@ void initinputs(int input)
    keyboard = joypad = mouse = 0;
 
 // KEYBOARD.
-   if (input & INPUT_KEYBOARD) {
+   if (input & R_INPUT_KEYBOARD) {
       initkeyboard();
       if (keyboard) {
          device[ndevices].locked = 0;
@@ -703,7 +699,7 @@ void initinputs(int input)
    }
 
 // JOYPAD.
-   if (input & INPUT_JOYPAD) {
+   if (input & R_INPUT_JOYPAD) {
       initjoypad();
       if (joypad) {
          device[ndevices].locked = 0;
@@ -714,7 +710,7 @@ void initinputs(int input)
    }
 
 // MOUSE.
-   if (input & INPUT_MOUSE) {
+   if (input & R_INPUT_MOUSE) {
       initmouse();
       if (mouse) {
          device[ndevices].locked = 0;

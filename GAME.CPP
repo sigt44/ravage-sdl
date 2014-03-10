@@ -13,11 +13,6 @@
 #include "RAVAGE.HPP"
 #include "COMPATIBILITY.HPP"
 
-#ifdef DEBUG
-extern void debugint(void);
-#pragma aux debugint = "int 3";
-#endif
-
 
 // A save game structure. Used to exchange data to\from game loader\saver.
 static   SaveGame savegame;
@@ -99,16 +94,7 @@ public:
          }
       }
    }
-// Display CPU Usage information.
-   void cpu(int usage)
-   {
-      char  text[4];
 
-      snprintf(text, 3, "%d", 5*(usage/5));
-      //itoa(5*(usage/5), text, 10);
-      render.x_drawsprite(&cpubanner, 5, 230, 0);
-      digit->print(80, 230, text);
-   }
 #ifdef STATS
 // Display DEBUG information during development.
    void debug(void)
@@ -500,33 +486,6 @@ static int playlevel(void)
 
    fast = 1;
    startTime = SDL_GetTicks();
-// Check Debug keys.
-      #ifdef DEBUG
-         if (key[0x20]) debugint();
-// Toggle invincible.
-         if (key[0x17]) {
-            cheatlevel ^= CHEAT_INVUL;
-            while (key[0x17]);
-         }
-// Fast scrolling.
-         if (key[0x1e]) {
-            singlestep = 2;
-            while (key[0x1e]);
-         }
-// Single step.
-         if (key[0x1f]) {
-            singlestep = 1;
-            while (key[0x1f]);
-         }
-         if (singlestep == 1) {
-            while (!key[0x34] && !key[0x1f]);
-            if (key[0x1f]) {
-               singlestep = 0;
-               while (key[0x1f]);
-            }
-         }
-         while (key[0x34]);
-      #endif
 
    render.clear(0, 0, 0);
 
@@ -740,7 +699,6 @@ static void showendlogo(void)
 
 }
 
-#ifndef SHAREWARE
 // Show HAPPY END screen.
 static void showhappyend(void)
 {
@@ -765,64 +723,6 @@ static void showhappyend(void)
    fadeout(FADE_ALL);
    s_unloadmod();
 }
-#endif
-
-#ifdef SHAREWARE
-void showorder(void)
-{
-   void  *f;
-   Font  *tiny, *blue;
-   char  *text;
-   int   x, y;
-
-// Load MOD.
-   s_loadmod("mods\\menu.uni");
-// Start music and fade in screen.
-   s_startmod();
-
-   tiny = new Font("fonts\\tiny.fnt");
-   blue = new Font("fonts\\blue.fnt");
-
-   f = loadfile("pic\\order.pcx");
-
-   text = (char *)loadfile("stuff\\order1.txt");
-
-   setscreen(0); clear(0);
-   showpcx(f, 20);
-   blue->print_c(XMAX/2, 0, "ORDER RAVAGE NOW");
-   x = 0; y = 30;
-   beauty(tiny, x, y, text);
-   unloadfile(text);
-
-   copyfull(); flippage();
-   fadein(getpcxpal());
-
-   input_wait(); input_fire(); input_wait();
-   fadeout(FADE_PALETTE);
-
-   text = (char *)loadfile("stuff\\order2.txt");
-
-   clear(0);
-   showpcx(f, 20);
-   blue->print_c(XMAX/2, 0, "HOW TO ORDER");
-   x = 0; y = 30;
-   beauty(tiny, x, y, text);
-   unloadfile(text);
-
-   copyfull(); flippage();
-   fadein(getpcxpal());
-
-   unloadfile(f);
-
-   input_wait(); input_fire(); input_wait();
-   fadeout(FADE_ALL);
-
-   delete blue;
-   delete tiny;
-
-   s_unloadmod();
-}
-#endif
 
 /*---------------------------------------------------------
  Function:
@@ -1029,11 +929,7 @@ void play(int load)
    tPool.destroy();
 // Rescued your BELOVED ?
    if (feedback == 2) {
-      #ifdef SHAREWARE
-        showorder();
-      #else
          if (start_stage == 1) showhappyend();
-      #endif
    }
 
 }
