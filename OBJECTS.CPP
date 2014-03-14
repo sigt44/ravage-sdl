@@ -224,7 +224,7 @@ Object::~Object()
         sfSprite = NULL;
     }
 
-    if(sShadow != NULL && !sPool.inPool(sShadow))
+    if(sShadow != NULL && !sPool.inPool(sShadow) && !shPool.inPool(sShadow))
     {
         sShadow->destroy();
         delete sShadow;
@@ -257,7 +257,7 @@ void Object::changeshadow(Sprite *spr)
       shadow = spr;
    }
 
-    if(sShadow != NULL && !sPool.inPool(sShadow))
+    if(sShadow != NULL && !sPool.inPool(sShadow) && !shPool.inPool(sShadow))
     {
        sShadow->destroy();
        delete sShadow;
@@ -268,7 +268,16 @@ void Object::changeshadow(Sprite *spr)
 	{
 		if(sSprite != NULL && shadow == sSprite->getBase()) //Special case of when the shadow is the sprite itself.
 		{
-			sShadow = sPool.getCopy(shadow);
+			if(!shPool.inPool(shadow))
+			{
+				sShadow = sPool.getCopy(shadow);
+				shPool.add(sShadow, shadow);
+			}
+			else
+			{
+				sShadow = shPool.get(shadow);
+			}
+
 		}
 		else
 		{

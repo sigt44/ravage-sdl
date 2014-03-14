@@ -97,8 +97,6 @@ static void loadsettings(char *file)
 // Fill in settings structure with FACTORY DEFAULTS.
 
 // Sound settings.
-   settings.voices = 2;
-   settings.mix_freq = 44100;
    settings.mod_vol = 20;
    settings.wav_vol = 35;
    settings.loop_music = 1;
@@ -127,6 +125,7 @@ static void loadsettings(char *file)
 
 // Graphix
    settings.shadows = SH_ALL;
+	settings.screen_mode = 0;
 
 // Try to load configuration file.
    if (myfile.open(file)) {
@@ -142,7 +141,6 @@ static void savesettings(char *file)
    if (!myfile.creat(file)) return;
    myfile.write(&settings, sizeof(Settings));
    myfile.close();
-
 }
 
 /*---------------------------------------------------------
@@ -250,7 +248,7 @@ static void powerup(void)
    s_setwavvol(settings.wav_vol);
 
 	// Enter graphics.
-   initgraphics(); reg_exit(shutgraphics);
+   initgraphics(settings.screen_mode); reg_exit(shutgraphics);
 
 // Init OBJECT system.
    initobjects(); reg_exit(shutobjects);
@@ -354,9 +352,8 @@ int end_ravage(void)
 {
    sMap[0].destroy();
    sMap[1].destroy();
-   sPool.destroy();
-   sfPool.destroy();
-   tPool.destroy();
+	
+	destroy_SpritePools();
 
     // Done for the game. Back to OS.
    reg_down();                // Execute registered shutdown functions.

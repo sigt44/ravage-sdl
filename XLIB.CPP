@@ -275,13 +275,38 @@ void SpritePool::unload(void)
  Description:
  Initilize the whole graphic system.
 ---------------------------------------------------------*/
-void initgraphics(void)
+void initgraphics(int screen_mode)
 {
 	//IMG_Init();
 
 	window.create("Ravage SDL", XSCALE, YSCALE);
 
 	render.init(&window, HWXMAX, HWYMAX);
+
+	switch(screen_mode)
+	{
+		default:
+		case 0:
+				
+			render.stretch(HWXMAX, HWYMAX);
+			render.setLinearScaling(false);
+
+		break;
+
+		case 1:
+			float width = HWXMAX;
+			float height = HWYMAX;
+
+			//Obtain the width or height that will result in full stretch of screen.
+			if(XFACTOR > YFACTOR) width = XSTRETCH;
+			else if(YFACTOR > XFACTOR) height = YSTRETCH;
+
+
+			render.stretch((int)width, (int)height);
+			render.setLinearScaling(true);
+
+		break;
+	}
 
    if (ingraphics) return;
 

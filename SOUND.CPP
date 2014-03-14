@@ -25,12 +25,10 @@
 
 // Mod player variables.
 static Mix_Music *mf = NULL;          // Music structure for Module file.
-static int     mod_voices;       // Number of allocated MOD voices.
 static int     mod_play;         // MOD is playing(1) or stopped(0).
 static int     mod_vol;          // Volume of MOD voices.
 
 // Wave variables.
-static int     wav_voices;       // Number of active WAVE voices.
 static int     wav_vol;          // WAVE volume.
 
 // All other variables.
@@ -287,12 +285,8 @@ void initsound()
 // Initialize several more or less cool variables.
    mf = 0;                 // No MOD loaded.
    mod_play = 0;           // No MOD has been loaded so don't play it.
-   wav_voices = 1;         // Start with 1 Wave voice...
-   mod_voices = 4;         // ...and 4 MOD voices.
 
 // initialize soundcard
-
-
    if (sound_Init(128, 8, 100, 1)) {
       error("Sound Error: ", Mix_GetError());
    } else {

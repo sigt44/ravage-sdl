@@ -14,6 +14,7 @@ extern class SDLWindow window;
 extern class SDLRenderer render;
 
 extern class SDLSpritePool sPool;
+extern class SDLSpritePool shPool;
 extern class SDLSpritePool sfPool;
 extern class SDLTilePool tPool;
 
@@ -173,6 +174,8 @@ public:
 
     int add(SDLSprite *sSprite, Sprite *spriteAddress);
 };
+
+void destroy_SpritePools(void);
 
 
 class SDLTile {
@@ -345,8 +348,11 @@ public:
 class SDLRenderer {
 	SDL_Renderer *renderer;
 	SDLTexture renderTexture; //Render onto a texture first before rendering to the screen
+
 	SDLTexture fadeTexture; //Black fading texture
 
+	
+	void resetRenderTexture(void); //Create a new target texture to render to. Used to update stretching.
 
 public:
 
@@ -360,18 +366,10 @@ public:
 
 	void init(SDLWindow *window, int logicalWidth, int logicalHeight);
 
-	SDLTexture *createScreenTexture() {
-		SDLTexture *screen = new SDLTexture;
-		SDL_Texture *copy = SDL_CreateTexture(renderer, 0, SDL_TEXTUREACCESS_TARGET, HWXMAX, HWYMAX);
-		SDL_SetRenderTarget(renderer, copy);
+	void stretch(int width, int height); 
+	void setLinearScaling(bool enable);
 
-		drawTexture(&renderTexture, 0, 0);
-		SDL_RenderPresent(renderer);
-
-		screen->loadPointer(copy, true);
-		SDL_SetRenderTarget(renderer, renderTexture.getBase());
-		return screen;
-	}
+	SDLTexture *createScreenTexture();
 
 	SDLTexture *getScreenTexture()
 	{

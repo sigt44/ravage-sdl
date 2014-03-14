@@ -8,8 +8,14 @@
 #define HWXMAX          320
 #define HWYMAX          240
 
-#define XRATIO          HWXMAX/XSCALE
-#define YRATIO          HWYMAX/YSCALE
+#define XRATIO          ((float)HWXMAX/XSCALE)
+#define YRATIO          ((float)HWYMAX/YSCALE)
+
+#define XFACTOR			((float)XSCALE/HWXMAX)
+#define YFACTOR			((float)YSCALE/HWYMAX)
+
+#define XSTRETCH			1.5f + XSCALE/YFACTOR
+#define YSTRETCH			1.5f + YSCALE/XFACTOR
 
 // -- Virtual Screen dimensions.
 #define XMAX            288         // Size of screen in x-direction.
@@ -96,7 +102,7 @@ extern Palette    palette;    // Allmaechtige ATOMPALETTE.
 
 
 // ----- Prototypes.
-void initgraphics(void);
+void initgraphics(int screen_mode);
 void shutgraphics(void);
 
 // Misc.

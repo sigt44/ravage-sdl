@@ -193,17 +193,16 @@ static Menu soundmenu[] = {
    { HEAD, "", 0,0,0,0,"SOUND",0,0,0 },
    { ADDSUB, "",0,0,40,0,"",0,a_sound,1 },
    { ADDSUB, "",0,0,60,0,"",0,a_sound,1 },
-   { ADD, "",0,0,80,0,"",0,a_sound,0 }, //Kept for element 6
-   { NONE, "",0,0,100,0,"",0,a_sound,1 }, //Kept for element 6
+   { ADD, "",0,0,80,0,"",0,a_sound,0 },
+   { NONE, "",0,0,100,0,"",0,a_sound,1 },
    { YES, "", 0, 0, 0, 0, "To Option Menu",0,a_tooptions,0 },
-   { TEXT, "",0,-1,25,12,"123456789012345678901234567890",0,0,0 }, // Must be element 6
    { END, "",0,0,0,0,"",0,a_sound,0 }
 };
 
 static Menu graphixmenu[] = {
    { HEAD, "", 0,0,0,0,"GRAPHICS",0,0,0 },
    { ADD, "",0,0,35,0,"",0,a_graphix,0 },
-//   { ADD, "",0,0,55,0,"",0,a_graphix,0 },
+   { ADD, "",0,0,55,0,"",0,a_graphix,0 },
 //   { ADD, "",0,0,75,0,"",0,a_graphix,0 },
    { YES, "", 0, 0, 0, 0, "To Option Menu",0,a_tooptions,0 },
    { END, "",0,0,0,0,"",0,a_graphix,0 }
@@ -314,6 +313,7 @@ public:
    void     down(void) { render.x_drawsprite(&sSpr, x, y, n + 1); }
    friend   Button *checkbuttons(int x0, int y0, int &index, int &subindex);
    friend   void destroybuttons(void);
+	friend	void clearmenu(void);
 };
 static Button  *anchor = 0; //Head of a list of buttons
 
@@ -428,10 +428,19 @@ static void clearmenu(void)
 {
 	void  *f;
 	int size = 0;
+	Button   *b = anchor;
 
 	f = loadfile("pic\\themenu.pcx", &size);
 	showpcx(f, 0, size);
    unloadfile(f);
+
+   if (!b) {
+      return;
+   }
+
+   do {
+			b->up();
+   } while ((b = b->next));
 
 	return;
 }
@@ -855,6 +864,7 @@ int menu(int mode, int p)
 //#pragma off (unreferenced)
 static const char *stext[3] = { "None", "Some", "All" };
 static const char *mtext[3] = { "Low", "Medium", "High" };
+static const char *screenText[2] = { "Standard", "Warm and Fuzzy" };
 static int  sfreq_now;
 static int  sfreq[4] = { 11025, 22050, 44100, 99999 };
 static int  nplayers;
@@ -997,8 +1007,6 @@ static int a_options(int index, int subindex)
          buildmenu(controlmenu);
          break;
       case 1:     // Sound menu
-// Copy Sound Driver Name to menu entry.
-         strcpy(soundmenu[6].text, s_drivername());
          buildmenu(soundmenu);
          break;
       case 2:     // graphix menu
@@ -1228,10 +1236,7 @@ static int a_sound(int index, int subindex)
       b_sound(2);
       b_sound(3);
       //b_sound(4);
-      for (i = 0; i < 3; i++) {
-         if (sfreq[i] > settings.mix_freq) break;
-      }
-      sfreq_now = i - 1;
+
       backoff = optionmenu;
       return 0;
    }
@@ -1282,7 +1287,7 @@ static void b_graphix(int n)
       addtext1(graphixmenu[n], "Shadows: ", stext[settings.shadows]);
       break;
 	case 2:
-      //addtext1(graphixmenu[n], "Frames/sec: ", ftext[settings.frate]);
+      addtext1(graphixmenu[n], "Scaling: ", screenText[settings.screen_mode]);
       break;
    case 3:
       //addtext1(graphixmenu[n], "Show CPU Usage: ", settings.cpu_usage ? "On" : "Off");
@@ -1306,9 +1311,48 @@ static int a_graphix(int index, int subindex)
       shadow_level(settings.shadows);
       b_graphix(index);
       break;
-   case 2:     // Frame rate.
-      //if (++settings.frate > 1) settings.frate = 0;
+   case 2:     // Screen mode
+      if (++settings.screen_mode > 1) settings.screen_mode = 0;
       b_graphix(index);
+
+		//Reset the current screen
+		render.clear(0, 0, 0);
+		render.update();
+
+		switch(settings.screen_mode)
+		{
+			default:
+			case 0:
+				
+				render.stretch(HWXMAX, HWYMAX);
+				render.setLinearScaling(false);
+
+			break;
+
+			case 1:
+				float width = HWXMAX;
+				float height = HWYMAX;
+
+				//Obtain the width or height that will result in full stretch of screen.
+				if(XFACTOR > YFACTOR) width = XSTRETCH;
+				else if(YFACTOR > XFACTOR) height = YSTRETCH;
+
+
+				render.stretch((int)width, (int)height);
+				render.setLinearScaling(true);
+
+			break;
+		}
+
+		//Reset the render
+		render.update();
+		render.clear(0, 0, 0);
+
+		//Redraw the menu
+		clearmenu();
+		buildmenu(graphixmenu);
+		render.update();
+
       break;
 
    case 3:     // CPU Usage

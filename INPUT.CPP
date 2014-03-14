@@ -341,7 +341,7 @@ void getmousexy(int &b, int &x, int &y)
 	x -= 40; //Fix touchscreen offset
 #endif
 
-   y = (int)(y * (float)XRATIO);
+   y = (int)(y * (float)YRATIO);
 
    //Constrain mouse position
    if(x < m_limx0) x = m_limx0;

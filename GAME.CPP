@@ -850,9 +850,7 @@ void play(int load)
 		SDL_SetRelativeMouseMode(SDL_TRUE);
 
       weapons.unload();
-      sPool.destroy();
-      sfPool.destroy();
-      tPool.destroy();
+		destroy_SpritePools();
       weapons.load("weapons\\weapons");
 
       getlevelname(gstate.level, name);
@@ -924,9 +922,8 @@ void play(int load)
    shutgame();
    pinfo.shut();
 
-   sPool.destroy();
-   sfPool.destroy();
-   tPool.destroy();
+	destroy_SpritePools();
+
 // Rescued your BELOVED ?
    if (feedback == 2) {
          if (start_stage == 1) showhappyend();

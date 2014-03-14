@@ -8,9 +8,21 @@ SDLWindow window;
 SDLRenderer render;
 
 SDLSpritePool sPool;
+SDLSpritePool shPool; //duplicate shadow pool
 SDLSpritePool sfPool; //corresponding sprites when flashed
 
 SDLTilePool tPool;
+
+void destroy_SpritePools(void)
+{
+	sPool.destroy();
+	shPool.destroy();
+   sfPool.destroy();
+   tPool.destroy();
+
+	return;
+}
+
 
 /*---------------------------------------------------------
 SDLSpriteSpool class methods
@@ -350,15 +362,12 @@ void SDLRenderer::init(SDLWindow *window, int logicalWidth, int logicalHeight)
 
 	if(!renderer) error("Unable to create renderer: ", (char *)SDL_GetError());
 
-	//SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
-
 	SDL_RenderSetLogicalSize(renderer, logicalWidth, logicalHeight);
 
 	SDL_SetRenderDrawBlendMode(render.getBase(), SDL_BLENDMODE_BLEND);
 	SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
 
-	renderTexture.loadPointer(SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, HWXMAX, HWYMAX), true);
-	//SDL_SetTextureBlendMode(renderTexture.getBase(), SDL_BLENDMODE_BLEND);
+	resetRenderTexture();
 
 	SDL_RenderClear(renderer);
 	SDL_RenderPresent(renderer);
@@ -374,8 +383,65 @@ void SDLRenderer::init(SDLWindow *window, int logicalWidth, int logicalHeight)
 
 	SDL_FreeSurface(fadeSurface);
 
+	return;
+}
+
+void SDLRenderer::resetRenderTexture(void)
+{
+	renderTexture.destroy();
+	renderTexture.loadPointer(SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, HWXMAX, HWYMAX), true);
+	return;
+}
+
+//Stretch screen instead of keeping aspect ratio and borders
+void SDLRenderer::stretch(int width, int height)
+{
+	SDL_Rect renderScale = {0, 0, width, height};
+
+	int xOffset = HWXMAX;
+	int yOffset = HWYMAX;
+
+	if(XFACTOR > YFACTOR) xOffset = XSTRETCH;
+	else if(YFACTOR > XFACTOR) yOffset = YSTRETCH;
+
+	xOffset -= width;
+	yOffset -= height;
+
+	resetRenderTexture();
+
+	if(xOffset > 0) renderScale.x = xOffset/2;
+	if(yOffset > 0) renderScale.y = yOffset/2;
+
+	SDL_RenderSetViewport(renderer, &renderScale);
+
+	SDL_RenderCopy(renderer, renderTexture.getBase(), NULL, NULL);
+   SDL_RenderPresent(renderer);
+   SDL_SetRenderTarget(renderer, renderTexture.getBase()); 
 
 	return;
+}
+
+void SDLRenderer::setLinearScaling(bool enable)
+{
+	(enable == true) ? SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear") : SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
+	resetRenderTexture();
+
+	return;
+}
+
+SDLTexture *SDLRenderer::createScreenTexture() {
+	SDLTexture *screen = new SDLTexture;
+	SDL_Texture *copy = SDL_CreateTexture(renderer, 0, SDL_TEXTUREACCESS_TARGET, HWXMAX, HWYMAX);
+
+	SDL_SetRenderTarget(renderer, copy);
+
+	drawTexture(&renderTexture, 0, 0);
+	SDL_RenderPresent(renderer);
+
+	screen->loadPointer(copy, true);
+	SDL_SetRenderTarget(renderer, renderTexture.getBase());
+
+	return screen;
 }
 
 void SDLRenderer::update(void) {
@@ -383,10 +449,14 @@ void SDLRenderer::update(void) {
 	SDL_RenderPresent(renderer);
 	SDL_SetRenderTarget(renderer, NULL);
 
-	drawTexture(&renderTexture, 0, 0);
+	SDL_RenderCopyEx(renderer, renderTexture.getBase(), NULL, NULL, 0.0f, NULL, SDL_FLIP_NONE); //Needed so that the texture can be stretched.
+	//drawTexture(&renderTexture, 0, 0, 0, 0, 320, 240);
+
 	SDL_RenderPresent(renderer);
 
 	SDL_SetRenderTarget(renderer, renderTexture.getBase());
+
+	return;
 }
 
 void SDLRenderer::fade(SDLTexture *background, int a)
@@ -441,11 +511,10 @@ void SDLRenderer::drawTile(SDLTile *tile, int x, int y, const SDL_Rect *clip)
 	SDLTexture *texture = tile->getBase();
 
 	SDL_Rect dest = {BORDER + x, y, clip->w, clip->h};
-	SDL_Rect src = {clip->x, clip->y, clip->w, clip->h};
 
 	if(tile != NULL && tile->drawable())
 	{
-		SDL_RenderCopy(renderer, texture->getBase(), &src, &dest);
+		SDL_RenderCopy(renderer, texture->getBase(), clip, &dest);
 	}
 
 	return;

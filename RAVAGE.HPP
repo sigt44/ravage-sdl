@@ -13,12 +13,11 @@
 #define _ext
 #endif
 
-
 // Einige NATURKONSTANTEN.
 // Don't expect the game to run properly if you change any of
 // the NATURKONSTANTEN.
 #define MEMNEEDED       2000     // Needed DPMI memory in KB.
-#define CONFIGFILE      "RAVAGE.INI"
+#define CONFIGFILE      "RAVAGE01.INI"
 #define SAVEGAMEFILE    "RAVAGE.SAV"
 #define MAXPLAYERS      2        // Number of players allowed by game.
 #define WEAPONSLOTS     8        // Number of power up slots.
@@ -118,12 +117,11 @@ struct Settings {
    int      joypadbutton[5];
 // Sound settings.
    int      loop_music;				// Ensure music is looped
-   int      voices;              // Number of SFX voices to mix.
-   int      mix_freq;            // Mixing frequency.
    int      mod_vol;             // Volume of MOD Music.
    int      wav_vol;             // Volume of WAVES.
 // Graphic settings.
    int      shadows;             // Shadow level. (None, Some or All).
+	int		screen_mode;			// 0 - standard, 1 - stretched + linear scaling.
 };
 
 
