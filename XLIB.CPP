@@ -268,6 +268,55 @@ void SpritePool::unload(void)
    unloadfile(anchor);
 }
 
+void setScreenMode(int screen_mode)
+{
+	float width = HWXMAX;
+	float height = HWYMAX;
+
+	switch(screen_mode)
+	{
+		//Stretched, aspect ratio maintained, nearest neighbour
+		default:
+		case 0:
+				
+			render.stretch(width, height);
+			render.setLinearScaling(false);
+
+		break;
+
+		//Stretched, aspect ratio maintained, linear
+		case 1:
+				
+			render.stretch(width, height);
+			render.setLinearScaling(true);
+
+		break;
+		
+		//Full screen stretched, nearest neighbour
+		case 2:
+
+			//Obtain the width or height that will result in full stretch of screen.
+			if(XFACTOR > YFACTOR) width = XSTRETCH;
+			else if(YFACTOR > XFACTOR) height = YSTRETCH;
+
+			render.stretch((int)width, (int)height);
+			render.setLinearScaling(false);
+
+		break;
+
+		//Full screen stretched, linear
+		case 3:
+
+			//Obtain the width or height that will result in full stretch of screen.
+			if(XFACTOR > YFACTOR) width = XSTRETCH;
+			else if(YFACTOR > XFACTOR) height = YSTRETCH;
+
+			render.stretch((int)width, (int)height);
+			render.setLinearScaling(true);
+
+		break;
+	}
+}
 
 /*---------------------------------------------------------
  Function: initgraphics
@@ -283,30 +332,7 @@ void initgraphics(int screen_mode)
 
 	render.init(&window, HWXMAX, HWYMAX);
 
-	switch(screen_mode)
-	{
-		default:
-		case 0:
-				
-			render.stretch(HWXMAX, HWYMAX);
-			render.setLinearScaling(false);
-
-		break;
-
-		case 1:
-			float width = HWXMAX;
-			float height = HWYMAX;
-
-			//Obtain the width or height that will result in full stretch of screen.
-			if(XFACTOR > YFACTOR) width = XSTRETCH;
-			else if(YFACTOR > XFACTOR) height = YSTRETCH;
-
-
-			render.stretch((int)width, (int)height);
-			render.setLinearScaling(true);
-
-		break;
-	}
+	setScreenMode(screen_mode);
 
    if (ingraphics) return;
 

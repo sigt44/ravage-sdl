@@ -335,13 +335,9 @@ void getmousexy(int &b, int &x, int &y)
    b = buttonState & SDL_BUTTON(1); //Check if left mouse button is pressed.
 
    //Fix pointer to screen ratio
-   x = (int)(x * (float)XRATIO) - BORDER; //Also adjust for BORDER
+   x = (int)(x * render.getXRatio()) - render.getViewportX() - BORDER; //Also adjust for BORDER
 
-#ifdef PANDORA
-	x -= 40; //Fix touchscreen offset
-#endif
-
-   y = (int)(y * (float)YRATIO);
+   y = (int)(y * render.getYRatio()) - render.getViewportY();
 
    //Constrain mouse position
    if(x < m_limx0) x = m_limx0;
@@ -450,7 +446,7 @@ void initmouse(void)
 	SDL_ShowCursor(SDL_ENABLE);
 	SDL_SetCursor(fakeCursor);
 	#else
-	SDL_ShowCursor(SDL_DISABLE);
+	//SDL_ShowCursor(SDL_DISABLE);
 	#endif
 }
 

@@ -348,7 +348,9 @@ public:
 class SDLRenderer {
 	SDL_Renderer *renderer;
 	SDLTexture renderTexture; //Render onto a texture first before rendering to the screen
-
+	SDL_Rect viewport;		//Used to track whether the view is stretched
+	float xRatio;				//x and y ratios between original display dimensions and viewport
+	float yRatio;				
 	SDLTexture fadeTexture; //Black fading texture
 
 	
@@ -358,6 +360,11 @@ public:
 
 	SDLRenderer() {
 		renderer = NULL;
+		xRatio = 1.0f;
+		yRatio = 1.0f;
+		viewport.x = viewport.y = 0;
+		viewport.w = HWXMAX;
+		viewport.h = HWYMAX;
 	}
 
 	~SDLRenderer() {
@@ -366,7 +373,28 @@ public:
 
 	void init(SDLWindow *window, int logicalWidth, int logicalHeight);
 
-	void stretch(int width, int height); 
+	void stretch(int width, int height);
+
+	float getXRatio(void)
+	{
+		return xRatio;
+	}
+
+	float getYRatio(void)
+	{
+		return yRatio;
+	}
+
+	int getViewportX(void)
+	{
+		return viewport.x;
+	}
+
+	int getViewportY(void)
+	{
+		return viewport.y;
+	}
+
 	void setLinearScaling(bool enable);
 
 	SDLTexture *createScreenTexture();

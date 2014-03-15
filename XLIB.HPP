@@ -100,12 +100,12 @@ public:
 // Global variables.
 extern Palette    palette;    // Allmaechtige ATOMPALETTE.
 
-
 // ----- Prototypes.
 void initgraphics(int screen_mode);
 void shutgraphics(void);
 
 // Misc.
+void setScreenMode(int screen_mode);
 void showpcx(void *pic, int line, int size);
 void *getpcxpal(void);
 

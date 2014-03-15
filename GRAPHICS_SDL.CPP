@@ -396,23 +396,40 @@ void SDLRenderer::resetRenderTexture(void)
 //Stretch screen instead of keeping aspect ratio and borders
 void SDLRenderer::stretch(int width, int height)
 {
-	SDL_Rect renderScale = {0, 0, width, height};
+	viewport.x = viewport.y = 0;
+	viewport.w = width;
+	viewport.h = height;
 
 	int xOffset = HWXMAX;
 	int yOffset = HWYMAX;
 
-	if(XFACTOR > YFACTOR) xOffset = XSTRETCH;
-	else if(YFACTOR > XFACTOR) yOffset = YSTRETCH;
+	if(XFACTOR > (YFACTOR+0.01f))
+	{
+		xOffset = XSTRETCH;
+		xRatio = HWXMAX/((float)width*YFACTOR);
+		yRatio = HWYMAX/((float)height*YFACTOR);
+	}
+	else if(YFACTOR > (XFACTOR+0.01f))
+	{
+		yOffset = YSTRETCH;
+		xRatio = HWXMAX/((float)width*XFACTOR);
+		yRatio = HWYMAX/((float)height*XFACTOR);
+	}
+	else
+	{
+		xRatio = HWXMAX/((float)width*XFACTOR);
+		yRatio = HWYMAX/((float)height*YFACTOR);
+	}
 
 	xOffset -= width;
 	yOffset -= height;
 
 	resetRenderTexture();
 
-	if(xOffset > 0) renderScale.x = xOffset/2;
-	if(yOffset > 0) renderScale.y = yOffset/2;
+	if(xOffset > 0) viewport.x = xOffset/2;
+	if(yOffset > 0) viewport.y = yOffset/2;
 
-	SDL_RenderSetViewport(renderer, &renderScale);
+	SDL_RenderSetViewport(renderer, &viewport);
 
 	SDL_RenderCopy(renderer, renderTexture.getBase(), NULL, NULL);
    SDL_RenderPresent(renderer);

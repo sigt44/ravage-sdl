@@ -424,7 +424,7 @@ static void destroymenu(void)
    menuback->restore();
 }
 
-static void clearmenu(void)
+void clearmenu(void)
 {
 	void  *f;
 	int size = 0;
@@ -484,6 +484,7 @@ static void buildmenu(Menu *menu)
          new Button(MENUX1-21, MENUY+menu->y, addsub, 0, index);
 			anchor->up();
          menu->back->save(MENUX, MENUY+menu->y+y-1);
+			anchor->up();
          break;
       case ADDSUB:
          y = tiny->height()*2 + 1;
@@ -864,7 +865,7 @@ int menu(int mode, int p)
 //#pragma off (unreferenced)
 static const char *stext[3] = { "None", "Some", "All" };
 static const char *mtext[3] = { "Low", "Medium", "High" };
-static const char *screenText[2] = { "Standard", "Warm and Fuzzy" };
+static const char *screenText[4] = { "Standard", "Fuzzy", "Warm", "Warm and Fuzzy" };
 static int  sfreq_now;
 static int  sfreq[4] = { 11025, 22050, 44100, 99999 };
 static int  nplayers;
@@ -1312,37 +1313,14 @@ static int a_graphix(int index, int subindex)
       b_graphix(index);
       break;
    case 2:     // Screen mode
-      if (++settings.screen_mode > 1) settings.screen_mode = 0;
+      if (++settings.screen_mode > 3) settings.screen_mode = 0;
       b_graphix(index);
 
 		//Reset the current screen
 		render.clear(0, 0, 0);
 		render.update();
 
-		switch(settings.screen_mode)
-		{
-			default:
-			case 0:
-				
-				render.stretch(HWXMAX, HWYMAX);
-				render.setLinearScaling(false);
-
-			break;
-
-			case 1:
-				float width = HWXMAX;
-				float height = HWYMAX;
-
-				//Obtain the width or height that will result in full stretch of screen.
-				if(XFACTOR > YFACTOR) width = XSTRETCH;
-				else if(YFACTOR > XFACTOR) height = YSTRETCH;
-
-
-				render.stretch((int)width, (int)height);
-				render.setLinearScaling(true);
-
-			break;
-		}
+		setScreenMode(settings.screen_mode);
 
 		//Reset the render
 		render.update();
